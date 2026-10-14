@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 window.layoutReady = (async () => {
     const container = document.querySelector('#siteLayout');
@@ -7,7 +7,7 @@ window.layoutReady = (async () => {
         throw new Error('Ortak menü alanı bulunamadı.');
     }
 
-    const response = await fetch('/layout.html', {
+    const response = await fetch('/html/layout.html', {
         cache: 'no-cache'
     });
 

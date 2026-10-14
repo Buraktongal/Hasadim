@@ -25,7 +25,7 @@ function closeAccountMenu() {
     if (menu) menu.open = false;
 }
 function isDetailPage() {
-    return document.body.dataset.page === 'detail' || location.pathname === '/ilan.html';
+    return document.body.dataset.page === 'detail' || location.pathname === '/html/ilan.html';
 }
 function syncHeaderQuery(value) {
     const input = $('#globalQuery');
@@ -44,7 +44,7 @@ async function session() {
     }
     await token();
 }
-function openAuth(){closeAccountMenu();window.location.href=user?'/profilim.html':'/giris.html';}
+function openAuth(){closeAccountMenu();window.location.href=user?'/html/profilim.html':'/html/giris.html';}
 async function submit(form,task){const b=form.querySelector('[type=submit]')||form.querySelector('button');if(b.disabled)return;b.disabled=true;form.querySelector('.form-error').textContent='';try{await task();}catch(e){form.querySelector('.form-error').textContent=e.message;}finally{b.disabled=false;}}
 $('#accountBtn').onclick=openAuth;
 $('#logoutBtn').onclick=async()=>{closeAccountMenu();try{await api('/api/account/logout','POST');if(isDetailPage()){window.location.href='/';return;}await session();await changeView('all');toast('Çıkış yapıldı.');}catch(e){toast(e.message);}};
@@ -214,7 +214,7 @@ $('#filters').onsubmit = e => { e.preventDefault(); page = 1; loadListings(); };
     $('#filters').reset();
     page = 1; loadListings();
 }; $('#prevPage').onclick = () => { page--; loadListings(); }; $('#nextPage').onclick = () => { page++; loadListings(); };
-function openDetail(id){window.location.href='/ilan.html?id='+encodeURIComponent(id)+'&from='+encodeURIComponent(view);}
+function openDetail(id){window.location.href='/html/ilan.html?id='+encodeURIComponent(id)+'&from='+encodeURIComponent(view);}
 function createGallery(photos,title){
     let index = 0; const gallery = el('section', undefined, 'gallery'); gallery.setAttribute('aria-label', 'İlan fotoğrafları');
     const large = el('img', undefined, 'detail-image'), opener = button('', 'gallery-open', () => {
@@ -242,7 +242,7 @@ async function renderDetail(id)
     try {
         const x = await api('/api/meyve-ilanlari/' + id);
         if (request !== detailRequest) return;
-        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
+        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
         const grid = el('div', undefined, 'detail-grid');
         for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
             const n = el('div');
@@ -253,7 +253,7 @@ async function renderDetail(id)
  else if(user){if(x.telefon){const tel=el('a','Telefon: '+x.telefon,'secondary');tel.href='tel:'+x.telefon.replace(/[^+0-9]/g,'');actions.append(tel);}actions.append(button('Satıcıya mesaj gönder','primary',()=>openCompose(x.id,x.ownerId,x.baslik)));}
  else actions.append(button('İletişim için giriş yap','primary',()=>{openAuth();}));
  if(user&&!x.isMine)actions.append(button('İlanı bildir','textbtn',()=>{$('#reportForm').reset();$('#reportForm [name=id]').value=id;$('#reportForm .form-error').textContent='';show('reportDialog');}));
- content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);if(p.photoUrl){const img=el('img',undefined,'avatar');img.src=p.photoUrl;img.alt=p.displayName;seller.append(img);}const link=el('a',p.displayName);link.href='/satici.html?id='+p.id;seller.append(el('h3','Satıcı bilgileri'),link,el('p',[p.businessName,p.city,p.district].filter(Boolean).join(' · ')),el('p',p.emailVerified?'E-posta doğrulandı':'E-posta doğrulanmadı'));}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/satici.html?id='+x.ownerId;seller.append(link);}
+ content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);if(p.photoUrl){const img=el('img',undefined,'avatar');img.src=p.photoUrl;img.alt=p.displayName;seller.append(img);}const link=el('a',p.displayName);link.href='/html/satici.html?id='+p.id;seller.append(el('h3','Satıcı bilgileri'),link,el('p',[p.businessName,p.city,p.district].filter(Boolean).join(' · ')),el('p',p.emailVerified?'E-posta doğrulandı':'E-posta doğrulanmadı'));}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
  }catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
 async function openEditor(x) {
     if (!mustLogin()) return;
@@ -355,7 +355,7 @@ $('#editorForm').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;subm
  const body={};for(const k of ['baslik','meyveTuru','cesit','il','ilce','aciklama','telefon'])body[k]=data.get(k).trim();body.miktarKg=Number(data.get('miktarKg'));body.kilogramFiyati=Number(data.get('kilogramFiyati'));body.hasatTarihi=data.get('hasatTarihi')||null;body.active=data.has('active');body.version=data.get('version')||null;
  let result;if(!id){const upload=new FormData();upload.append('listing',JSON.stringify(body));for(const f of files)upload.append('files',f);result=await api('/api/meyve-ilanlari/with-photos','POST',upload);form.elements.namedItem('id').value=result.id;}
  else { if (files.length) { const upload = new FormData(); for (const f of files) upload.append('files', f); await api('/api/meyve-ilanlari/' + id + '/photos', 'POST', upload); resetSelectedPhotos(); const fresh=await api('/api/meyve-ilanlari/'+id);form.elements.namedItem('version').value=fresh.version;form.dataset.photoCount=String(fresh.photos.length);form.elements.namedItem('photo').required=false;body.version=fresh.version;}result=await api('/api/meyve-ilanlari/'+id,'PUT',body);}
- if(isDetailPage()){window.location.href='/ilan.html?id='+result.id;return;}
+ if(isDetailPage()){window.location.href='/html/ilan.html?id='+result.id;return;}
  close('editorDialog');toast('İlanın kaydedildi.');await changeView('mine');});};
 function openCompose(listingId,recipientId,title){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};

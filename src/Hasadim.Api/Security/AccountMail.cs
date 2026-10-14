@@ -4,7 +4,7 @@ namespace Hasadim.Api.Security;
 public class AccountMail(IConfiguration config)
 {
  public bool Enabled=>!string.IsNullOrWhiteSpace(config["Mail:Host"]);
- public string Link(string page,string email,string token){var origin=config["Web:PublicOrigin"]??"https://localhost:7106";return origin.TrimEnd('/')+"/"+page+"?email="+Uri.EscapeDataString(email)+"&token="+Uri.EscapeDataString(token);}
+ public string Link(string page,string email,string token){var origin=config["Web:PublicOrigin"]??"https://localhost:7106";return origin.TrimEnd('/')+"/html/"+page+"?email="+Uri.EscapeDataString(email)+"&token="+Uri.EscapeDataString(token);}
  public async Task Send(string email,string subject,string text,CancellationToken ct)
  {
   if(!Enabled)throw new InvalidOperationException("SMTP ayarları eksik.");

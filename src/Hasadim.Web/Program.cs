@@ -26,4 +26,17 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
   await response.Content.CopyToAsync(c.Response.Body,c.RequestAborted);
  }catch(HttpRequestException){c.Response.StatusCode=502;await c.Response.WriteAsJsonAsync(new{mesaj="API bağlantısı kurulamadı. API projesini ve HTTPS sertifikasını kontrol edin."});}
 });
-app.UseDefaultFiles();app.UseStaticFiles();app.Run();
+// HTML sayfaları wwwroot/html içinde tutulur. Ana adres arama parametrelerini korur.
+app.MapGet("/", (HttpContext c) =>
+    Results.Redirect("/html/index.html" + c.Request.QueryString.Value));
+
+// Eski yer imleri ve daha önce gönderilmiş e-posta bağlantıları çalışmaya devam etsin.
+foreach (var file in Directory.EnumerateFiles(
+    Path.Combine(app.Environment.WebRootPath, "html"), "*.html"))
+{
+    var page = Path.GetFileName(file);
+    app.MapGet("/" + page, (HttpContext c) =>
+        Results.Redirect("/html/" + page + c.Request.QueryString.Value));
+}
+
+app.UseStaticFiles();app.Run();

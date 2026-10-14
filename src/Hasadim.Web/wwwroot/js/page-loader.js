@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 function loadPageScript(source) {
     return new Promise((resolve, reject) => {
@@ -22,7 +22,8 @@ function loadPageScript(source) {
         await loadPageScript('/js/fruit-varieties.js');
         await loadPageScript('/js/navigation.js');
         await loadPageScript('/js/phone-input.js');
-        await loadPageScript('/app.js');
+        await loadPageScript('/js/listing-workflow.js');
+        await loadPageScript('/js/app.js');
     } catch (error) {
         console.error(error);
 
