@@ -21,6 +21,7 @@ function loadPageScript(source) {
         await loadPageScript('/locations.js');
         await loadPageScript('/fruit-varieties.js');
         await loadPageScript('/navigation.js');
+        await loadPageScript('/js/phone-input.js');
         await loadPageScript('/app.js');
     } catch (error) {
         console.error(error);

@@ -11,12 +11,14 @@
     <title>Hasadım — Üreticiden, doğrudan.</title>
 
     <link rel="stylesheet" href="/styles.css">
-
+    <link rel="stylesheet" href="/css/listing-form.css">
     <!-- Önce ortak menü yüklenir.
          Diğer uygulama scriptlerini page-loader.js yükler. -->
     <script src="/layout.js" defer></script>
+
     <script src="/page-loader.js" defer></script>
     <script src="/footer.js" defer></script>
+
 </head>
 
 <body data-page="market">
@@ -352,15 +354,24 @@
                     Telefon
                     <input name="telefon"
                            type="tel"
+                           inputmode="numeric"
+                           autocomplete="tel-national"
                            required
-                           minlength="10"
-                           maxlength="25"
-                           placeholder="05xx xxx xx xx">
+                           maxlength="14"
+                           pattern="05[0-9]{2} [0-9]{3} [0-9]{2} [0-9]{2}"
+                           placeholder="0511 111 11 11"
+                           title="Telefon numarasını 0511 111 11 11 biçiminde tamamlayın.">
                 </label>
 
                 <label>
                     Hasat tarihi
-                    <input name="hasatTarihi" type="date">
+                    <input name="hasatTarihi"
+                           type="date"
+                           aria-describedby="harvestDateHelp">
+
+                    <small id="harvestDateHelp" class="muted">
+                        Ürünün hasat edildiği veya edileceği tarihi seç.
+                    </small>
                 </label>
             </div>
 

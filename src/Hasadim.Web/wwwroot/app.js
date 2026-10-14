@@ -162,7 +162,10 @@ async function loadListings(){
  $('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#prevPage').disabled=page<=1;$('#nextPage').disabled=page*data.pageSize>=data.total;
  }catch(e){if(request===listRequest){$('#listings').replaceChildren();$('#listStatus').textContent=e.message;}}
 }
-function picture(x,cls){if(x.photoUrl){const img=el('img',undefined,cls);img.src=x.photoUrl;img.alt=x.baslik;img.loading='lazy';return img;}const n=el('div',fruits[x.meyveTuru]||'🌱','fruit-placeholder');n.setAttribute('aria-label',x.meyveTuru+' — fotoğraf eklenmemiş');return n;}
+function picture(x, cls) {
+    if (x.photoUrl) { const img = el('img', undefined, cls); img.src = x.photoUrl; img.alt = x.baslik; img.loading = 'lazy'; return img; }
+    const n = el('div', fruits[x.meyveTuru] || '🌱', 'fruit-placeholder'); n.setAttribute('aria-label', x.meyveTuru + ' — fotoğraf eklenmemiş'); return n;
+}
 function card(x) {
     const c = el('article', undefined, 'card')
         , media = el('div', undefined, 'card-media');
@@ -207,13 +210,28 @@ function card(x) {
 
     return c;
 }
-$('#filters').onsubmit=e=>{e.preventDefault();page=1;loadListings();};$('#clearFilters').onclick=()=>{$('#filters').reset();page=1;loadListings();};$('#prevPage').onclick=()=>{page--;loadListings();};$('#nextPage').onclick=()=>{page++;loadListings();};
+$('#filters').onsubmit = e => { e.preventDefault(); page = 1; loadListings(); }; $('#clearFilters').onclick = () => {
+    $('#filters').reset();
+    page = 1; loadListings();
+}; $('#prevPage').onclick = () => { page--; loadListings(); }; $('#nextPage').onclick = () => { page++; loadListings(); };
 function openDetail(id){window.location.href='/ilan.html?id='+encodeURIComponent(id)+'&from='+encodeURIComponent(view);}
 function createGallery(photos,title){
- let index=0;const gallery=el('section',undefined,'gallery');gallery.setAttribute('aria-label','İlan fotoğrafları');const large=el('img',undefined,'detail-image'),opener=button('','gallery-open',()=>{update(index);lightbox.showModal();});opener.setAttribute('aria-label','Fotoğrafı büyük görüntüle');opener.append(large);const thumbs=el('div',undefined,'thumbnails'),counter=el('span',undefined,'photo-counter');counter.setAttribute('aria-live','polite');
- const lightbox=el('dialog',undefined,'photo-lightbox'),big=el('img',undefined,'lightbox-image'),bigCounter=el('span'),closeButton=button('Kapat ×','secondary',()=>lightbox.close()),previous=button('← Önceki','secondary',()=>update(index-1)),next=button('Sonraki →','secondary',()=>update(index+1)),bar=el('div',undefined,'lightbox-bar');lightbox.setAttribute('aria-label',title+' — Büyük fotoğraf');bar.append(previous,bigCounter,next,closeButton);lightbox.append(big,bar);lightbox.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){e.preventDefault();update(index-1);}if(e.key==='ArrowRight'){e.preventDefault();update(index+1);}});lightbox.addEventListener('click',e=>{if(e.target===lightbox)lightbox.close();});
+    let index = 0; const gallery = el('section', undefined, 'gallery'); gallery.setAttribute('aria-label', 'İlan fotoğrafları');
+    const large = el('img', undefined, 'detail-image'), opener = button('', 'gallery-open', () => {
+        update(index);
+        lightbox.showModal();
+    }); opener.setAttribute('aria-label', 'Fotoğrafı büyük görüntüle');
+    opener.append(large); const thumbs = el('div', undefined, 'thumbnails'), counter = el('span', undefined, 'photo-counter'); counter.setAttribute('aria-live', 'polite');
+    const lightbox = el('dialog', undefined, 'photo-lightbox'), big = el('img', undefined, 'lightbox-image'), bigCounter = el('span'), closeButton = button('Kapat ×', 'secondary', () => lightbox.close()), previous = button('← Önceki', 'secondary', () => update(index - 1)), next = button('Sonraki →', 'secondary', () => update(index + 1)), bar = el('div', undefined, 'lightbox-bar');
+    lightbox.setAttribute('aria-label', title + ' — Büyük fotoğraf');
+    bar.append(previous, bigCounter, next, closeButton);
+    lightbox.append(big, bar); lightbox.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { e.preventDefault(); update(index - 1); } if (e.key === 'ArrowRight') { e.preventDefault(); update(index + 1); } });
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.close(); });
  const buttons=photos.map((p,i)=>{const b=button('','thumbnail',()=>update(i));b.setAttribute('aria-label','Fotoğraf '+(i+1));const img=el('img');img.src=p.photoUrl;img.alt='Fotoğraf '+(i+1);img.loading='lazy';b.append(img);thumbs.append(b);return b;});
- function update(i){index=(i+photos.length)%photos.length;large.src=photos[index].photoUrl;large.alt=title+' — Fotoğraf '+(index+1);big.src=large.src;big.alt=large.alt;counter.textContent=(index+1)+' / '+photos.length+' fotoğraf';bigCounter.textContent=counter.textContent;buttons.forEach((b,n)=>{b.classList.toggle('active',n===index);b.setAttribute('aria-pressed',String(n===index));});previous.disabled=next.disabled=photos.length===1;}
+    function update(i) {
+        index = (i + photos.length) % photos.length; large.src = photos[index].photoUrl;
+        large.alt = title + ' — Fotoğraf ' + (index + 1); big.src = large.src; big.alt = large.alt; counter.textContent = (index + 1) + ' / ' + photos.length + ' fotoğraf'; bigCounter.textContent = counter.textContent; buttons.forEach((b, n) => { b.classList.toggle('active', n === index); b.setAttribute('aria-pressed', String(n === index)); }); previous.disabled = next.disabled = photos.length === 1;
+    }
  const controls=el('div',undefined,'gallery-controls');controls.append(counter,button('Büyük görüntüle ⤢','secondary',()=>{update(index);lightbox.showModal();}));gallery.append(opener,controls,thumbs,lightbox);update(0);return gallery;
 }
 async function renderDetail(id)
@@ -252,19 +270,46 @@ async function openEditor(x) {
         : 'Yeni ilan ver';
 
     if (x) {
-        for (const [k, v] of Object.entries(x)) {
-            const field = form.elements.namedItem(k);
+        for (const [key, value] of Object.entries(x)) {
+            const field = form.elements.namedItem(key);
 
             if (!field || field.type === 'file') continue;
 
             if (field.type === 'checkbox') {
-                field.checked = !!v;
+                field.checked = Boolean(value);
             } else {
-                field.value = k === 'hasatTarihi' && v
-                    ? v.slice(0, 10)
-                    : (v ?? '');
+                field.value = key === 'hasatTarihi' && value
+                    ? value.slice(0, 10)
+                    : (value ?? '');
             }
         }
+    }
+
+    const photoCount = x?.photos?.length ?? 0;
+
+    form.dataset.photoCount = String(photoCount);
+    form.elements.namedItem('photo').required = photoCount === 0;
+
+    $('#photoPreviews').replaceChildren();
+
+    try {
+        window.formatListingPhone();
+
+        window.setupFruitVarietySelectors(
+            form,
+            x?.meyveTuru ?? '',
+            x?.cesit ?? ''
+        );
+
+        await window.setupLocationSelectors(
+            form,
+            x?.il ?? '',
+            x?.ilce ?? ''
+        );
+
+        show('editorDialog');
+    } catch (error) {
+        toast(error.message);
     }
 
     form.dataset.photoCount = String(x?.photos?.length || 0);

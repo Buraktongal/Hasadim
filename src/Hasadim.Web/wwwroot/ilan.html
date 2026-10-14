@@ -6,10 +6,11 @@
     <meta name="theme-color" content="#183e2e">
     <title>İlan detayı — Hasadım</title>
     <link rel="stylesheet" href="/styles.css">
-
+    <link rel="stylesheet" href="/css/listing-form.css">
 
     <script src="/layout.js" defer></script>
     <script src="/page-loader.js" defer></script>
+
 </head>
 <body data-page="detail">
     <div id="siteLayout"></div>
@@ -22,7 +23,7 @@
         <section id="messagesView" hidden><div class="section-heading"><h2>Mesajlarım</h2><button id="refreshMessages" class="secondary">Yenile</button></div><p class="muted">İlanlarla ilgili yazışmaların burada. Yeni mesajlar için yenile.</p><div id="messagesList"></div><button id="moreMessages" class="secondary" hidden>Önceki mesajları yükle</button></section>
         <section id="adminView" hidden><div class="section-heading"><h2>Şikâyet yönetimi</h2><button id="refreshAdmin" class="secondary">Yenile</button></div><p class="muted">Açık şikâyetleri inceleyebilir, ilanları yayından gizleyebilirsin.</p><div id="reportsList"></div></section>
     </main><main class="detail-page"><a href="/">← Pazara dön</a><div id="detailContent" aria-live="polite"></div></main>
-    
+
 
     <div id="toast" role="status" hidden></div>
     <dialog id="editorDialog" class="wide">
@@ -39,7 +40,43 @@
                 </label>
 
 
-            </div><div class="two"><label>Miktar (kg)<input name="miktarKg" type="number" required min="0.01" max="100000000" step="0.01"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" required min="0.01" max="1000000" step="0.01"></label></div><div class="two"><label>İl<input name="il" list="cities" required maxlength="100"></label><label>İlçe<input name="ilce" required maxlength="100"></label></div><div class="two"><label>Telefon<input name="telefon" type="tel" required minlength="10" maxlength="25" placeholder="05xx xxx xx xx"></label><label>Hasat tarihi<input name="hasatTarihi" type="date"></label></div><label>Açıklama<textarea name="aciklama" rows="4" maxlength="5000" placeholder="Kalite, ambalaj, teslimat ve ürün bilgileri"></textarea></label>
+            </div><div class="two"><label>Miktar (kg)<input name="miktarKg" type="number" required min="0.01" max="100000000" step="0.01"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" required min="0.01" max="1000000" step="0.01"></label></div><div class="two">
+                <label>
+                    İl
+                    <select name="il" required>
+                        <option value="">İl seçin</option>
+                    </select>
+                </label>
+
+                <label>
+                    İlçe
+                    <select name="ilce" required disabled>
+                        <option value="">Önce il seçin</option>
+                    </select>
+                </label>
+            </div>
+            <label>
+                Telefon
+            </label><input name="telefon"
+       type="tel"
+       inputmode="numeric"
+       autocomplete="tel-national"
+       required
+       maxlength="14"
+       pattern="05[0-9]{2} [0-9]{3} [0-9]{2} [0-9]{2}"
+       placeholder="0511 111 11 11"
+       title="Telefon numarasını 0511 111 11 11 biçiminde tamamlayın.">
+                    <label>
+                        Hasat tarihi
+                        <input name="hasatTarihi"
+                               type="date"
+                               aria-describedby="harvestDateHelp">
+
+                        <small id="harvestDateHelp" class="muted">
+                            Ürünün hasat edildiği veya edileceği tarihi seç.
+                        </small>
+                    </label>
+            <label>Açıklama<textarea name="aciklama" rows="4" maxlength="5000" placeholder="Kalite, ambalaj, teslimat ve ürün bilgileri"></textarea></label>
 
 
             <label>
@@ -51,7 +88,13 @@
                        accept="image/jpeg,image/png,image/webp">
             </label>
 
-            <div id="photoPreviews" class="thumbnails"></div><small class="muted">En az 1, en fazla 10 fotoğraf · JPG, PNG veya WebP · Fotoğraf başına 5 MB. İlk fotoğraf kapaktır. Düzenlerken seçtiklerin galeriye eklenir.</small><div id="photoPreviews" class="thumbnails"></div><label class="check"><input name="active" type="checkbox" checked> İlan yayında olsun</label><p class="muted">Telefonun giriş yapan kullanıcılara gösterilir.</p><p class="form-error" role="alert"></p><button class="primary full" type="submit">İlanı kaydet</button>
+            <small class="muted">En az 1, en fazla 10 fotoğraf · JPG, PNG veya WebP · Fotoğraf başına 5 MB. İlk fotoğraf kapaktır. Düzenlerken seçtiklerin galeriye eklenir.</small><div id="photoPreviews" class="thumbnails"></div><p class="muted">
+                İlanın taslak olarak kaydedilir.
+                Yayımlanması için inceleme ve onay adımlarının tamamlanması gerekir.
+            </p><p class="muted">Telefonun giriş yapan kullanıcılara gösterilir.</p>
+
+
+            <p class="form-error" role="alert"></p><button class="primary full" type="submit">İlanı kaydet</button>
         </form>
     </dialog>
     <dialog id="composeDialog"><div class="dialog-head"><h2>Mesaj gönder</h2><button class="close" data-close="composeDialog" aria-label="Kapat">×</button></div><p id="composeContext" class="muted"></p><form id="composeForm"><input type="hidden" name="listingId"><input type="hidden" name="recipientId"><label>Mesajın<textarea name="body" required maxlength="2000" rows="5"></textarea></label><p class="form-error" role="alert"></p><button class="primary full">Gönder</button></form></dialog>
