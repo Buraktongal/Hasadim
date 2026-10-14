@@ -102,6 +102,8 @@ public class ListingQuery
 
     public bool Mine { get; set; }
     public bool Favorites { get; set; }
+
+    public bool Review { get; set; }
 }
 
 public record ListingPhoto(

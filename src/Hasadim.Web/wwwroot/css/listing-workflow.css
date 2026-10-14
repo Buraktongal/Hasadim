@@ -1,0 +1,27 @@
+﻿.listing-status {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 12px 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--sage);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+    .listing-status p {
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+    }
+
+.review-card {
+    padding: 20px;
+    margin: 16px 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+}
+
+    .review-card form {
+        margin-top: 18px;
+    }

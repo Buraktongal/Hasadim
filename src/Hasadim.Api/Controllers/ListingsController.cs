@@ -108,7 +108,7 @@ public class ListingsController(
                     "/api/meyve-ilanlari/photo-file/" + name)
                 .ToArray();
 
-            // Application/Core katmanları yeni ilanı taslak oluşturur.
+            // İlan ve fotoğraflar birlikte inceleme bekleyen durumda kaydedilir.
             id = await service.Create(request, ct, photoReferences);
         }
         catch
@@ -123,7 +123,7 @@ public class ListingsController(
             new
             {
                 id,
-                mesaj = "İlan taslak olarak kaydedildi."
+                mesaj = "İlanın alındı. Kontrol için incelemeye gönderildi."
             }
         );
     }
@@ -140,7 +140,7 @@ public class ListingsController(
         return Ok(new
         {
             id,
-            mesaj = "İlan bilgileri güncellendi."
+            mesaj = "Değişikliklerin alındı. İlan yeniden incelemeye gönderildi."
         });
     }
 

@@ -171,6 +171,13 @@ public class MarketplaceService(
         ListingQuery q,
         CancellationToken ct)
     {
+        if (q.Review)
+        {
+            Admin();
+            if (q.Mine || q.Favorites)
+                throw new AppException(400, "İnceleme filtresi diğer hesap filtreleriyle birlikte kullanılamaz.");
+        }
+
         if (q.Mine || q.Favorites)
         {
             _ = User;
@@ -270,6 +277,7 @@ public class MarketplaceService(
             throw new AppException(400, error.Message);
         }
 
+        Apply(listing.SubmitForReview);
         await repo.Create(listing, photos, ct);
 
         return listing.Id;
@@ -286,7 +294,20 @@ public class MarketplaceService(
         ValidateRequest(request);
         EnsureVersion(listing, request.Version);
 
-        Apply(() => listing.Update(request.Data()));
+        if (listing.Hidden)
+            throw new AppException(409, "Yönetim tarafından gizlenen ilan için destek alın.");
+
+        var detail = await repo.Detail(id, current.Id, ct);
+        if (detail is null || detail.IsDeleted)
+            throw new AppException(404, "İlan bulunamadı.");
+        if (detail.Photos.Count < 1 || detail.Photos.Count > 10)
+            throw new AppException(400, "İlan için 1–10 fotoğraf gerekli.");
+
+        Apply(() =>
+        {
+            listing.Update(request.Data());
+            listing.SubmitForReview();
+        });
 
         await Save(listing, request.Version!, ct);
     }

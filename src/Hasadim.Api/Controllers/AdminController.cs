@@ -10,6 +10,15 @@ namespace Hasadim.Api.Controllers;
 public class AdminController(
     MarketplaceService service) : ControllerBase
 {
+    [HttpGet("listings/pending")]
+    public async Task<IActionResult> Pending(
+        [FromQuery] int page = 1,
+        CancellationToken ct = default)
+    {
+        return Ok(await service.Search(
+            new ListingQuery { Review = true, Page = page, PageSize = 12 }, ct));
+    }
+
     // Yönetici, taslak veya incelemedeki ilanı da görüntüleyebilir.
     [HttpGet("listings/{id:guid}")]
     public async Task<IActionResult> ListingDetail(

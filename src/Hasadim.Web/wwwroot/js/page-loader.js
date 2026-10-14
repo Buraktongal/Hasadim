@@ -18,9 +18,9 @@ function loadPageScript(source) {
     try {
         await window.layoutReady;
 
-        await loadPageScript('/locations.js');
-        await loadPageScript('/fruit-varieties.js');
-        await loadPageScript('/navigation.js');
+        await loadPageScript('/js/locations.js');
+        await loadPageScript('/js/fruit-varieties.js');
+        await loadPageScript('/js/navigation.js');
         await loadPageScript('/js/phone-input.js');
         await loadPageScript('/app.js');
     } catch (error) {
