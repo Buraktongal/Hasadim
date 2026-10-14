@@ -5,7 +5,7 @@ using Hasadim.Infrastructure.Database;
 namespace Hasadim.Infrastructure.Repositories;
 public class ProfileRepository(SqlConnectionFactory factory):IProfileRepository
 {
- public async Task<SellerProfile?> Find(Guid id,CancellationToken ct){await using var c=await factory.Open(ct);return await c.QuerySingleOrDefaultAsync<SellerProfile>(new CommandDefinition("SELECT p.*,u.DisplayName,u.Email,u.EmailConfirmed,u.CreatedAt,(SELECT COUNT(*) FROM dbo.Listings l WHERE l.OwnerId=u.Id AND l.Active=1 AND l.Hidden=0 AND l.IsDeleted=0) AS ActiveListingCount FROM dbo.UserProfiles p JOIN dbo.Users u ON u.Id=p.UserId WHERE p.UserId=@id",new{id},cancellationToken:ct));}
+ public async Task<SellerProfile?> Find(Guid id,CancellationToken ct){await using var c=await factory.Open(ct);return await c.QuerySingleOrDefaultAsync<SellerProfile>(new CommandDefinition("SELECT p.*,u.DisplayName,u.Email,u.EmailConfirmed,u.CreatedAt,(SELECT COUNT(*) FROM dbo.Listings l WHERE l.OwnerId=u.Id AND l.Active=1 AND l.Hidden=0 AND l.IsDeleted=0 AND l.Status=4 AND (l.ExpiresAt IS NULL OR l.ExpiresAt>SYSUTCDATETIME())) AS ActiveListingCount FROM dbo.UserProfiles p JOIN dbo.Users u ON u.Id=p.UserId WHERE p.UserId=@id",new{id},cancellationToken:ct));}
  public async Task<bool> Update(Guid id,ProfileRequest r,CancellationToken ct)
  {
   await using var c=await factory.Open(ct);using var tx=c.BeginTransaction();

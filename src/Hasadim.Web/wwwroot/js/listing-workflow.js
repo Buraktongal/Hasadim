@@ -3,7 +3,7 @@
 (() => {
     const states = [
         'Taslak', 'İncelemede', 'Düzeltme bekliyor',
-        'Onaylandı · Ödeme bekliyor', 'Yayında', 'Süresi doldu', 'Satıldı'
+        'Onaylı · Yayın bekliyor', 'Yayında', 'Süresi doldu', 'Satıldı'
     ];
     let reviewPage = 1;
     let queueRequest = 0;
@@ -24,10 +24,20 @@
         if (x.status === 1) {
             box.append(el('p', 'İlanın kontrol ediliyor. Sonucu İlanlarım bölümünden takip edebilirsin.'));
         }
-        if (x.status === 3) {
-            box.append(el('p', 'İlan onaylandı. Ödeme ve yayımlama aşaması henüz kullanıma açılmadı.'));
-        }
+        if (x.status === 3)
+            box.append(el('p', 'İlan daha önce onaylanmış. Yönetim 30 günlük yayını başlatabilir.'));
+        if (x.publishedAt) box.append(el('p', 'Yayın başlangıcı: ' + displayDate(x.publishedAt)));
+        if (x.expiresAt) box.append(el('p', 'Yayın bitişi: ' + displayDate(x.expiresAt)));
+        if (x.status === 5)
+            box.append(el('p', 'Yayın süresi doldu. İlanın Geçmiş ilanlar bölümünde saklanıyor.'));
         parent.append(box);
+    }
+
+    function displayDate(value) {
+        const utc = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z';
+        return new Intl.DateTimeFormat('tr-TR', {
+            dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Istanbul'
+        }).format(new Date(utc));
     }
 
     async function loadQueue(page = reviewPage) {
@@ -67,7 +77,7 @@
     }
 
     function appendReviewActions(parent, x) {
-        if (!user?.isAdmin || x.status !== 1 || x.hidden) return;
+        if (!user?.isAdmin || ![1, 3].includes(x.status) || x.hidden) return;
         const box = el('section', undefined, 'review-card');
         const form = el('form');
         const label = el('label', 'Eksik veya hatalı bilgi varsa gerekçesini yaz');
@@ -78,12 +88,13 @@
         label.append(note);
         const error = el('p', '', 'form-error');
         error.setAttribute('role', 'alert');
-        const approve = button('İlanı onayla', 'primary', () => decide('approve'));
+        const approve = button(x.status === 3 ? '30 günlük yayını başlat' : 'Onayla ve yayımla', 'primary', () => decide('approve'));
         const changes = el('button', 'Düzeltme iste', 'secondary');
         changes.type = 'submit';
         form.append(label, changes);
+        form.hidden = x.status === 3;
         box.append(el('h3', 'İlan incelemesi'),
-            el('p', 'Onaylanan ilan ödeme bekleyen duruma geçer; henüz yayımlanmaz.'),
+            el('p', 'Onaylanan ilan hemen yayımlanır. Yayın süresi 30 gündür.'),
             approve, form, error);
         parent.append(box);
 

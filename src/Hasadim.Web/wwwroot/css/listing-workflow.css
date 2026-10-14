@@ -22,6 +22,8 @@
     background: var(--surface);
 }
 
+.listing-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+
     .review-card form {
         margin-top: 18px;
     }

@@ -152,19 +152,24 @@ public class Listing
 
     public void Approve(Guid reviewerId)
     {
-        EnsurePendingReview();
+        EnsureNotDeleted();
+        if (Status != ListingStatus.PendingReview && Status != ListingStatus.AwaitingPayment)
+            throw new InvalidOperationException("İlan onay veya yayın beklemiyor.");
 
         if (reviewerId == Guid.Empty)
         {
             throw new ArgumentException("İnceleyen kullanıcı gerekli.");
         }
 
-        // Onay, tek başına ilanı yayımlamaz.
-        Status = ListingStatus.AwaitingPayment;
-        Active = false;
+        // Ödeme entegrasyonu hazır olana kadar onayla birlikte 30 günlük ücretsiz yayın.
+        var now = DateTime.UtcNow;
+        Status = ListingStatus.Published;
+        Active = true;
+        PublishedAt = now;
+        ExpiresAt = now.AddDays(30);
 
         ReviewedBy = reviewerId;
-        ReviewedAt = DateTime.UtcNow;
+        ReviewedAt = now;
         ReviewNote = null;
     }
 

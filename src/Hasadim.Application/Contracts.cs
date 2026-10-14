@@ -104,6 +104,7 @@ public class ListingQuery
     public bool Favorites { get; set; }
 
     public bool Review { get; set; }
+    public bool History { get; set; }
 }
 
 public record ListingPhoto(
@@ -170,7 +171,7 @@ public class ListingView
         ListingStatus.Draft => "Taslak",
         ListingStatus.PendingReview => "İncelemede",
         ListingStatus.ChangesRequested => "Düzeltme bekliyor",
-        ListingStatus.AwaitingPayment => "Ödeme bekliyor",
+        ListingStatus.AwaitingPayment => "Onaylı · Yayın bekliyor",
         ListingStatus.Published => "Yayında",
         ListingStatus.Expired => "Süresi doldu",
         ListingStatus.Sold => "Satıldı",

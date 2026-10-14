@@ -99,7 +99,7 @@ if (globalSearchForm) {
 
 async function changeView(next, { query = '' } = {}) {
     const titles = {
-        all: 'Pazar yeri', mine: 'İlanlarım', favorites: 'Favorilerim',
+        all: 'Pazar yeri', mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim',
         messages: 'Mesajlar', admin: 'Yönetim'
     };
     if (!Object.hasOwn(titles, next)) next = 'all';
@@ -117,6 +117,8 @@ async function changeView(next, { query = '' } = {}) {
     $('#marketView').hidden = ['messages', 'admin'].includes(next);
     $('#messagesView').hidden = next !== 'messages';
     $('#adminView').hidden = next !== 'admin';
+    const listingTabs = $('#myListingTabs');
+    if (listingTabs) listingTabs.hidden = !['mine', 'history'].includes(next);
     for (const item of document.querySelectorAll('[data-view]')) {
         const selected = item.dataset.view === next;
         item.classList.toggle('selected', selected);
@@ -129,8 +131,10 @@ async function changeView(next, { query = '' } = {}) {
     syncHeaderQuery(query);
     updateMarketAddress();
     if (next === 'messages') return loadMessages();
-    if (next === 'admin') return loadReports();
-    $('#viewTitle').textContent = next === 'mine' ? 'İlanlarım'
+    if (next === 'admin') return Promise.all([
+        loadReports(), window.ListingWorkflow.loadQueue(1)
+    ]);
+    $('#viewTitle').textContent = next === 'history' ? 'Geçmiş ilanlar' : next === 'mine' ? 'İlanlarım'
         : next === 'favorites' ? 'Favori ilanlarım' : 'Taze ilanları keşfet';
     await loadListings();
 }
@@ -152,12 +156,12 @@ async function loadListings(){
  updateMarketAddress();
  const request=++listRequest;const f=new FormData($('#filters'));const p=new URLSearchParams();for(const [k,v]of f)if(v)p.set(k,v.trim());
  if(f.get('minFiyat')&&f.get('maxFiyat')&&Number(f.get('minFiyat'))>Number(f.get('maxFiyat'))){$('#listStatus').textContent='En düşük fiyat, en yüksek fiyattan büyük olamaz.';return;}
- p.set('page',page);if(view==='mine')p.set('mine','true');if(view==='favorites')p.set('favorites','true');
+ p.set('page',page);if(view==='mine')p.set('mine','true');if(view==='history')p.set('history','true');if(view==='favorites')p.set('favorites','true');
  $('#listStatus').textContent='İlanlar yükleniyor…';$('#prevPage').disabled=true;$('#nextPage').disabled=true;
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
  $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan';
- if(!data.items.length)empty($('#listings'),'Henüz ilan yok','Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
+ if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
  $('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#prevPage').disabled=page<=1;$('#nextPage').disabled=page*data.pageSize>=data.total;
  }catch(e){if(request===listRequest){$('#listings').replaceChildren();$('#listStatus').textContent=e.message;}}
@@ -182,14 +186,15 @@ function card(x) {
             } catch (e) { toast(e.message); } finally { fav.disabled = false; }
         });
     fav.setAttribute('aria-label', 'Favorilere ekle / çıkar');
-    fav.setAttribute('aria-pressed', String(x.favorite)); media.append(fav);
+    fav.setAttribute('aria-pressed', String(x.favorite));
+    if (x.status === 4 && x.active && !x.hidden) media.append(fav);
     const body = el('div', undefined, 'card-body');
     body.append(
         el('small', 'İlan No: ' + x.listingNumber, 'listing-number')
     );
     body.append(el('span', x.meyveTuru + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
         el('h3', x.baslik), el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
- if(!x.active||x.hidden)body.append(el('p',x.hidden?'Yönetim tarafından gizlendi':'Yayında değil','state-badge'));
+ window.ListingWorkflow.appendStatus(body, x);
  const price=el('p',money(x.kilogramFiyati),'price');price.append(el('small',' / kg'));body.append(price);
     const bottom = el('div', undefined, 'card-bottom'); bottom.append(el('span', x.ownerName, 'card-owner'), button('İlanı incele ↗', 'textbtn', () => openDetail(x.id)));
 
@@ -242,21 +247,53 @@ async function renderDetail(id)
     try {
         const x = await api('/api/meyve-ilanlari/' + id);
         if (request !== detailRequest) return;
-        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
+        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
         const grid = el('div', undefined, 'detail-grid');
         for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
         } content.append(grid, el('p', x.aciklama || 'Açıklama eklenmemiş.', 'description'));
- const actions=el('div',undefined,'actions');
- if(x.isMine){actions.append(button('İlanı düzenle','primary',()=>{openEditor(x);}),button('İlanı sil','danger',async()=>{if(!confirm('İlan silinsin mi? Pazar yerinden kaldırılacak; mesaj geçmişi korunacak.'))return;try{await api('/api/meyve-ilanlari/'+id,'DELETE');toast('İlan silindi.');window.location.href='/';}catch(e){toast(e.message);}}));}
- else if(user){if(x.telefon){const tel=el('a','Telefon: '+x.telefon,'secondary');tel.href='tel:'+x.telefon.replace(/[^+0-9]/g,'');actions.append(tel);}actions.append(button('Satıcıya mesaj gönder','primary',()=>openCompose(x.id,x.ownerId,x.baslik)));}
- else actions.append(button('İletişim için giriş yap','primary',()=>{openAuth();}));
- if(user&&!x.isMine)actions.append(button('İlanı bildir','textbtn',()=>{$('#reportForm').reset();$('#reportForm [name=id]').value=id;$('#reportForm .form-error').textContent='';show('reportDialog');}));
+ window.ListingWorkflow.appendStatus(content, x);
+ const actions = el('div', undefined, 'actions');
+ const publiclyVisible = x.status === 4 && x.active && !x.hidden;
+ if (x.isMine) {
+     if (window.ListingWorkflow.editable(x)) {
+         actions.append(button('İlanı düzenle', 'primary', () => openEditor(x)));
+     }
+     actions.append(button('İlanı sil', 'danger', async () => {
+         if (!confirm('İlan silinsin mi? Mesaj geçmişi korunacak.')) return;
+         try {
+             await api('/api/meyve-ilanlari/' + id, 'DELETE');
+             window.location.href = '/?view=mine';
+         } catch (error) { toast(error.message); }
+     }));
+ } else if (user && publiclyVisible) {
+     if (x.telefon) {
+         const tel = el('a', 'Telefon: ' + x.telefon, 'secondary');
+         tel.href = 'tel:' + x.telefon.replace(/[^+0-9]/g, '');
+         actions.append(tel);
+     }
+     actions.append(button('Satıcıya mesaj gönder', 'primary',
+         () => openCompose(x.id, x.ownerId, x.baslik)));
+     actions.append(button('İlanı bildir', 'textbtn', () => {
+         $('#reportForm').reset();
+         $('#reportForm [name=id]').value = id;
+         $('#reportForm .form-error').textContent = '';
+         show('reportDialog');
+     }));
+ } else if (!user && publiclyVisible) {
+     actions.append(button('İletişim için giriş yap', 'primary', openAuth));
+ }
+ window.ListingWorkflow.appendReviewActions(content, x);
  content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);if(p.photoUrl){const img=el('img',undefined,'avatar');img.src=p.photoUrl;img.alt=p.displayName;seller.append(img);}const link=el('a',p.displayName);link.href='/html/satici.html?id='+p.id;seller.append(el('h3','Satıcı bilgileri'),link,el('p',[p.businessName,p.city,p.district].filter(Boolean).join(' · ')),el('p',p.emailVerified?'E-posta doğrulandı':'E-posta doğrulanmadı'));}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
  }catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
+
 async function openEditor(x) {
     if (!mustLogin()) return;
+    if (x && !window.ListingWorkflow.editable(x)) {
+        toast('Bu ilan şu anda düzenlenemez.');
+        return;
+    }
 
     const form = $('#editorForm');
 
@@ -268,6 +305,8 @@ async function openEditor(x) {
     $('#editorTitle').textContent = x
         ? 'İlanını düzenle'
         : 'Yeni ilan ver';
+    form.querySelector('[type="submit"]').textContent = x
+        ? 'Değişiklikleri gönder' : 'İlan ver';
 
     if (x) {
         for (const [key, value] of Object.entries(x)) {
@@ -312,28 +351,6 @@ async function openEditor(x) {
         toast(error.message);
     }
 
-    form.dataset.photoCount = String(x?.photos?.length || 0);
-    form.elements.namedItem('photo').required = !x?.photos?.length;
-
-    $('#photoPreviews').replaceChildren();
-
-    try {
-        window.setupFruitVarietySelectors(
-            form,
-            x?.meyveTuru || '',
-            x?.cesit || ''
-        );
-
-        await window.setupLocationSelectors(
-            form,
-            x?.il || '',
-            x?.ilce || ''
-        );
-
-        show('editorDialog');
-    } catch (error) {
-        toast(error.message);
-    }
 }
 
 function openNewListingFromMenu() {
@@ -350,13 +367,7 @@ document
     .forEach(button => {
         button.onclick = openNewListingFromMenu;
     });
-$('#editorForm').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;submit(form,async()=>{
- const data=new FormData(form),files=data.getAll('photo').filter(f=>f.size);const id=data.get('id');if(!id&&!files.length)throw Error('En az bir fotoğraf seçin.');if(files.length+Number(form.dataset.photoCount||0)>10)throw Error('En fazla 10 fotoğraf yükleyebilirsiniz.');for(const file of files){if(file.size>5000000)throw Error('Her fotoğraf en fazla 5 MB olabilir.');if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('JPG, PNG veya WebP seçin.');}
- const body={};for(const k of ['baslik','meyveTuru','cesit','il','ilce','aciklama','telefon'])body[k]=data.get(k).trim();body.miktarKg=Number(data.get('miktarKg'));body.kilogramFiyati=Number(data.get('kilogramFiyati'));body.hasatTarihi=data.get('hasatTarihi')||null;body.active=data.has('active');body.version=data.get('version')||null;
- let result;if(!id){const upload=new FormData();upload.append('listing',JSON.stringify(body));for(const f of files)upload.append('files',f);result=await api('/api/meyve-ilanlari/with-photos','POST',upload);form.elements.namedItem('id').value=result.id;}
- else { if (files.length) { const upload = new FormData(); for (const f of files) upload.append('files', f); await api('/api/meyve-ilanlari/' + id + '/photos', 'POST', upload); resetSelectedPhotos(); const fresh=await api('/api/meyve-ilanlari/'+id);form.elements.namedItem('version').value=fresh.version;form.dataset.photoCount=String(fresh.photos.length);form.elements.namedItem('photo').required=false;body.version=fresh.version;}result=await api('/api/meyve-ilanlari/'+id,'PUT',body);}
- if(isDetailPage()){window.location.href='/html/ilan.html?id='+result.id;return;}
- close('editorDialog');toast('İlanın kaydedildi.');await changeView('mine');});};
+window.ListingWorkflow.bindEditor();
 function openCompose(listingId,recipientId,title){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};
 $('#reportForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));await api('/api/meyve-ilanlari/'+d.id+'/report','POST',{reason:d.reason.trim()});close('reportDialog');toast('Bildirimin yönetime iletildi.');});};
@@ -366,7 +377,9 @@ async function loadMessages(append=false){const parent=$('#messagesList');if(!ap
  }catch(e){if(!append)parent.replaceChildren(el('p',e.message,'form-error'));else toast(e.message);}finally{$('#moreMessages').disabled=false;}}
 $('#refreshMessages').onclick=()=>loadMessages();$('#moreMessages').onclick=()=>loadMessages(true);
 async function loadReports(){const parent=$('#reportsList');parent.replaceChildren(el('p','Yükleniyor…'));try{const data=await api('/api/admin/reports');parent.replaceChildren();if(!data.length)empty(parent,'Açık şikâyet yok','Yeni bildirimler burada görüntülenecek.');for(const r of data){const c=el('article',undefined,'report');c.append(el('h3','#'+r.listingId+' · '+r.baslik),el('p',r.reason));const actions=el('div',undefined,'actions');actions.append(button('İlanı incele','secondary',()=>openDetail(r.listingId)),button(r.hidden?'İlanı tekrar göster':'İlanı gizle','danger',async()=>{try{await api(`/api/admin/listings/${r.listingId}/visibility?hidden=${!r.hidden}`,'POST');await loadReports();}catch(e){toast(e.message);}}),button('Şikâyeti kapat','primary',async()=>{try{await api(`/api/admin/reports/${r.id}/resolve`,'POST');await loadReports();}catch(e){toast(e.message);}}));c.append(actions);parent.append(c);}}catch(e){parent.replaceChildren(el('p',e.message,'form-error'));}}
-$('#refreshAdmin').onclick=loadReports;
+$('#refreshAdmin').onclick = () => Promise.all([
+    loadReports(), window.ListingWorkflow.loadQueue(1)
+]);
 (async () => {
     try {
         await session();

@@ -12,6 +12,7 @@
 
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="stylesheet" href="/css/listing-form.css">
+    <link rel="stylesheet" href="/css/listing-workflow.css">
     <!-- Önce ortak menü yüklenir.
          Diğer uygulama scriptlerini page-loader.js yükler. -->
     <script src="/js/layout.js" defer></script>
@@ -77,6 +78,11 @@
 
                 <span id="resultCount" class="muted"></span>
             </div>
+
+            <nav id="myListingTabs" class="listing-tabs" aria-label="İlanlarım bölümleri" hidden>
+                <button type="button" class="navbtn" data-view="mine">Güncel ilanlar</button>
+                <button type="button" class="navbtn" data-view="history">Geçmiş ilanlar</button>
+            </nav>
 
             <div class="market-layout">
 
@@ -228,7 +234,7 @@
                  hidden>
 
             <div class="section-heading">
-                <h2 id="adminTitle">Şikâyet yönetimi</h2>
+                <h2 id="adminTitle">İlan ve şikâyet yönetimi</h2>
 
                 <button id="refreshAdmin"
                         type="button"
@@ -238,10 +244,13 @@
             </div>
 
             <p class="muted">
-                Açık şikâyetleri inceleyebilir,
-                ilanları yayından gizleyebilirsin.
+                Yeni ilanları inceleyebilir, düzeltme isteyebilir
+                ve açık şikâyetleri yönetebilirsin.
             </p>
 
+            <h3>İnceleme bekleyen ilanlar</h3>
+            <div id="reviewQueue"></div>
+            <h3>Şikâyetler</h3>
             <div id="reportsList"></div>
         </section>
 
@@ -278,8 +287,8 @@
             <input name="version" type="hidden">
 
             <p class="muted">
-                Kaydettiğin ilan taslak olarak saklanır.
-                Taslak kaydetmek ilanı yayımlamaz.
+                İlanın kontrol için yönetim incelemesine gönderilir.
+                Eksik veya hatalı bilgi varsa gerekçesi İlanlarım bölümünde gösterilir.
             </p>
 
             <label>
@@ -411,7 +420,7 @@
             <p class="form-error" role="alert"></p>
 
             <button class="primary full" type="submit">
-                Taslak kaydet
+                İlan ver
             </button>
         </form>
     </dialog>

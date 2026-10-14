@@ -174,16 +174,18 @@ public class MarketplaceService(
         if (q.Review)
         {
             Admin();
-            if (q.Mine || q.Favorites)
+            if (q.Mine || q.Favorites || q.History)
                 throw new AppException(400, "İnceleme filtresi diğer hesap filtreleriyle birlikte kullanılamaz.");
         }
 
-        if (q.Mine || q.Favorites)
+        if (q.Mine || q.Favorites || q.History)
         {
             _ = User;
         }
 
         ValidateRequest(q);
+        if (q.History && (q.Mine || q.Favorites))
+            throw new AppException(400, "Geçmiş ilan filtresi diğer hesap filtreleriyle birlikte kullanılamaz.");
 
         if (q.MinFiyat < 0 ||
             q.MaxFiyat < 0 ||
@@ -397,7 +399,7 @@ public class MarketplaceService(
     }
 
     // Yalnızca yönetici onaylayabilir.
-    // Onay sonunda ilan ödeme bekler; yayımlanmaz.
+    // Geçici ücretsiz yayın: onaydan itibaren 30 gün.
     public async Task Approve(
         Guid id,
         ListingWorkflowRequest request,

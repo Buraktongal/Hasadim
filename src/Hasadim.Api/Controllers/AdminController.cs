@@ -28,7 +28,7 @@ public class AdminController(
         return Ok(await service.Detail(id, ct));
     }
 
-    // Onaydan sonra ilan ödeme bekler.
+    // Geçici ücretsiz yayın: onayla birlikte ilan 30 gün yayımlanır.
     [HttpPost("listings/{id:guid}/approve")]
     public async Task<IActionResult> Approve(
         Guid id,
@@ -40,7 +40,7 @@ public class AdminController(
         return Ok(new
         {
             id,
-            mesaj = "İlan onaylandı. Ödeme bekliyor."
+            mesaj = "İlan onaylandı ve 30 günlüğüne yayımlandı."
         });
     }
 

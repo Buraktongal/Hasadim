@@ -11,9 +11,11 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
     {
         await using var c = await factory.Open(ct); var where = "l.IsDeleted=0";
         where += q.Review
-          ? " AND l.Status=1 AND l.Hidden=0"
+          ? " AND l.Status IN (1,3) AND l.Hidden=0"
+          : q.History
+          ? " AND l.OwnerId=@user AND (l.Status IN (5,6) OR (l.Status=4 AND l.ExpiresAt IS NOT NULL AND l.ExpiresAt<=SYSUTCDATETIME()))"
           : q.Mine
-          ? " AND l.OwnerId=@user"
+          ? " AND l.OwnerId=@user AND l.Status NOT IN (5,6) AND NOT (l.Status=4 AND l.ExpiresAt IS NOT NULL AND l.ExpiresAt<=SYSUTCDATETIME())"
           : """
        AND l.Active = 1
        AND l.Hidden = 0
