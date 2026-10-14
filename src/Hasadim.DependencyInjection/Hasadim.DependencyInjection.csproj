@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><UserSecretsId>hasadim-v2-dependencyinjection</UserSecretsId></PropertyGroup><ItemGroup><ProjectReference Include="../Hasadim.Application/Hasadim.Application.csproj"/><ProjectReference Include="../Hasadim.Infrastructure/Hasadim.Infrastructure.csproj"/><FrameworkReference Include="Microsoft.AspNetCore.App"/></ItemGroup></Project>

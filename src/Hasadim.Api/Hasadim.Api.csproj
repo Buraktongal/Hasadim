@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk.Web"><PropertyGroup><UserSecretsId>hasadim-v2-api</UserSecretsId></PropertyGroup><ItemGroup><ProjectReference Include="../Hasadim.Application/Hasadim.Application.csproj"/><ProjectReference Include="../Hasadim.DependencyInjection/Hasadim.DependencyInjection.csproj"/></ItemGroup></Project>

@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><UserSecretsId>hasadim-v2-application</UserSecretsId></PropertyGroup><ItemGroup><ProjectReference Include="../Hasadim.Core/Hasadim.Core.csproj"/></ItemGroup></Project>

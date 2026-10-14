@@ -1,0 +1,152 @@
+﻿<header class="topbar market-header">
+
+    <!-- Logo -->
+    <a class="site-logo"
+       href="/"
+       aria-label="Hasadım ana sayfa">
+        <img src="/images/hasadim-logo.png"
+             alt="Hasadım"
+             width="2048"
+             height="683">
+    </a>
+
+    <!-- Genel arama -->
+    <form action="/"
+          method="get"
+          role="search"
+          class="global-search">
+
+        <label class="sr-only" for="globalQuery">
+            Ürün veya ilan ara
+        </label>
+
+        <input id="globalQuery"
+               name="q"
+               type="search"
+               placeholder="Meyve, çeşit veya ilan ara…"
+               maxlength="150">
+
+        <button type="submit" class="primary">
+            Ara
+        </button>
+    </form>
+
+    <!-- Hesap ve ilan işlemleri -->
+    <div class="header-actions">
+
+        <details id="accountMenu" class="account-dropdown">
+
+            <summary class="account-menu-toggle">
+                <span id="accountMenuName">Hesabım</span>
+                <span class="account-menu-arrow" aria-hidden="true">
+                    ⌄
+                </span>
+            </summary>
+
+            <nav class="account-menu-panel"
+                 aria-label="Hesap ve gezinme">
+
+                <p class="account-menu-heading">
+                    KEŞFET
+                </p>
+
+                <button type="button"
+                        class="navbtn selected"
+                        data-view="all">
+                    Pazar yeri
+                </button>
+
+                <hr data-auth-menu hidden>
+
+                <p class="account-menu-heading"
+                   data-auth-menu
+                   hidden>
+                    İLAN İŞLEMLERİ
+                </p>
+
+                <button type="button"
+                        class="navbtn"
+                        data-view="mine"
+                        data-auth-menu
+                        hidden>
+                    İlanlarım
+                </button>
+
+                <button type="button"
+                        class="navbtn"
+                        data-view="favorites"
+                        data-auth-menu
+                        hidden>
+                    Favorilerim
+                </button>
+
+                <button type="button"
+                        class="navbtn"
+                        data-view="messages"
+                        data-auth-menu
+                        hidden>
+                    Mesajlarım
+                </button>
+
+                <button type="button"
+                        class="navbtn"
+                        data-account-action="create-listing"
+                        data-auth-menu
+                        hidden>
+                    Yeni ilan ver
+                </button>
+
+                <hr>
+
+                <p class="account-menu-heading">
+                    HESAP
+                </p>
+
+                <!-- app.js girişten sonra bu düğmeyi Profilim yapar -->
+                <button id="accountBtn"
+                        type="button"
+                        class="plain">
+                    Giriş yap
+                </button>
+
+                <a id="securityLink"
+                   href="/hesabim.html"
+                   class="plain"
+                   hidden>
+                    Hesap güvenliği
+                </a>
+
+                <!-- Yalnızca yönetici hesabında gösterilir -->
+                <button id="adminNav"
+                        type="button"
+                        class="navbtn"
+                        data-view="admin"
+                        hidden>
+                    Yönetim paneli
+                </button>
+
+                <hr data-auth-menu hidden>
+
+                <button id="logoutBtn"
+                        type="button"
+                        class="plain account-logout"
+                        hidden>
+                    Çıkış yap
+                </button>
+
+            </nav>
+        </details>
+
+        <button id="newBtn"
+                type="button"
+                class="primary header-new-listing">
+            + İlan ver
+        </button>
+
+    </div>
+</header>
+
+<nav id="breadcrumbs"
+     class="breadcrumbs"
+     aria-label="Sayfa konumu">
+</nav>

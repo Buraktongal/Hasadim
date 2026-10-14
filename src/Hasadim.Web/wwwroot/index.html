@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <meta name="theme-color" content="#245C3A">
+
+    <title>Hasadım — Üreticiden, doğrudan.</title>
+
+    <link rel="stylesheet" href="/styles.css">
+
+    <!-- Önce ortak menü yüklenir.
+         Diğer uygulama scriptlerini page-loader.js yükler. -->
+    <script src="/layout.js" defer></script>
+    <script src="/page-loader.js" defer></script>
+    <script src="/footer.js" defer></script>
+</head>
+
+<body data-page="market">
+
+    <!-- Ortak logo, arama, hesap menüsü ve sayfa konumu -->
+    <div id="siteLayout"></div>
+
+    <main>
+
+        <!-- Ana tanıtım -->
+        <section class="hero" id="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">
+                    TOPRAKTAN GELEN FIRSATLAR
+                </p>
+
+                <h1>
+                    İyi ürün,<br>
+                    doğru alıcıyla buluşur.
+                </h1>
+
+                <p>
+                    Hasadını paylaş, üreticiye doğrudan ulaş.<br>
+                    Meyve ticaretinin yeni buluşma noktası.
+                </p>
+
+                <div class="hero-tags">
+                    <span>Üreticiden doğrudan</span>
+                    <span>Türkiye genelinde</span>
+                    <span>Kolay ilan verme</span>
+                </div>
+            </div>
+
+            <div class="harvest-art" aria-hidden="true">
+                <div class="sun"></div>
+                <div class="leaf leaf-one"></div>
+                <div class="leaf leaf-two"></div>
+                <div class="fruit orange"></div>
+                <div class="fruit apple"></div>
+                <div class="fruit pear"></div>
+
+                <span class="art-label">
+                    Mevsimin bereketi burada.
+                </span>
+            </div>
+        </section>
+
+        <!-- İlan listesi -->
+        <section id="marketView" aria-labelledby="viewTitle">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">HASADIM PAZAR YERİ</p>
+                    <h2 id="viewTitle">Taze ilanları keşfet</h2>
+                </div>
+
+                <span id="resultCount" class="muted"></span>
+            </div>
+
+            <div class="market-layout">
+
+                <!-- Filtreler -->
+                <aside>
+                    <form id="filters">
+
+                        <div class="filter-heading">
+                            <h3>İlanları filtrele</h3>
+
+                            <button id="clearFilters"
+                                    type="button"
+                                    class="textbtn">
+                                Temizle
+                            </button>
+                        </div>
+
+                        <label>
+                            Ne arıyorsun?
+                            <input name="q"
+                                   type="search"
+                                   placeholder="Ürün, çeşit veya ilan başlığı"
+                                   maxlength="150">
+                        </label>
+
+                        <label>
+                            Meyve türü
+                            <select name="meyveTuru" id="fruitFilter">
+                                <option value="">Tüm meyveler</option>
+                            </select>
+                        </label>
+
+                        <label>
+                            İl
+                            <input name="il"
+                                   list="cities"
+                                   placeholder="Tüm iller"
+                                   maxlength="100">
+                        </label>
+
+                        <div class="two">
+                            <label>
+                                En az TL/kg
+                                <input name="minFiyat"
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       placeholder="0">
+                            </label>
+
+                            <label>
+                                En çok TL/kg
+                                <input name="maxFiyat"
+                                       type="number"
+                                       min="0"
+                                       step="0.01"
+                                       placeholder="Sınırsız">
+                            </label>
+                        </div>
+
+                        <label>
+                            Sıralama
+                            <select name="sort">
+                                <option value="new">
+                                    En yeni ilanlar
+                                </option>
+                                <option value="priceAsc">
+                                    Fiyat: düşükten yükseğe
+                                </option>
+                                <option value="priceDesc">
+                                    Fiyat: yüksekten düşüğe
+                                </option>
+                            </select>
+                        </label>
+
+                        <button class="primary full" type="submit">
+                            İlanları göster
+                        </button>
+                    </form>
+
+                    <div class="sidebar-note">
+                        <span aria-hidden="true">✳</span>
+                        <h3>Bir hasat, yeni bir başlangıç.</h3>
+                        <p>
+                            Ürününü ekle, alıcılarla doğrudan
+                            iletişime geç.
+                        </p>
+                    </div>
+                </aside>
+
+                <!-- Sonuçlar -->
+                <div>
+                    <p id="listStatus" role="status"></p>
+
+                    <div id="listings" class="cards"></div>
+
+                    <div class="pagination">
+                        <button id="prevPage"
+                                type="button"
+                                class="secondary">
+                            ← Önceki
+                        </button>
+
+                        <span id="pageLabel" aria-live="polite"></span>
+
+                        <button id="nextPage"
+                                type="button"
+                                class="secondary">
+                            Sonraki →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mesajlar -->
+        <section id="messagesView"
+                 aria-labelledby="messagesTitle"
+                 hidden>
+
+            <div class="section-heading">
+                <h2 id="messagesTitle">Mesajlarım</h2>
+
+                <button id="refreshMessages"
+                        type="button"
+                        class="secondary">
+                    Yenile
+                </button>
+            </div>
+
+            <p class="muted">
+                İlanlarla ilgili yazışmaların burada.
+                Yeni mesajlar için yenile.
+            </p>
+
+            <div id="messagesList"></div>
+
+            <button id="moreMessages"
+                    type="button"
+                    class="secondary"
+                    hidden>
+                Önceki mesajları yükle
+            </button>
+        </section>
+
+        <!-- Mevcut şikâyet yönetimi -->
+        <section id="adminView"
+                 aria-labelledby="adminTitle"
+                 hidden>
+
+            <div class="section-heading">
+                <h2 id="adminTitle">Şikâyet yönetimi</h2>
+
+                <button id="refreshAdmin"
+                        type="button"
+                        class="secondary">
+                    Yenile
+                </button>
+            </div>
+
+            <p class="muted">
+                Açık şikâyetleri inceleyebilir,
+                ilanları yayından gizleyebilirsin.
+            </p>
+
+            <div id="reportsList"></div>
+        </section>
+
+    </main>
+
+    <!-- Ortak footer -->
+    <div id="siteFooter"></div>
+
+    <!-- İşlem bildirimleri -->
+    <div id="toast" role="status" hidden></div>
+
+    <!-- İlan oluşturma / düzenleme -->
+    <dialog id="editorDialog"
+            class="wide"
+            aria-labelledby="editorTitle">
+
+        <div class="dialog-head">
+            <div>
+                <p class="eyebrow">HASADINI PAYLAŞ</p>
+                <h2 id="editorTitle">Yeni ilan hazırla</h2>
+            </div>
+
+            <button type="button"
+                    class="close"
+                    data-close="editorDialog"
+                    aria-label="Kapat">
+                ×
+            </button>
+        </div>
+
+        <form id="editorForm">
+
+            <input name="id" type="hidden">
+            <input name="version" type="hidden">
+
+            <p class="muted">
+                Kaydettiğin ilan taslak olarak saklanır.
+                Taslak kaydetmek ilanı yayımlamaz.
+            </p>
+
+            <label>
+                İlan başlığı
+                <input name="baslik"
+                       required
+                       minlength="5"
+                       maxlength="150"
+                       placeholder="Örn. Korkuteli bahçesinden Deveci armut">
+            </label>
+
+            <div class="two">
+                <label>
+                    Meyve türü
+                    <select name="meyveTuru"
+                            id="editorFruit"
+                            required>
+                    </select>
+                </label>
+
+                <label>
+                    Çeşit
+                    <select name="cesit" required disabled>
+                        <option value="">
+                            Önce meyve türü seçin
+                        </option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="two">
+                <label>
+                    Miktar (kg)
+                    <input name="miktarKg"
+                           type="number"
+                           required
+                           min="0.01"
+                           max="100000000"
+                           step="0.01">
+                </label>
+
+                <label>
+                    Fiyat (TL/kg)
+                    <input name="kilogramFiyati"
+                           type="number"
+                           required
+                           min="0.01"
+                           max="1000000"
+                           step="0.01">
+                </label>
+            </div>
+
+            <!-- Tek .two kapsayıcısı kullanılıyor. -->
+            <div class="two">
+                <label>
+                    İl
+                    <select name="il" required>
+                        <option value="">İl seçin</option>
+                    </select>
+                </label>
+
+                <label>
+                    İlçe
+                    <select name="ilce" required disabled>
+                        <option value="">Önce il seçin</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="two">
+                <label>
+                    Telefon
+                    <input name="telefon"
+                           type="tel"
+                           required
+                           minlength="10"
+                           maxlength="25"
+                           placeholder="05xx xxx xx xx">
+                </label>
+
+                <label>
+                    Hasat tarihi
+                    <input name="hasatTarihi" type="date">
+                </label>
+            </div>
+
+            <label>
+                Açıklama
+                <textarea name="aciklama"
+                          rows="4"
+                          maxlength="5000"
+                          placeholder="Kalite, ambalaj, teslimat ve ürün bilgileri"></textarea>
+            </label>
+
+            <label>
+                Ürün fotoğrafları
+                <input name="photo"
+                       type="file"
+                       multiple
+                       required
+                       accept="image/jpeg,image/png,image/webp"
+                       aria-describedby="photoHelp">
+            </label>
+
+            <small id="photoHelp" class="muted">
+                En az 1, en fazla 10 fotoğraf.
+                JPG, PNG veya WebP; fotoğraf başına en fazla 5 MB.
+                İlk fotoğraf kapaktır.
+                Düzenlerken seçtiklerin mevcut galeriye eklenir.
+            </small>
+
+            <!-- Bu ID sayfada yalnızca bir kez bulunmalı. -->
+            <div id="photoPreviews" class="thumbnails"></div>
+
+            <p class="muted">
+                Telefonunun diğer kullanıcılara gösterilmesini
+                Profilim bölümünden yönetebilirsin.
+            </p>
+
+            <p class="form-error" role="alert"></p>
+
+            <button class="primary full" type="submit">
+                Taslak kaydet
+            </button>
+        </form>
+    </dialog>
+
+    <!-- Mesaj gönderme -->
+    <dialog id="composeDialog"
+            aria-labelledby="composeTitle">
+
+        <div class="dialog-head">
+            <h2 id="composeTitle">Mesaj gönder</h2>
+
+            <button type="button"
+                    class="close"
+                    data-close="composeDialog"
+                    aria-label="Kapat">
+                ×
+            </button>
+        </div>
+
+        <p id="composeContext" class="muted"></p>
+
+        <form id="composeForm">
+            <input type="hidden" name="listingId">
+            <input type="hidden" name="recipientId">
+
+            <label>
+                Mesajın
+                <textarea name="body"
+                          required
+                          maxlength="2000"
+                          rows="5"></textarea>
+            </label>
+
+            <p class="form-error" role="alert"></p>
+
+            <button class="primary full" type="submit">
+                Gönder
+            </button>
+        </form>
+    </dialog>
+
+    <!-- İlan bildirimi -->
+    <dialog id="reportDialog"
+            aria-labelledby="reportTitle">
+
+        <div class="dialog-head">
+            <h2 id="reportTitle">İlanı bildir</h2>
+
+            <button type="button"
+                    class="close"
+                    data-close="reportDialog"
+                    aria-label="Kapat">
+                ×
+            </button>
+        </div>
+
+        <form id="reportForm">
+            <input name="id" type="hidden">
+            <input name="version" type="hidden">
+
+            <label>
+                Şikâyet nedeni
+                <textarea name="reason"
+                          required
+                          maxlength="1000"
+                          rows="4"></textarea>
+            </label>
+
+            <p class="form-error" role="alert"></p>
+
+            <button class="primary full" type="submit">
+                Bildirimi gönder
+            </button>
+        </form>
+    </dialog>
+
+    <!-- Yalnızca arama filtresinde öneri olarak kullanılır.
+         İlan formundaki il/ilçe listesini locations.js doldurur. -->
+    <datalist id="cities">
+        <option value="Antalya"></option>
+        <option value="Mersin"></option>
+        <option value="Isparta"></option>
+        <option value="İzmir"></option>
+        <option value="Adana"></option>
+        <option value="Bursa"></option>
+        <option value="Konya"></option>
+        <option value="Muğla"></option>
+        <option value="Denizli"></option>
+        <option value="Manisa"></option>
+        <option value="Aydın"></option>
+        <option value="İstanbul"></option>
+        <option value="Ankara"></option>
+    </datalist>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+"use strict";
+const $=s=>document.querySelector(s);let csrf="";
+const params=new URLSearchParams(location.search);const email=params.get("email"),linkToken=params.get("token");
+if(linkToken)history.replaceState(null,"",location.pathname);
+function status(text,error=false){$("#accountStatus").textContent=text;$("#accountStatus").className=error?"form-error":"success";}
+async function token(){const r=await fetch("/api/csrf");if(!r.ok)throw Error("Oturum başlatılamadı.");csrf=(await r.json()).token;}
+async function api(path,data){const method=data===undefined?"GET":"POST";if(method==="POST"&&!csrf)await token();const r=await fetch("/api/account/"+path,{method,headers:method==="POST"?{"Content-Type":"application/json","X-CSRF-TOKEN":csrf}:{},body:data===undefined?undefined:JSON.stringify(data)});const text=await r.text();let body;try{body=text?JSON.parse(text):null;}catch{}if(!r.ok)throw Error(body?.mesaj||(body?.errors?Object.values(body.errors).flat().join(" "):r.status===429?"Çok fazla deneme. Bir dakika sonra tekrar deneyin.":"İşlem tamamlanamadı."));return body;}
+function bind(id,action){const f=$("#"+id);if(!f)return;f.addEventListener("submit",async e=>{e.preventDefault();const b=f.querySelector("button");if(b.disabled)return;b.disabled=true;status("");try{await action(Object.fromEntries(new FormData(f)),f);}catch(e){status(e.message||"Sunucuya ulaşılamadı.",true);}finally{b.disabled=false;}});}
+bind("loginForm",async d=>{const r=await api("login",d);if(r.requiresTwoFactor){$("#loginForm").hidden=true;$("#twoFactorForm").hidden=false;$("#loginForm [name=password]").value="";await token();status("Doğrulayıcı uygulamandaki kodu gir.");}else location.replace("/");});
+bind("twoFactorForm",async d=>{d.recovery=d.recovery==="on";await api("two-factor-login",d);location.replace("/");});
+bind("registerForm",async(d,f)=>{const r=await api("register",d);f.reset();f.hidden=true;status(r.requiresConfirmation?"Hesabın oluşturuldu. E-postandaki bağlantıyla doğrulayıp giriş yap.":"Hesabın oluşturuldu. Giriş yap bağlantısından devam edebilirsin.");});
+bind("forgotForm",async d=>status((await api("forgot-password",d)).mesaj));
+if($("#resendConfirmation"))$("#resendConfirmation").onclick=async()=>{const f=$("#forgotForm");if(!f.reportValidity())return;try{status((await api("resend-confirmation",Object.fromEntries(new FormData(f)))).mesaj);}catch(e){status(e.message,true);}};
+bind("resetForm",async d=>{if(!email||!linkToken)throw Error("E-postadaki bağlantıyı kullanın.");await api("reset-password",{...d,email,token:linkToken});$("#resetForm").hidden=true;status("Şifren değiştirildi. Giriş yapabilirsin.");});
+bind("confirmForm",async()=>{if(!email||!linkToken)throw Error("E-postadaki bağlantıyı kullanın.");await api("confirm-email",{email,token:linkToken});$("#confirmForm").hidden=true;status("E-postan doğrulandı. Giriş yapabilirsin.");});
+bind("setupForm",async(d,f)=>{const r=await api("2fa/setup",d);await token();f.reset();$("#authenticatorKey").textContent=r.email+"\n"+r.key;$("#setupKey").hidden=false;status("Anahtarı doğrulayıcı uygulamana ekle.");});
+bind("enableForm",async d=>{const r=await api("2fa/enable",d);$("#setupKey").hidden=true;$("#authenticatorKey").textContent="";$("#setupForm").hidden=true;$("#recoveryBox").hidden=false;$("#recoveryCodes").textContent=r.codes.join("\n");$("#twoFactorStatus").textContent="İki adımlı doğrulama etkin.";await token();status("Kurtarma kodlarını güvenli bir yerde sakla.");});
+bind("changeForm",async d=>{await api("change-password",d);location.replace("/giris.html");});
+bind("logoutAllForm",async d=>{await api("logout-all",d);location.replace("/giris.html");});
+(async()=>{try{await token();if(document.body.dataset.page==="security"){const u=await api("me");if(!u){location.replace("/giris.html");return;}$("#twoFactorStatus").textContent=u.twoFactorEnabled?"İki adımlı doğrulama etkin.":"İki adımlı doğrulama henüz açık değil.";$("#setupForm").hidden=u.twoFactorEnabled;}}catch(e){status(e.message,true);}})();
