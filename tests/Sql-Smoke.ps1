@@ -1,4 +1,4 @@
-param([string]$BaseUrl = "https://localhost:7106")
+param([string]$BaseUrl = "https://localhost:7106", [Parameter(Mandatory=$true)][string]$SellerEmail, [Parameter(Mandatory=$true)][string]$BuyerEmail)
 $ErrorActionPreference = "Stop"
 function Check($Condition, $Name) { if (-not $Condition) { throw "FAIL: $Name" }; Write-Host "PASS: $Name" -ForegroundColor Green }
 function Call($Session, $Method, $Path, $Body = $null, $Token = $null) {
@@ -24,16 +24,19 @@ $a=New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $b=New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $guest=New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $stamp=[Guid]::NewGuid().ToString('N')
-$password="TestPass123-$stamp"
-foreach ($x in @(@{Session=$a;Email="seller-$stamp@example.test"},@{Session=$b;Email="buyer-$stamp@example.test"})) {
+# İki ayrı, e-postası doğrulanmış test hesabı kullanılır; kod kontrolü atlanmaz.
+if ($SellerEmail -eq $BuyerEmail) { throw 'Iki ayri test hesabi gerekli.' }
+foreach ($x in @(@{Session=$a;Email=$SellerEmail},@{Session=$b;Email=$BuyerEmail})) {
+ $credential=Get-Credential -UserName $x.Email -Message 'Dogrulanmis test hesabinin sifresini girin'
+ if ($null -eq $credential) { throw 'Test iptal edildi.' }
  $t=Token $x.Session
- $registered=Call $x.Session 'POST' '/api/account/register' @{displayName='Local Test';email=$x.Email;password=$password} $t
- if ($registered.requiresConfirmation) { throw 'Use a local Development database with confirmation disabled.' }
- Call $x.Session 'POST' '/api/account/login' @{email=$x.Email;password=$password} $t | Out-Null
+ $login=Call $x.Session 'POST' '/api/account/login' @{email=$x.Email;password=$credential.GetNetworkCredential().Password} $t
+ if ($login.requiresTwoFactor) { throw 'Bu test icin iki asamali dogrulamasi olmayan ayri test hesabi kullanin.' }
 }
 $ta=Token $a; $tb=Token $b; $ua=Call $a 'GET' '/api/account/me'
 $profile=Call $a 'GET' '/api/profiles/me'
 Call $a 'PUT' '/api/profiles/me' @{displayName='Local Test';accountType='Individual';activity='Producer';city='Antalya';district='Korkuteli';phone='05011111111';showPhone=$true;version=$profile.version} $ta | Out-Null
+$baseline=(Call $a 'GET' '/api/meyve-ilanlari?mine=true').total
 $ids=New-Object System.Collections.Generic.List[string]
 $listing=@{baslik="Test fruit $stamp";meyveTuru='Elma';cesit='Test';miktarKg=500;kilogramFiyati=25;il='Antalya';ilce='Korkuteli';telefon='05000000000';aciklama='Local test';active=$true}
 try {
@@ -43,7 +46,7 @@ try {
  Check ([Guid]::Parse($one.id) -ne [Guid]::Empty) 'GUID identity'
  Check ($one.id -ne $two.id) 'Same user can create two separate listings'
  $mine=Call $a 'GET' '/api/meyve-ilanlari?mine=true'
- Check ($mine.total -eq 2) 'Both listings persisted for one owner'
+ Check ($mine.total -eq ($baseline + 2)) 'Both listings persisted for one owner'
  $detail=Call $a 'GET' "/api/meyve-ilanlari/$($one.id)"
  $edit=$listing.Clone();$edit.version=$detail.version
  Expect 403 {Call $b 'PUT' "/api/meyve-ilanlari/$($one.id)" $edit $tb}

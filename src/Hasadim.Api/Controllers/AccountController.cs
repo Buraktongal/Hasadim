@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 namespace Hasadim.Api.Controllers;
 public class LoginRequest{[Required,EmailAddress,StringLength(256)]public string Email{get;set;}="";[Required,StringLength(128)]public string Password{get;set;}="";}
-public class RegisterRequest:LoginRequest{[Required,StringLength(100,MinimumLength=2)]public string DisplayName{get;set;}="";}
+public class RegisterRequest:LoginRequest{[Required,StringLength(100,MinimumLength=2)]public string DisplayName{get;set;}="";[Required,RegularExpression(@"^05[0-9]{9}$",ErrorMessage="Telefon numaranı 05 ile başlayan 11 rakam olarak gir.")]public string Phone{get;set;}="";}
+public class CompleteRegistrationRequest{public Guid ChallengeId{get;set;}[Required,RegularExpression(@"^[0-9]{6}$",ErrorMessage="6 haneli kodu gir.")]public string Code{get;set;}="";}
 public class CodeRequest{[Required,StringLength(100)]public string Code{get;set;}="";public bool Recovery{get;set;}}
 public class PasswordRequest{[Required,StringLength(128)]public string Password{get;set;}="";}
 public class ChangePasswordRequest:PasswordRequest{[Required,StringLength(128,MinimumLength=12)]public string NewPassword{get;set;}="";}
@@ -16,7 +17,7 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,IOptions<IdentityOptions> options):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations):ControllerBase
 {
  IActionResult Errors(IdentityResult r)=>BadRequest(new{mesaj=string.Join(" ",r.Errors.Select(x=>x.Description))});
  async Task<AppUser> MeUser()=>await users.GetUserAsync(User)??throw new Hasadim.Application.AppException(401,"Giriş yapın.");
@@ -26,10 +27,23 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  public async Task<IActionResult> Register(RegisterRequest r,CancellationToken ct)
  {
   if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yapın."});
-  if(await users.FindByEmailAsync(r.Email.Trim()) is not null)return BadRequest(new{mesaj="Bu bilgilerle kayıt oluşturulamadı. Giriş veya şifre yenilemeyi deneyin."});
-  var u=new AppUser{UserName=r.Email.Trim(),Email=r.Email.Trim(),DisplayName=r.DisplayName.Trim()};var result=await users.CreateAsync(u,r.Password);if(!result.Succeeded)return Errors(result);
-  if(options.Value.SignIn.RequireConfirmedEmail){var token=await users.GenerateEmailConfirmationTokenAsync(u);await mail.Send(u.Email!,"Hasadım e-posta doğrulama",mail.Link("eposta-dogrula.html",u.Email!,token),ct);}
-  return Ok(new{requiresConfirmation=options.Value.SignIn.RequireConfirmedEmail,mesaj="Hesap oluşturuldu."});
+  if(!mail.Enabled)return StatusCode(503,new{mesaj="E-posta gönderimi henüz hazır değil. Lütfen daha sonra tekrar dene."});
+  var u=new AppUser{UserName=r.Email.Trim(),Email=r.Email.Trim(),DisplayName=r.DisplayName.Trim(),PhoneNumber=r.Phone};
+  u.NormalizedEmail=users.NormalizeEmail(u.Email);u.NormalizedUserName=users.NormalizeName(u.UserName);
+  foreach(var validator in users.UserValidators){var result=await validator.ValidateAsync(users,u);if(!result.Succeeded)return Errors(result);}
+  foreach(var validator in users.PasswordValidators){var result=await validator.ValidateAsync(users,u,r.Password);if(!result.Succeeded)return Errors(result);}
+  u.PasswordHash=users.PasswordHasher.HashPassword(u,r.Password);
+  var ticket=await registrations.Start(u,ct);
+  try{await mail.Send(u.Email!,"Hasadım kayıt doğrulama kodu",$"Doğrulama kodun: {ticket.Code}\nBu kod 2 dakika geçerlidir. Kodu kimseyle paylaşma. Bu kaydı sen başlatmadıysan mesajı yok say.",ct);}
+  catch{await registrations.Cancel(ticket.Id,CancellationToken.None);return StatusCode(503,new{mesaj="Doğrulama e-postası gönderilemedi. Hesap oluşturulmadı. Daha sonra tekrar dene."});}
+  return Ok(new{challengeId=ticket.Id,expiresAt=ticket.ExpiresAt,mesaj="6 haneli kod e-posta adresine gönderildi. Hesabın kodu doğruladığında oluşturulacak."});
+ }
+ [HttpPost("register/confirm")]
+ public async Task<IActionResult> CompleteRegistration(CompleteRegistrationRequest r,CancellationToken ct)
+ {
+  if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yapın."});
+  await registrations.Complete(r.ChallengeId,r.Code,ct);
+  return Ok(new{mesaj="E-postan doğrulandı ve hesabın oluşturuldu. Giriş yapabilirsin."});
  }
  [HttpPost("login")]
  public async Task<IActionResult> Login(LoginRequest r)

@@ -5,6 +5,9 @@ using Hasadim.Infrastructure.Database;
 using Hasadim.Infrastructure.Repositories;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
+using Hasadim.Infrastructure.Identity;
 
 // Yalnızca bu çalıştırmaya ait, rastgele adlı LocalDB veritabanını kullanır.
 // Uygulama ayarlarını veya gerçek kullanıcı verilerini okumaz.
@@ -64,6 +67,50 @@ try {
     await sql.ExecuteAsync("UPDATE dbo.Listings SET ExpiresAt=DATEADD(second,-1,SYSUTCDATETIME()) WHERE Id=@id", new { id });
     Check(!(await service.Search(new ListingQuery(), default)).Items.Any(x => x.Id == id), "SQL süresi dolan ilanı pazardan çıkarır");
     Check((await service.Search(new ListingQuery { History = true }, default)).Items.Single().Status == ListingStatus.Expired, "SQL geçmiş ilanı sahibine gösterir");
+    var registrations = new RegistrationStore(factory, new EphemeralDataProtectionProvider());
+    AppUser NewUser(string email) => new() {
+        UserName = email, NormalizedUserName = email.ToUpperInvariant(), Email = email,
+        NormalizedEmail = email.ToUpperInvariant(), DisplayName = "Code test", PhoneNumber = "05011111111",
+        PasswordHash = new PasswordHasher<AppUser>().HashPassword(new AppUser(), "OnlyForTests123!")
+    };
+    async Task Reject(int expected, Func<Task> action, string name) {
+        try { await action(); throw new Exception("Expected rejection: " + name); }
+        catch (AppException e) { Check(e.Status == expected, name); }
+    }
+    var draft = NewUser("registration@example.test");
+    var ticket = await registrations.Start(draft, default);
+    Check(System.Text.RegularExpressions.Regex.IsMatch(ticket.Code, "^[0-9]{6}$"), "Kayıt kodu altı rakam");
+    Check(await sql.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.Users WHERE Id=@Id", draft) == 0, "Kod gönderimi hesap oluşturmaz");
+    Check(await sql.ExecuteScalarAsync<int>("SELECT DATEDIFF(second,LastSentAt,ExpiresAt) FROM dbo.RegistrationChallenges WHERE Id=@Id", ticket) == 120, "Kodun SQL süresi tam 120 saniye");
+    var protectedData = await sql.ExecuteScalarAsync<string>("SELECT ProtectedData FROM dbo.RegistrationChallenges WHERE Id=@Id", ticket);
+    Check(!protectedData!.Contains(draft.Email!) && !protectedData.Contains(draft.PasswordHash!), "Bekleyen kayıt içeriği korumalı saklanır");
+    await Reject(429, () => registrations.Start(draft, default), "Hızlı tekrar gönderim engellenir");
+    var wrong = ticket.Code == "000000" ? "111111" : "000000";
+    await Reject(400, () => registrations.Complete(ticket.Id, wrong, default), "Yanlış kod hesap açmaz");
+    Check(await sql.ExecuteScalarAsync<int>("SELECT Attempts FROM dbo.RegistrationChallenges WHERE Id=@Id", ticket) == 1, "Yanlış deneme SQL üzerinde sayılır");
+    await registrations.Complete(ticket.Id, ticket.Code, default);
+    var created = await sql.QuerySingleAsync<AppUser>("SELECT * FROM dbo.Users WHERE Id=@Id", draft);
+    Check(created.EmailConfirmed && !created.PhoneNumberConfirmed, "Doğru kod yalnızca e-postayı doğrular");
+    Check(new PasswordHasher<AppUser>().VerifyHashedPassword(created, created.PasswordHash!, "OnlyForTests123!") != PasswordVerificationResult.Failed, "Hesap şifresi doğrulanabilir özet olarak saklanır");
+    Check(await sql.ExecuteScalarAsync<string>("SELECT Phone FROM dbo.UserProfiles WHERE UserId=@Id", draft) == draft.PhoneNumber, "Kayıt telefonu profile taşınır");
+    await Reject(400, () => registrations.Complete(ticket.Id, ticket.Code, default), "Kod ikinci kez kullanılamaz");
+    var expired = await registrations.Start(NewUser("expired@example.test"), default);
+    await sql.ExecuteAsync("UPDATE dbo.RegistrationChallenges SET ExpiresAt=SYSUTCDATETIME() WHERE Id=@Id", expired);
+    await Reject(400, () => registrations.Complete(expired.Id, expired.Code, default), "Süresi dolan doğru kod reddedilir");
+    var limited = await registrations.Start(NewUser("limited@example.test"), default);
+    wrong = limited.Code == "000000" ? "111111" : "000000";
+    for (var i = 0; i < 5; i++) await Reject(400, () => registrations.Complete(limited.Id, wrong, default), "Hatalı kod sınırı " + (i + 1));
+    await Reject(400, () => registrations.Complete(limited.Id, limited.Code, default), "Beş yanlış deneme sonrasında doğru kod da reddedilir");
+    var resendUser = NewUser("resend@example.test");
+    var oldTicket = await registrations.Start(resendUser, default);
+    await sql.ExecuteAsync("UPDATE dbo.RegistrationChallenges SET LastSentAt=DATEADD(second,-61,LastSentAt) WHERE Id=@Id", oldTicket);
+    var newTicket = await registrations.Start(resendUser, default);
+    await Reject(400, () => registrations.Complete(oldTicket.Id, oldTicket.Code, default), "Yeni gönderim önceki kodu geçersiz kılar");
+    await registrations.Cancel(newTicket.Id, default);
+    await Reject(400, () => registrations.Complete(newTicket.Id, newTicket.Code, default), "E-posta gönderimi başarısızsa kod geçersizdir");
+    var concurrent = await registrations.Start(NewUser("parallel@example.test"), default);
+    async Task<bool> CompleteOnce() { try { await registrations.Complete(concurrent.Id, concurrent.Code, default); return true; } catch (AppException e) when(e.Status==400) { return false; } }
+    Check((await Task.WhenAll(CompleteOnce(), CompleteOnce())).Count(x => x) == 1, "Eşzamanlı doğrulama yalnızca bir kez hesap açar");
     Console.WriteLine($"ALL {checks} SQL CHECKS PASSED");
 } finally {
     SqlConnection.ClearAllPools();

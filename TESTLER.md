@@ -89,3 +89,11 @@ Yeni ilan ve ilan düzenleme formlarından telefon girişi kaldırıldı. İlan 
 Bu değişiklik SMS doğrulaması sağlamaz. SMS hizmeti hesabı henüz olmadığından telefonun profilde kayıtlı olması doğrulanmış olması anlamına gelmez.
 
 Derleme 0 hata/0 uyarı; 67 C# kontrolü, arayüz/statik dosya testleri ve ayrı LocalDB üzerinde 12 SQL kontrolü geçti. Testler profil telefonu yokken istemcinin numarasının kabul edilmemesini ve SQL kaydındaki telefonun gerçekten profilden gelmesini kapsar.
+
+## Hesap açılmadan önce 6 haneli e-posta kodu
+
+Yeni kayıt iki adıma ayrıldı. İlk istek yalnızca korumalı bekleyen kayıt ve 120 saniyelik kod oluşturur; kullanıcı/profil satırı açılmaz. Doğru kod, kullanıcı ve profil oluşturmayı aynı SQL işleminde tamamlar. Kod tek kullanımlıktır, en fazla 5 yanlış denemeye izin verilir; yeniden gönderim için 60 saniye ve saatlik 5 istek sınırı uygulanır. E-posta doğrulaması girişte zorunludur. Kayıt telefonunu profile taşır, SMS doğrulanmış olarak işaretlemez.
+
+Derleme 0 hata/0 uyarı; 67 mevcut C# kontrolü, yeni kayıt arayüz testi ve diğer arayüz/statik dosya kontrolleri geçti. Ayrı LocalDB üzerinde toplam 33 SQL kontrolü geçti: kayıt öncesi hesap bulunmaması, 120 saniye sınırı, yanlış kod sayacı, doğru kodla atomik oluşturma, tekrar kullanım, süresi geçmiş kod, 5 yanlış deneme, eski kodun geçersizleşmesi, gönderim iptali ve eşzamanlı doğrulama dahil.
+
+Gerçek Gmail gönderimi uygulama şifresi henüz sağlanmadığından test edilmedi. EPOSTA-KUR.bat yerel kurulum yardımcısıdır; çalıştırılması tek başına SMTP teslimatını doğrulamaz. Ayrıntılar KODLU-KAYIT-KURULUM.md dosyasındadır. HTTP SQL testi artık doğrulanmış iki test hesabı ister; e-posta doğrulamasını atlayan eski test akışı kaldırıldı.

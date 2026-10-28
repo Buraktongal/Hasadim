@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Identity;
 using System.Threading.RateLimiting;
 var hostArgs = args.Where(x => x != "--migrate" && x != "--bootstrap-admin").ToArray();
 var builder = WebApplication.CreateBuilder(hostArgs);
-var confirm = !builder.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("Identity:RequireConfirmedEmail");
+const bool confirm = true;
 builder.Services.AddHasadim(confirm);
-builder.Services.AddHttpContextAccessor(); builder.Services.AddScoped<ICurrentUser, CurrentUser>(); builder.Services.AddScoped<AccountMail>();
+builder.Services.AddHttpContextAccessor(); builder.Services.AddScoped<ICurrentUser, CurrentUser>(); builder.Services.AddScoped<AccountMail>(); builder.Services.AddScoped<RegistrationStore>();
 var keys = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys"); Directory.CreateDirectory(keys);
 builder.Services.AddDataProtection().SetApplicationName("Hasadim.Api.v2").PersistKeysToFileSystem(new DirectoryInfo(keys));
 builder.Services.ConfigureApplicationCookie(o =>
