@@ -1,7 +1,7 @@
 "use strict";
 window.setBreadcrumbs=items=>{const root=document.querySelector('#breadcrumbs');root.replaceChildren();items.forEach((item,i)=>{if(i){const sep=document.createElement('span');sep.textContent='›';sep.setAttribute('aria-hidden','true');root.append(sep);}const n=document.createElement(item.href?'a':'span');n.textContent=item.label;if(item.href)n.href=item.href;else n.setAttribute('aria-current','page');root.append(n);});};
 const names={'profilim.html':'Profilim','satici.html':'Satıcı profili','ilan.html':'İlan detayı','hesabim.html':'Hesap güvenliği','giris.html':'Giriş yap','kayit.html':'Kayıt ol','sifremi-unuttum.html':'Şifremi unuttum','sifre-yenile.html':'Şifre yenile','eposta-dogrula.html':'E-posta doğrulama'};
-const filename=location.pathname.split('/').pop(),query=new URLSearchParams(location.search).get('q');document.querySelector('#globalQuery').value=query||'';
+const filename=location.pathname.split('/').pop(),query=new URLSearchParams(location.search).get('q');const searchInput=document.querySelector('#globalQuery');if(searchInput)searchInput.value=query||'';
 setBreadcrumbs([{label:'Ana sayfa',href:'/'},{label:names[filename]||(query?'Arama: '+query:'Pazar yeri')}]);
 // Kaydırma sırasında üst menüyü küçült.
 (() => {

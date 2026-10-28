@@ -1,0 +1,16 @@
+.profile-section-heading, .profile-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.profile-section-heading h2 { margin: 0; }
+.profile-details { margin: 24px 0; }
+.profile-details > div { padding: 14px 0; border-bottom: 1px solid var(--line, #dce5d6); }
+.profile-details dt { font-size: .85rem; color: #52634e; margin-bottom: 6px; }
+.profile-details dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+#profileEditor { min-width: 0; }
+#profileForm { display: grid; gap: 16px; }
+#profileForm label { display: grid; gap: 6px; }
+#profileForm label.check { display: flex; align-items: flex-start; }
+#profileForm .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#profileForm input, #profileForm select, #profileForm textarea { min-width: 0; max-width: 100%; }
+.profile-actions { justify-content: flex-start; }
+.profile-photo-editor { border-top: 1px solid var(--line, #dce5d6); margin-top: 28px; padding-top: 20px; }
+#photoForm { display: grid; gap: 12px; }
+@media (max-width: 600px) { #profileForm .two { grid-template-columns: 1fr; } .profile-actions > button { width: 100%; } }

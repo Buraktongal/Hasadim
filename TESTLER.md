@@ -51,3 +51,11 @@ Bu güncellemede gerçek SQL veritabanıyla geçiş ve uçtan uca kayıt/ilan ak
 MigrationRunner artık eski LF ve CRLF dosyalarından üretilmiş özetleri kabul eder. Yeni özetler LF biçiminde hesaplanır; SQL dosyaları Git tarafından LF olarak alınır. SQL içeriği, boşluklar veya yorumlar değişmişse koruma devam eder. SchemaVersions kayıtları silinmez/güncellenmez; uygulanmış SQL yeniden çalıştırılmaz.
 
 Bu düzeltmeyle 64 C# kontrolü geçti ve derleme 0 hata/0 uyarıyla tamamlandı. Gerçek kullanıcı veritabanındaki kayıtlı özet okunmadığı için bildirilen hatanın kesin nedeni doğrulanmadı. Hata sürerse eski SQL içeriği ile kayıtlı özet karşılaştırılmalıdır; veritabanı veya SchemaVersions tablosu silinmemelidir.
+
+## Profil ekranı düzenlemesi
+
+Profil ilk açılışta salt okunur özet gösterir. Bilgilerimi düzenle düğmesi ayrı düzenleme bölümünü açar; Vazgeç kaydedilmemiş alanları atar, başarılı kayıt özet görünümüne döner. Fotoğraf işlemleri bu bölümde ayrıca ve hemen kaydedilir. Profil sayfasından arama formu kaldırıldı; ortak gezinme kodu arama alanı olmayan sayfalarda da çalışır.
+
+İl/ilçe seçicileri mevcut iller-ilceler.json dosyasına bağlandı. Kayıtlı seçimler yüklenir, il değişince ilçe temizlenir. Liste yüklenemezse düzenleme açılmaz; kullanıcı tekrar deneyebilir.
+
+`node tests/profile-ui.cjs` ve TEST.bat üzerinden yeni kontroller çalıştırılır. Özet/düzenleme geçişi, iptal, kayıt, kayıt hatasında alanların korunması, konum yükleme hatasından sonra yeniden deneme ve bağlı ilçe seçimi sahte DOM/API ile doğrulandı. Statik bağlantı ve mevcut ilan arayüz testleri de geçti. Gerçek tarayıcı görsel kontrolü ve gerçek hesapla API kaydı bu değişiklikte yapılmadı.

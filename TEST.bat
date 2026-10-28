@@ -19,6 +19,8 @@ node tests\ui-smoke.cjs
 if errorlevel 1 goto failed
 node tests\listing-workflow.cjs
 if errorlevel 1 goto failed
+node tests\profile-ui.cjs
+if errorlevel 1 goto failed
 node tests\static-paths.cjs
 if errorlevel 1 goto failed
 echo Tum yerel kontroller basarili. Gercek veritabani testi ayri calistirilir.
