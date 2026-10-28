@@ -1,7 +1,5 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
-using System.Security.Cryptography;
-using System.Text;
 namespace Hasadim.Infrastructure.Database;
 public class MigrationRunner(SqlConnectionFactory factory)
 {
@@ -18,9 +16,9 @@ public class MigrationRunner(SqlConnectionFactory factory)
   var assembly=typeof(MigrationRunner).Assembly;
   foreach(var resource in assembly.GetManifestResourceNames().Where(x=>x.EndsWith(".sql")).Order()){
    using var stream=assembly.GetManifestResourceStream(resource)!;using var reader=new StreamReader(stream);var sql=await reader.ReadToEndAsync(ct);
-   var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(sql)));
+   var hash=MigrationChecksum.Compute(sql);
    var saved=await c.QuerySingleOrDefaultAsync<string>(new CommandDefinition("SELECT Hash FROM dbo.SchemaVersions WHERE Name=@resource",new{resource},tx,cancellationToken:ct));
-   if(saved is not null){if(saved!=hash)throw new InvalidOperationException("Uygulanmış migration değiştirilmiş: "+resource);continue;}
+   if(saved is not null){if(!MigrationChecksum.Matches(sql,saved))throw new InvalidOperationException("Uygulanmış migration içeriği değiştirilmiş: "+resource+". Eski SQL dosyasını geri yükleyin; SchemaVersions kaydını silmeyin.");continue;}
    await c.ExecuteAsync(new CommandDefinition(sql,transaction:tx,commandTimeout:120,cancellationToken:ct));
    await c.ExecuteAsync(new CommandDefinition("INSERT dbo.SchemaVersions(Name,Hash) VALUES(@resource,@hash)",new{resource,hash},tx,cancellationToken:ct));
   }

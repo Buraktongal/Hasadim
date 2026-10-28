@@ -126,6 +126,15 @@ Check((await ps.Public(profiles.Value.UserId,ct)).MemberSince is null,"Eski kull
 var pr=new ProfileRequest{DisplayName="Burak",City="Antalya",District="Merkez",Version=new byte[8]};await ps.Update(pr,ct);Check(profiles.UpdatedId==owner,"Profil güncellemesi oturumdaki kullanıcıya aittir");
 profiles.Success=false;await Status(409,()=>ps.Update(pr,ct),"Profil sürüm çakışması reddedilir");
 pr.AccountType="Business";var errors=new List<System.ComponentModel.DataAnnotations.ValidationResult>();Check(!System.ComponentModel.DataAnnotations.Validator.TryValidateObject(pr,new(pr),errors,true),"Firma adı olmadan kurumsal profil reddedilir");
+string RawHash(string sql) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(sql)));
+const string sqlLf = "SELECT 1;\nSELECT 'text';\n";
+var sqlCrLf = sqlLf.Replace("\n", "\r\n");
+Check(Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlCrLf, RawHash(sqlLf)), "Eski LF özeti CRLF dosyasını kabul eder");
+Check(Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf, RawHash(sqlCrLf)), "Eski CRLF özeti LF dosyasını kabul eder");
+Check(Hasadim.Infrastructure.Database.MigrationChecksum.Compute(sqlLf) == Hasadim.Infrastructure.Database.MigrationChecksum.Compute(sqlCrLf), "Yeni özet satır sonlarından bağımsızdır");
+Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.Replace("SELECT 1", "SELECT 2"), RawHash(sqlCrLf)), "Gerçek SQL değişikliği reddedilir");
+Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.Replace("'text'", "' text'"), RawHash(sqlLf)), "SQL içindeki boşluk değişikliği reddedilir");
+Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.TrimEnd(), RawHash(sqlLf)), "Son satırın silinmesi sessizce kabul edilmez");
 Console.WriteLine($"ALL {checks} WORKFLOW CHECKS PASSED");
 
 class Current : ICurrentUser

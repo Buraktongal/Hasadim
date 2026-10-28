@@ -46,3 +46,8 @@ Betik iki test hesabı ve iki ilan oluşturur; sonunda ilanları soft-delete ede
 006_AutomaticPublication.sql, eski inceleme/yayın bekleyen uygun kayıtları bir defa yayımlar. Gizlenen, silinen, taslak, düzeltme bekleyen ve geçmiş ilanlara dokunmaz; mevcut yayınların süresini uzatmaz. Development ortamında API başlarken uygulanır. Diğer ortamlarda VERITABANI-GUNCELLE.bat ile uygulanmalıdır.
 
 Bu güncellemede gerçek SQL veritabanıyla geçiş ve uçtan uca kayıt/ilan akışı çalıştırılmadı. SMTP/TOTP ve gerçek tarayıcı görsel kontrolleri de doğrulanmadı. Sahte DOM ve bellek deposu testleri bu kontrollerin yerine geçmez.
+## Git sonrası migration satır sonu uyumluluğu
+
+MigrationRunner artık eski LF ve CRLF dosyalarından üretilmiş özetleri kabul eder. Yeni özetler LF biçiminde hesaplanır; SQL dosyaları Git tarafından LF olarak alınır. SQL içeriği, boşluklar veya yorumlar değişmişse koruma devam eder. SchemaVersions kayıtları silinmez/güncellenmez; uygulanmış SQL yeniden çalıştırılmaz.
+
+Bu düzeltmeyle 64 C# kontrolü geçti ve derleme 0 hata/0 uyarıyla tamamlandı. Gerçek kullanıcı veritabanındaki kayıtlı özet okunmadığı için bildirilen hatanın kesin nedeni doğrulanmadı. Hata sürerse eski SQL içeriği ile kayıtlı özet karşılaştırılmalıdır; veritabanı veya SchemaVersions tablosu silinmemelidir.
