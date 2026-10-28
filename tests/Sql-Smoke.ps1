@@ -46,20 +46,17 @@ try {
  $edit=$listing.Clone();$edit.version=$detail.version
  Expect 403 {Call $b 'PUT' "/api/meyve-ilanlari/$($one.id)" $edit $tb}
  Expect 403 {Call $b 'DELETE' "/api/meyve-ilanlari/$($one.id)" $null $tb}
- Call $a 'PUT' "/api/meyve-ilanlari/$($one.id)" $edit $ta | Out-Null
+ Check ($detail.status -eq 1) 'New listing is pending review'
+ Check (-not $detail.active) 'Pending listing is not published'
  Expect 409 {Call $a 'PUT' "/api/meyve-ilanlari/$($one.id)" $edit $ta}
  Expect 400 {Call $a 'POST' '/api/meyve-ilanlari' $listing}
- $public=Call $guest 'GET' "/api/meyve-ilanlari/$($one.id)"
- Check ($null -eq $public.telefon) 'Guest phone privacy'
- Call $b 'POST' "/api/meyve-ilanlari/$($one.id)/favorite" $null $tb | Out-Null
- $favorites=Call $b 'GET' '/api/meyve-ilanlari?favorites=true'
- Check ($favorites.items.id -contains $one.id) 'Favorite saved'
- Call $b 'POST' '/api/messages' @{listingId=$one.id;recipientId=$ua.id;body='Test message'} $tb | Out-Null
- $messages=Call $a 'GET' '/api/messages'
- Check ($messages.items.listingId -contains $one.id) 'Seller receives message'
+ Expect 404 {Call $guest 'GET' "/api/meyve-ilanlari/$($one.id)"}
+ Expect 404 {Call $b 'POST' "/api/meyve-ilanlari/$($one.id)/favorite" $null $tb}
+ Expect 403 {Call $b 'POST' '/api/messages' @{listingId=$one.id;recipientId=$ua.id;body='Test message'} $tb}
+ Expect 403 {Call $b 'GET' '/api/admin/listings/pending'}
  Expect 401 {Call $guest 'GET' '/api/messages'}
  Expect 403 {Call $b 'GET' '/api/admin/reports'}
- Write-Host 'All SQL-backed smoke tests passed.' -ForegroundColor Green
+ Write-Host 'All SQL-backed pending-listing smoke tests passed.' -ForegroundColor Green
 } finally {
  foreach($id in $ids) {try {Call $a 'DELETE' "/api/meyve-ilanlari/$id" $null $ta | Out-Null} catch {Write-Warning "Could not archive test listing $id"}}
 }

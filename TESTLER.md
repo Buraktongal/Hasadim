@@ -1,53 +1,47 @@
-# Test sonuçları ve sınırları
+# Testler ve doğrulama sınırları
 
-## Bu ortamda doğrulananlar
+## 28 Ekim 2026 kontrolü
 
-- .NET 10 SDK 10.0.100 ile Core, Application, Infrastructure, DependencyInjection, API, Web ve test projeleri derlendi.
-- C# test uygulamasındaki **23 kontrol geçti**: aynı kullanıcıya ait iki farklı GUID ilanı, sahiplik, anonim oluşturma yasağı, rowversion zorunluluğu ve çakışması, fiyat aralığı, telefon gizliliği, yönetici yetkisi, salt ve parola doğrulama. Yeni kontroller fotoğraf zorunluluğu/10 fotoğraf sınırı, profil telefonu gizliliği, profil sahipliği, rowversion ve kurumsal ad zorunluluğunu da kapsar. Repository testte bellekte taklit edildi; gerçek SQL Server kullanılmadı.
-- `tests/ui-smoke.cjs`: sahte DOM ve API ile listeleme, filtre, iki ayrı yeni ilan, düzenleme sürümü/tarihi, GUID mesaj, favori, şikâyet ve ayrı giriş sayfasına yönlendirme geçti.
-- JavaScript sözdizimi kontrol edildi.
-- **Gerçek API ve Web süreçleri çalıştırılarak** ayrı giriş sayfasının HTTP 200 dönmesi, Web–API HTTPS bağlantısı, CSRF token aktarımı, eksik CSRF'nin HTTP 400 ile reddi, DTO doğrulaması ve anonim mesaj/yönetim/ilan oluşturma isteklerinin HTTP 401 ile reddi doğrulandı. Bu kontroller veritabanı gerektirmeyen endpoint'lerle yapıldı. Yerel test istemcisi geliştirme sertifikasına özel test ayarı kullandı; uygulamanın API istemcisinde sertifika doğrulaması kapatılmadı.
+- .NET SDK 10.0.402 ile çözüm derlendi: 0 hata, 0 uyarı.
+- C# test uygulamasındaki 51 kontrol geçti. Yönetici onayı, tam 30 günlük yayın, tekrar onayın süreyi uzatmaması, süresi dolan ilanların geçmişe taşınması, yetkiler, sürüm çakışması ve profil gizliliği kapsanır. Depo bellekte taklit edilir; bunlar gerçek SQL testleri değildir.
+- `tests/ui-smoke.cjs`: sahte DOM/API üzerinde ilan oluşturma, düzenleme, geçmiş ilanlar, detay, galeri, giriş, mesaj, favori ve şikâyet kontrolleri geçti.
+- `tests/listing-workflow.cjs`: inceleme kuyruğu, gerekçe, sürüm bilgisi, çift gönderim engeli ve yönetici kontrolleri geçti.
+- `tests/static-paths.cjs`: yerel sayfa ve dosya bağlantıları, yükleme sırası ve 11 JavaScript dosyasının sözdizimi doğrulandı.
+- NuGet güvenlik taraması, doğrudan ve dolaylı bağımlılıklarda bilinen açık bildirmedi. SQL istemcisinin dolaylı Pkcs bağımlılığı 9.0.21 sürümüne sabitlendi. Kaynak: https://github.com/dotnet/runtime/security/advisories/GHSA-846f-f764-76mx
 
-## Henüz bu ortamda doğrulanamayanlar
+## Çalıştırma
 
-SQL Server/LocalDB sunucusu olmadığı için SQL migration'ların ve Dapper kullanıcı depolarının gerçek veritabanında uçtan uca çalışması test edilemedi. Gerçek SMTP teslimatı ve gerçek kullanıcıyla TOTP kayıt/giriş akışı da test edilemedi. Gerçek tarayıcı görsel/mobil render testi yapılmadı. Derleme başarısı veya sahte repository testleri bu kontrollerin yerine geçmez.
+.NET 10 SDK ve Node.js kurulu olmalı. Proje kökündeki `TEST.bat` derlemeyi ve dört yerel test grubunu sırayla çalıştırır; herhangi bir hata varsa durur ve başarısız çıkış kodu döndürür.
 
-## Testleri tekrar çalıştırma
-
-Proje kökünde:
+Ayrı çalıştırmak için:
 
 ```powershell
 dotnet build Hasadim.slnx
-dotnet run --project tests/Hasadim.Tests
-```
-
-Veya TEST.bat kullan. Node.js varsa ayrıca:
-
-```powershell
+dotnet run --no-build --project tests/Hasadim.Tests
 node tests/ui-smoke.cjs
+node tests/listing-workflow.cjs
+node tests/static-paths.cjs
+dotnet list Hasadim.slnx package --vulnerable --include-transitive
 ```
 
-## Gerçek SQL testi
+Statik dosya testi isteğe bağlı çalışan Web adresi de alır: `node tests/static-paths.cjs https://localhost:7106`. Bu kip gerçek HTTP durumlarını, içerik türlerini ve eski bağlantıların sorgu bilgilerini koruyan yönlendirmelerini denetler. Test istemcisinin geliştirme sertifikasına güvenmesi gerekir.
 
-Yerel uygulamayı BASLAT.bat ile başlat, iki sunucunun hazır olmasını bekle. Development ortamında e-posta doğrulaması kapalıyken:
+## Gerçek veritabanı testi
+
+`tests/Sql-Smoke.ps1` yeni ilanların incelemeye gitmesi ve onay öncesinde dışarıdan erişilememesi davranışına uyarlandı. Bu güncellemede gerçek SQL Server üzerinde çalıştırılmadı. Test veritabanı kullanan Development ortamını BASLAT.bat ile başlattıktan sonra, e-posta doğrulaması kapalıyken:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Sql-Smoke.ps1
 ```
 
-Bu komut yalnızca mevcut betik çalışması için geçerlidir; kalıcı yürütme ilkesi değişmez. Test iki benzersiz hesap ve iki ilan oluşturur. Sonunda ilanlar soft-delete edilir; test kullanıcıları, ilan geçmişi ve mesajı veritabanında kalır. Üretim veritabanında kullanma. Betik bu teslim ortamında çalıştırılmadı.
+Betik iki test hesabı ve iki ilan oluşturur; sonunda ilanları soft-delete eder. Hesaplar ve kayıt geçmişi veritabanında kalır. Üretim veritabanında çalıştırmayın. Bu betik yönetici onayı ve 30 günlük sürenin SQL üzerinde uçtan uca doğrulamasını içermez.
 
 ## Manuel kabul kontrolü
 
-1. Kaydol ve giriş yap; aynı hesapla en az iki farklı ilan ver. İkisi de İlanlarım ekranında kalmalı.
-2. Birini düzenleyip tekrar “İlan ver” aç; başlık ve kimlikler yeni kayıt için temiz olmalı.
-3. Aynı ilanı iki sekmede düzenle; eski sürümü kaydetme HTTP 409 vermeli.
-4. Başka hesap ilk hesabın ilanını değiştirememeli; mesajlar yalnızca taraflara görünmeli.
-5. Hesabım → 2FA kurulumunu yap, kurtarma kodlarını sakla, çıkış yapıp TOTP ve ayrı bir girişte kurtarma koduyla giriş dene. Kullanılmış kurtarma kodu tekrar çalışmamalı.
-6. Aynı hesapla iki tarayıcıda giriş yap. Birinde tüm oturumları kapat; diğerinde sonraki korumalı istek giriş istemeli.
-7. Şifre değiştirme sonrasında eski şifre reddedilmeli; doğrulanmış e-postaya sıfırlama akışını gerçek SMTP ile dene.
-8. Beş yanlış şifreyle kilidi, CSRF ve hız sınırlarını kontrol et.
-9. Fotoğraf yükle, sunucuları yeniden başlat: ilan ve fotoğraf korunmalı. Gizlenen/silinen ilanın fotoğrafı anonim erişimde açılmamalı.
-10. Telefon ve masaüstü tarayıcılarda giriş, form, detay ve menü görünümünü kontrol et.
+1. Kaydolup giriş yapın; fotoğraflı bir ilan gönderin. İlanlarım içinde incelemede görünmeli, herkese açık listede bulunmamalı.
+2. Yöneticiyle düzeltme isteyin. İlan sahibi gerekçeyi görmeli, düzenleyip yeniden incelemeye gönderebilmeli.
+3. Yönetici onayı verin. İlan hemen yayımlanmalı; yayın bitişi onaydan 30 gün sonra olmalı. Tekrarlanan onay süreyi uzatmamalı.
+4. Test veritabanında süresi dolmuş bir ilanla kontrol edin: herkese açık ve güncel listelerden çıkmalı; sahibinin Geçmiş ilanlar bölümünde ve detayında görünmeli.
+5. Başka kullanıcı geçmiş ilana erişememeli; normal kullanıcı yönetici işlemlerini yapamamalı.
 
-Profil ve galeri güncellemesinin kullanım/upgrade adımları GUNCELLEME.md içindedir. Yeni HTTP kontrolleri profil sayfaları, üst arama, breadcrumb ve anonim /api/profiles/me erişimini de kapsar.
+Gerçek veritabanıyla kayıt → ilan → onay akışı, gerçek SMTP/TOTP ve tarayıcıdaki görsel/mobil kontroller henüz bu güncellemede doğrulanmadı. Sahte DOM ve bellek deposu testlerinin geçmesi bunların yerine geçmez.

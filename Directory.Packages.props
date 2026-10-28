@@ -1,1 +1,11 @@
-<Project><PropertyGroup><ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally></PropertyGroup><ItemGroup><PackageVersion Include="Dapper" Version="2.1.66"/><PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.3"/></ItemGroup></Project>
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Dapper" Version="2.1.66" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.3" />
+    <!-- SqlClient transitif bağımlılığı: Ekim 2026 güvenlik düzeltmeleri. -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="9.0.21" />
+  </ItemGroup>
+</Project>
