@@ -17,6 +17,7 @@ public class SellerProfile
  public DateTime? CreatedAt {get;set;}
  public string Email {get;set;}="";
  public bool EmailConfirmed {get;set;}
+ public bool PhoneVerified {get;set;}
  public int ActiveListingCount {get;set;}
  public byte[] Version {get;set;}=[];
 }

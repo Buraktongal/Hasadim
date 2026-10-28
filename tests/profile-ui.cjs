@@ -30,7 +30,7 @@ class FormData {
     [Symbol.iterator]() { return this.values[Symbol.iterator](); }
 }
 let profile = { id: 'owner', version: 'v1', displayName: 'Burak', accountType: 'Individual', activity: 'Producer', city: 'Antalya', district: 'Korkuteli', about: '<b>Bahçem</b>', phone: '', showPhone: true, email: 'test@example.test', emailVerified: true, completion: 80, activeListingCount: 2 };
-let puts = 0, failLocations = true, failSave = false;
+let puts = 0, failLocations = true, failSave = false, emailRequests = 0, mailAvailable = false;
 const locationData = JSON.parse(fs.readFileSync(path.join(root, 'data/iller-ilceler.json'), 'utf8'));
 const context = vm.createContext({
     document: { body: { dataset: { page: 'edit' } }, querySelector: s => nodes[s] || null, createElement: () => new Element() },
@@ -39,6 +39,13 @@ const context = vm.createContext({
     fetch: async (url, options = {}) => {
         if (url === '/data/iller-ilceler.json') return { ok: !failLocations, json: async () => locationData };
         if (url === '/api/csrf') return { ok: true, json: async () => ({ token: 'token' }) };
+        if (url === '/api/account/me/resend-confirmation') {
+            assert.equal(options.method, 'POST');
+            assert.equal(options.headers['X-CSRF-TOKEN'], 'token');
+            emailRequests++;
+            return { ok: mailAvailable, status: mailAvailable ? 200 : 503,
+                json: async () => ({ mesaj: mailAvailable ? 'Bağlantı gönderildi.' : 'E-posta gönderimi şu anda kullanılamıyor.' }) };
+        }
         assert.equal(url, '/api/profiles/me');
         if (options.method === 'PUT') {
             if (failSave) return { ok: false, status: 409, json: async () => ({ mesaj: 'Sürüm değişti.' }) };
@@ -54,7 +61,25 @@ const tick = () => new Promise(r => setImmediate(r));
     await tick();
     assert.equal(nodes['#profileOverview'].hidden, false);
     assert.equal(nodes['#profileEditor'].hidden, true);
-    assert(nodes['#profileDetails'].children.some(row => row.children[1].textContent === '<b>Bahçem</b>'));
+    assert(nodes['#profileDetails'].children.some(row => row.children[1].children[0].textContent === '<b>Bahçem</b>'));
+    const row = label => nodes['#profileDetails'].children.find(row => row.children[0].textContent === label).children[1];
+    assert.equal(row('E-posta').children[1].textContent, 'Doğrulandı');
+    assert.equal(row('E-posta').children.length, 2);
+    assert(!nodes['#profileDetails'].children.some(row => row.children[0].textContent === 'E-posta doğrulaması'));
+    assert.equal(row('Telefon').children[1].textContent, 'Doğrulanmadı');
+    assert.equal(row('Telefon').children.at(-1).disabled, true);
+    profile.emailVerified = false;
+    context.nextProfile = profile;
+    vm.runInContext('metadata(nextProfile)', context);
+    const verifyEmail = row('E-posta').children.at(-1);
+    await verifyEmail.onclick();
+    assert.match(nodes['#status'].textContent, /kullanılamıyor/);
+    assert.equal(verifyEmail.disabled, false);
+    mailAvailable = true;
+    await verifyEmail.onclick();
+    assert.equal(emailRequests, 2);
+    assert.match(nodes['#status'].textContent, /gönderildi/);
+    assert.equal(row('E-posta').children[1].textContent, 'Doğrulanmadı');
     await nodes['#editProfile'].onclick();
     assert.equal(nodes['#profileEditor'].hidden, true);
     assert.match(nodes['#status'].textContent, /yüklenemedi/);

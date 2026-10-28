@@ -14,3 +14,8 @@
 .profile-photo-editor { border-top: 1px solid var(--line, #dce5d6); margin-top: 28px; padding-top: 20px; }
 #photoForm { display: grid; gap: 12px; }
 @media (max-width: 600px) { #profileForm .two { grid-template-columns: 1fr; } .profile-actions > button { width: 100%; } }
+.profile-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.verification-badge { font-size: .8rem; font-weight: 600; border-radius: 20px; padding: 4px 10px; }
+.verification-badge.verified { color: #195a32; background: #e8f4eb; }
+.verification-badge.unverified { color: #775512; background: #fff3d5; }
+.verification-help { flex-basis: 100%; color: #52634e; order: 1; }

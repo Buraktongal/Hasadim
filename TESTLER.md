@@ -59,3 +59,11 @@ Profil ilk açılışta salt okunur özet gösterir. Bilgilerimi düzenle düğm
 İl/ilçe seçicileri mevcut iller-ilceler.json dosyasına bağlandı. Kayıtlı seçimler yüklenir, il değişince ilçe temizlenir. Liste yüklenemezse düzenleme açılmaz; kullanıcı tekrar deneyebilir.
 
 `node tests/profile-ui.cjs` ve TEST.bat üzerinden yeni kontroller çalıştırılır. Özet/düzenleme geçişi, iptal, kayıt, kayıt hatasında alanların korunması, konum yükleme hatasından sonra yeniden deneme ve bağlı ilçe seçimi sahte DOM/API ile doğrulandı. Statik bağlantı ve mevcut ilan arayüz testleri de geçti. Gerçek tarayıcı görsel kontrolü ve gerçek hesapla API kaydı bu değişiklikte yapılmadı.
+
+## İletişim doğrulama durumu
+
+E-posta doğrulaması ayrı bilgi satırı yerine e-posta adresinin yanında Doğrulandı/Doğrulanmadı etiketiyle gösterilir. Doğrulanmamış hesap kendi e-posta adresine bağlantı gönderebilir; yeni kimlik doğrulamalı endpoint mevcut CSRF ve auth hız sınırına tabidir. İstekten e-posta adresi kabul etmez. SMTP yapılandırılmamışsa 503 döner; gönderim başarılı gösterilmez. Bağlantıyı gönderme işlemi EmailConfirmed değerini değiştirmez; kullanıcı bağlantıyı tamamlayıp profil sayfasını yenilediğinde durum değişir.
+
+Telefon yanında doğrulama durumu ve SMS hizmetinin henüz açılmadığı açıklaması bulunur. Kullanıcının SMS hizmeti hesabı olmadığı için düğme kapalıdır; SMS gönderimi/kod kontrolü henüz uygulanmadı. Doğrulanmış telefon etiketi yalnızca Users tablosunda doğrulanmış numara ile profil numarası aynıysa gösterilir. Numara eklemek doğrulama sayılmaz.
+
+Derleme 0 hata/0 uyarı, mevcut 64 C# kontrolü, profil ve ilan arayüz testleri geçti. Profil testi doğrulanmış/doğrulanmamış e-posta etiketini, CSRF ile gönderimi, gönderim hatasını, gönderim sonrası etiketin değişmemesini ve SMS düğmesinin kapalı olmasını kapsar. Gerçek SMTP teslimatı ve gerçek SQL üzerinde telefon durum sorgusu bu değişiklikte test edilmedi.

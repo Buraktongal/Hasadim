@@ -57,6 +57,17 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  public async Task<IActionResult> Forgot(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&u.EmailConfirmed&&mail.Enabled){var t=await users.GeneratePasswordResetTokenAsync(u);await mail.Send(u.Email!,"Hasadım şifre yenileme",mail.Link("sifre-yenile.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa şifre yenileme bağlantısı gönderildi."});}
  [HttpPost("resend-confirmation")]
  public async Task<IActionResult> Resend(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&!u.EmailConfirmed&&mail.Enabled){var t=await users.GenerateEmailConfirmationTokenAsync(u);await mail.Send(u.Email!,"Hasadım e-posta doğrulama",mail.Link("eposta-dogrula.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa doğrulama bağlantısı gönderildi."});}
+ [Authorize,HttpPost("me/resend-confirmation")]
+ public async Task<IActionResult> ResendMine(CancellationToken ct)
+ {
+  var u=await MeUser();
+  if(u.EmailConfirmed)return Ok(new{mesaj="E-posta adresin zaten doğrulandı."});
+  if(!mail.Enabled)return StatusCode(503,new{mesaj="E-posta gönderimi şu anda kullanılamıyor. Lütfen daha sonra tekrar dene."});
+  if(string.IsNullOrWhiteSpace(u.Email))return BadRequest(new{mesaj="Hesabında e-posta adresi bulunamadı."});
+  var token=await users.GenerateEmailConfirmationTokenAsync(u);
+  await mail.Send(u.Email,"Hasadım e-posta doğrulama",mail.Link("eposta-dogrula.html",u.Email,token),ct);
+  return Ok(new{mesaj="Doğrulama bağlantısı e-posta adresine gönderildi. Gelen kutunu ve spam klasörünü kontrol et."});
+ }
  [HttpPost("confirm-email")]
  public async Task<IActionResult> Confirm(ConfirmRequest r){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is null)return BadRequest(new{mesaj="Bağlantı geçersiz."});var result=await users.ConfirmEmailAsync(u,r.Token);return result.Succeeded?Ok():BadRequest(new{mesaj="Bağlantı geçersiz veya süresi dolmuş."});}
  [HttpPost("reset-password")]

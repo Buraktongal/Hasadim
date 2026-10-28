@@ -23,15 +23,47 @@ function metadata(p) {
         ['Faaliyet', activities[p.activity]],
         ...(p.accountType === 'Business' ? [['Firma adı', p.businessName]] : []),
         ['Konum', [p.city, p.district].filter(Boolean).join(' / ')],
-        ['Hakkımda', p.about], ['Telefon', p.phone],
+        ['Hakkımda', p.about],
         ['Telefon görünürlüğü', p.showPhone ? 'Giriş yapan kullanıcılara açık' : 'Gizli'],
-        ['E-posta', p.email], ['E-posta doğrulaması', p.emailVerified ? 'Doğrulandı' : 'Doğrulanmadı']
+        ['E-posta', p.email], ['Telefon', p.phone]
     ];
     const root = $('#profileDetails');
     root.replaceChildren();
     for (const [label, value] of details) {
         const row = node('div');
-        row.append(node('dt', label), node('dd', value || 'Henüz eklenmedi'));
+        const content = node('dd');
+        content.append(node('span', value || 'Henüz eklenmedi'));
+        if (label === 'E-posta' || label === 'Telefon') {
+            content.className = 'profile-contact';
+            const verified = label === 'E-posta' ? p.emailVerified : p.phoneVerified;
+            const badge = node('span', verified ? 'Doğrulandı' : 'Doğrulanmadı');
+            badge.className = 'verification-badge ' + (verified ? 'verified' : 'unverified');
+            content.append(badge);
+            if (!verified) {
+                const action = node('button', label === 'E-posta' ? 'E-postamı doğrula' : 'Telefonumu doğrula');
+                action.type = 'button';
+                if (label === 'E-posta') {
+                    action.onclick = () => {
+                        if (action.disabled) return;
+                        return busy(action, async () => {
+                            const result = await api('/api/account/me/resend-confirmation', 'POST');
+                            status(result.mesaj);
+                        });
+                    };
+                } else {
+                    action.disabled = true;
+                    action.setAttribute('aria-describedby', 'phoneVerificationHelp');
+                    const help = node('small', p.phone
+                        ? 'SMS ile doğrulama henüz kullanıma açılmadı.'
+                        : 'Önce Bilgilerimi düzenle bölümünden telefon numaranı ekle. SMS ile doğrulama henüz kullanıma açılmadı.');
+                    help.id = 'phoneVerificationHelp';
+                    help.className = 'verification-help';
+                    content.append(help);
+                }
+                content.append(action);
+            }
+        }
+        row.append(node('dt', label), content);
         root.append(row);
     }
 }
