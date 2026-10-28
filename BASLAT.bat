@@ -1,6 +1,13 @@
 @echo off
 setlocal
 cd /d "%~dp0"
+for %%F in ("src\Hasadim.Web\Hasadim.Web.csproj" "src\Hasadim.Web\appsettings.json" "src\Hasadim.Web\Properties\launchSettings.json") do (
+ if not exist "%%~F" (
+  echo Eksik dosya: %%~F
+  echo Onarim paketini Hasadim.slnx bulunan klasore cikarin.
+  goto failed
+ )
+)
 where dotnet >nul 2>nul
 if errorlevel 1 goto missing
 dotnet dev-certs https --trust
