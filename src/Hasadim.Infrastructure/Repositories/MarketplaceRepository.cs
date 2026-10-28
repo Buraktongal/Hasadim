@@ -50,11 +50,13 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             );
         }
 
-        if (l.Status != ListingStatus.PendingReview || l.Active || l.SubmittedAt is null)
+        if (l.Status != ListingStatus.Published || !l.Active || l.SubmittedAt is null ||
+            l.Hidden || l.IsDeleted || l.PublishedAt is null ||
+            l.ExpiresAt - l.PublishedAt != TimeSpan.FromDays(30))
         {
             throw new AppException(
                 400,
-                "Yeni ilan inceleme bekleyen durumda oluşturulmalıdır."
+                "İlan yayımlanmaya hazır değil. Bilgilerini kontrol edip tekrar dene."
             );
         }
 
@@ -80,6 +82,8 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Active,
             Status,
             SubmittedAt,
+            PublishedAt,
+            ExpiresAt,
             PhotoUrl
         )
         VALUES
@@ -97,9 +101,11 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             @Telefon,
             @HasatTarihi,
             @OlusturulmaTarihi,
-            0,
+            @Active,
             @Status,
             @SubmittedAt,
+            @PublishedAt,
+            @ExpiresAt,
             @Photo
         );
         """;
@@ -120,7 +126,10 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             l.HasatTarihi,
             l.OlusturulmaTarihi,
             Status = (int)l.Status,
+            l.Active,
             l.SubmittedAt,
+            l.PublishedAt,
+            l.ExpiresAt,
             Photo = photos[0]
         };
 

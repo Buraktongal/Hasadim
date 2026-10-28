@@ -108,7 +108,7 @@ public class ListingsController(
                     "/api/meyve-ilanlari/photo-file/" + name)
                 .ToArray();
 
-            // İlan ve fotoğraflar birlikte inceleme bekleyen durumda kaydedilir.
+            // Sunucu kontrollerinden geçen ilan ve fotoğraflar tek işlemde yayımlanır.
             id = await service.Create(request, ct, photoReferences);
         }
         catch

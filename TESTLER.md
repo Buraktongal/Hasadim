@@ -67,3 +67,17 @@ E-posta doğrulaması ayrı bilgi satırı yerine e-posta adresinin yanında Do�
 Telefon yanında doğrulama durumu ve SMS hizmetinin henüz açılmadığı açıklaması bulunur. Kullanıcının SMS hizmeti hesabı olmadığı için düğme kapalıdır; SMS gönderimi/kod kontrolü henüz uygulanmadı. Doğrulanmış telefon etiketi yalnızca Users tablosunda doğrulanmış numara ile profil numarası aynıysa gösterilir. Numara eklemek doğrulama sayılmaz.
 
 Derleme 0 hata/0 uyarı, mevcut 64 C# kontrolü, profil ve ilan arayüz testleri geçti. Profil testi doğrulanmış/doğrulanmamış e-posta etiketini, CSRF ile gönderimi, gönderim hatasını, gönderim sonrası etiketin değişmemesini ve SMS düğmesinin kapalı olmasını kapsar. Gerçek SMTP teslimatı ve gerçek SQL üzerinde telefon durum sorgusu bu değişiklikte test edilmedi.
+
+## Otomatik yayının gerçek SQL kayıt düzeltmesi
+
+Otomatik yayın akışına geçerken MarketplaceRepository.Create içinde kalan PendingReview şartı kaldırıldı. Kayıt artık sunucunun yayımladığı Active/Published durumunu, PublishedAt ve ExpiresAt değerlerini yazar. 30 günlük süre ve fotoğrafların aynı işlem içinde kaydı korunur. Geçersiz bilgi ve fotoğrafsız gönderim kayıt oluşmadan hata döndürür.
+
+Yeni regresyon testi:
+
+```powershell
+dotnet run --project tests/Hasadim.SqlTests
+```
+
+SQL Server LocalDB gerektirir. Uygulamanın bağlantı ayarlarını kullanmaz: rastgele isimli Hasadim_Test_ veritabanı oluşturur, tüm migration'ları uygular, test sonunda yalnızca bu veritabanını siler. TEST.bat bu testi otomatik çalıştırmaz.
+
+Gerçek LocalDB üzerinde 11 kontrol geçti: yayımlanmış kayıt, 30 günlük tarihlerin saklanması, iki fotoğrafın kaydı, anonim liste/detay erişimi, geçersiz veri ve fotoğrafsız gönderimin reddi, fotoğraf kayıt hatasında tam geri alma, süresi dolan ilanın pazardan çıkıp geçmişte görünmesi. Bu kontrol HTTP yükleme ve gerçek tarayıcı testinin yerine geçmez.
