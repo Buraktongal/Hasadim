@@ -30,8 +30,25 @@ var owner = user.Id;
 var first = await service.Create(Request(), ct, ["photo.jpg"]);
 var second = await service.Create(Request(), ct, ["photo.jpg"]);
 Check(first != second, "Aynı kullanıcı ayrı ilanlar oluşturur");
-Check(repo.Items[first].Status == ListingStatus.PendingReview, "Yeni ilan doğrudan incelemede");
-Check(!repo.Items[first].Active && repo.Items[first].SubmittedAt.HasValue, "İlan yayımlanmaz; gönderim tarihi vardır");
+Check(repo.Items[first].Status == ListingStatus.Published && repo.Items[first].Active, "Yeni ilan yönetici olmadan otomatik yayımlanır");
+Check(repo.Items[first].ExpiresAt - repo.Items[first].PublishedAt == TimeSpan.FromDays(30), "Otomatik yayın tam 30 gün sürer");
+Check(repo.Items[first].ReviewedBy is null && repo.Items[first].ReviewedAt is null, "Otomatik yayın yönetici incelemesi olarak kaydedilmez");
+user.Id = null;
+Check((await service.Detail(first, ct)).Status == ListingStatus.Published, "Otomatik yayın herkese görünür");
+user.Id = owner;
+var invalid = Request(); invalid.MiktarKg = 0;
+await Status(400, () => service.Create(invalid, ct, ["photo.jpg"]), "Geçersiz ilan otomatik yayımlanmaz");
+var originalExpiry = repo.Items[first].ExpiresAt;
+await Status(409, () => service.SubmitForReview(first, new() { Version = repo.Items[first].Version }, ct), "Yayımlanmış ilan yeniden gönderilemez");
+Check(repo.Items[first].ExpiresAt == originalExpiry, "Yeniden gönderim otomatik yayın süresini uzatmaz");
+// Eski inceleme kayıtları ve yönetim yetkileri için ayrı senaryo.
+foreach (var id in new[] { first, second })
+{
+    typeof(Listing).GetProperty(nameof(Listing.Status))!.SetValue(repo.Items[id], ListingStatus.PendingReview);
+    typeof(Listing).GetProperty(nameof(Listing.Active))!.SetValue(repo.Items[id], false);
+}
+Check(repo.Items[first].Status == ListingStatus.PendingReview, "Eski inceleme kaydı senaryosu hazır");
+Check(!repo.Items[first].Active && repo.Items[first].SubmittedAt.HasValue, "Eski inceleme kaydı yayında değildir; gönderim tarihi vardır");
 Check(repo.Photos[first].Count == 1, "Fotoğraflar ilanla birlikte depoya gönderilir");
 Check((await service.Detail(first, ct)).Status == ListingStatus.PendingReview, "Sahibi incelemedeki ilanı görür");
 user.Id = null;
@@ -59,10 +76,11 @@ await Status(409, () => service.Update(first, Request(oldVersion), ct), "SQL sü
 Check(repo.Items[first].Status == ListingStatus.ChangesRequested, "Başarısız güncelleme kaydı değiştirmez");
 repo.UpdateSuccess = true;
 await service.Update(first, Request(oldVersion), ct);
-Check(repo.Items[first].Status == ListingStatus.PendingReview && repo.Items[first].ReviewNote is null, "Düzeltme tek kayıtta yeniden incelemeye alınır");
+Check(repo.Items[first].Status == ListingStatus.Published && repo.Items[first].ReviewNote is null, "Düzeltilen ilan tek kayıtta otomatik yayımlanır");
 await Status(409, () => service.Update(first, Request(oldVersion), ct), "İkinci gönderim yeniden kaydedilmez");
 user.Id = Guid.NewGuid(); user.IsAdmin = true;
 await Status(409, () => service.Approve(first, new() { Version = oldVersion }, ct), "Eski yönetici sürümüyle onay reddedilir");
+typeof(Listing).GetProperty(nameof(Listing.Status))!.SetValue(repo.Items[first], ListingStatus.PendingReview);
 await service.Approve(first, new() { Version = repo.Items[first].Version }, ct);
 Check(repo.Items[first].Status == ListingStatus.Published && repo.Items[first].Active, "Yönetici onayı ilanı hemen yayımlar");
 Check(repo.Items[first].PublishedAt.HasValue && repo.Items[first].ExpiresAt - repo.Items[first].PublishedAt == TimeSpan.FromDays(30), "Yayın süresi tam 30 gün");

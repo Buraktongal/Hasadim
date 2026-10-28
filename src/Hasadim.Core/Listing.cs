@@ -150,6 +150,25 @@ public class Listing
         ReviewNote = null;
     }
 
+    public void PublishAutomatically()
+    {
+        EnsureNotDeleted();
+        if (Hidden || (Status != ListingStatus.PendingReview && Status != ListingStatus.AwaitingPayment))
+            throw new InvalidOperationException("İlan otomatik yayına uygun değil.");
+
+        ValidateData(new(Baslik, MeyveTuru, Cesit, MiktarKg, KilogramFiyati,
+            Il, Ilce, Aciklama, Telefon, HasatTarihi, false));
+        var now = DateTime.UtcNow;
+        Status = ListingStatus.Published;
+        Active = true;
+        PublishedAt = now;
+        ExpiresAt = now.AddDays(30);
+        // Otomatik yayın bir insanın inceleme yaptığı anlamına gelmez.
+        ReviewedBy = null;
+        ReviewedAt = null;
+        ReviewNote = null;
+    }
+
     public void Approve(Guid reviewerId)
     {
         EnsureNotDeleted();

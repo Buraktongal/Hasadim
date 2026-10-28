@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 (() => {
     const states = [
@@ -180,7 +180,7 @@
                     return;
                 }
                 await changeView('mine');
-                toast(result.mesaj || 'İlanın incelemeye gönderildi.');
+                toast(result.mesaj || 'İlanın yayımlandı. 30 gün boyunca yayında kalacak.');
             });
         };
     }

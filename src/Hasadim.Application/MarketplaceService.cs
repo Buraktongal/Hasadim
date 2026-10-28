@@ -280,6 +280,7 @@ public class MarketplaceService(
         }
 
         Apply(listing.SubmitForReview);
+        Apply(listing.PublishAutomatically);
         await repo.Create(listing, photos, ct);
 
         return listing.Id;
@@ -309,6 +310,7 @@ public class MarketplaceService(
         {
             listing.Update(request.Data());
             listing.SubmitForReview();
+            listing.PublishAutomatically();
         });
 
         await Save(listing, request.Version!, ct);
@@ -359,7 +361,7 @@ public class MarketplaceService(
         await repo.Delete(id, ct);
     }
 
-    // İlan sahibi taslağı incelemeye gönderir.
+    // Eski istemciler için gönderim adresi korunur; kontroller sonrası otomatik yayınlar.
     public async Task SubmitForReview(
         Guid id,
         ListingWorkflowRequest request,
@@ -393,7 +395,11 @@ public class MarketplaceService(
             );
         }
 
-        Apply(() => listing.SubmitForReview());
+        Apply(() =>
+        {
+            listing.SubmitForReview();
+            listing.PublishAutomatically();
+        });
 
         await Save(listing, request.Version, ct);
     }

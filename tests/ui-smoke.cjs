@@ -56,10 +56,10 @@ async function fetcher(url,opts={}){
   if(u.searchParams.get('favorites'))r=r.filter(x=>x.favorite);
   result={items:r.map(x=>({...x,isMine:x.ownerId===current?.id})),total:r.length,page:1,pageSize:12};
  }else if(u.pathname==='/api/meyve-ilanlari/with-photos'&&method==='POST'){
-  body=JSON.parse(body.get('listing'));const id='00000000-0000-4000-8000-'+String(++counter).padStart(12,'0');items.push({...body,id,ownerId:current.id,ownerName:current.displayName,status:1,active:false,hidden:false,photos:[{photoUrl:'/test.png'}],version:'AAAAAAAAAAE='});result={id,mesaj:'İlanın incelemeye gönderildi.'};
+  body=JSON.parse(body.get('listing'));const id='00000000-0000-4000-8000-'+String(++counter).padStart(12,'0');items.push({...body,id,ownerId:current.id,ownerName:current.displayName,status:4,active:true,hidden:false,photos:[{photoUrl:'/test.png'}],version:'AAAAAAAAAAE='});result={id,mesaj:'İlanın yayımlandı. 30 gün boyunca yayında kalacak.'};
  }else if(/^\/api\/meyve-ilanlari\/[a-f0-9-]{36}$/.test(u.pathname)){
   const id=u.pathname.split('/').at(-1),x=items.find(x=>x.id===id);
-  if(method==='GET')result={...x,isMine:x.ownerId===current?.id};if(method==='PUT'){assert(body.version,'Version must be sent');Object.assign(x,body,{status:1,active:false,reviewNote:null});result={id};}if(method==='DELETE')items=items.filter(x=>x.id!==id);
+  if(method==='GET')result={...x,isMine:x.ownerId===current?.id};if(method==='PUT'){assert(body.version,'Version must be sent');Object.assign(x,body,{status:4,active:true,reviewNote:null});result={id};}if(method==='DELETE')items=items.filter(x=>x.id!==id);
  }else if(url.endsWith('/favorite')){items.find(x=>x.id===u.pathname.split('/')[3]).favorite=method==='POST';}
  else if(url.startsWith('/api/profiles/'))result={id:seller,displayName:'Satıcı',emailVerified:true,city:'Antalya',district:'Merkez'};
  else if(url.endsWith('/photo'))result={};
@@ -83,11 +83,11 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  field('#filters','minFiyat','40');field('#filters','maxFiyat','20');await run('loadListings()');assert(get('#listStatus').textContent.includes('büyük olamaz'));get('#filters').reset();console.log('PASS: filters');
  run('openEditor()');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,2);const first=items[1].id;
  run('openEditor()');assert.equal(get('#editorForm').elements.namedItem('id').value,'');assert.equal(get('#editorForm').elements.namedItem('version').value,'');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,3);assert.notEqual(items[2].id,first);assert.equal(items[1].ownerId,items[2].ownerId);assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,2);console.log('PASS: same user creates two listings with fresh GUID IDs');
- assert.equal(items[1].status,1);assert(get('#listings').textContent.includes('İncelemede'));
- assert(!items[1].active);assert(!items[2].active);
+ assert.equal(items[1].status,4);assert(get('#listings').textContent.includes('Yayında'));
+ assert(items[1].active);assert(items[2].active);
  const ownerDetail=new E('div');ownerDetail.id='detailContent';doc.append(ownerDetail);
  await run('renderDetail('+JSON.stringify(first)+')');
- assert(ownerDetail.textContent.includes('İncelemede'));
+ assert(ownerDetail.textContent.includes('Yayında'));
  assert(!ownerDetail.textContent.includes('İlanı düzenle'));
  items[1].status=2;items[1].reviewNote='İlçeyi kontrol et';
  await run('renderDetail('+JSON.stringify(first)+')');

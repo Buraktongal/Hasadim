@@ -123,7 +123,7 @@ public class ListingsController(
             new
             {
                 id,
-                mesaj = "İlanın alındı. Kontrol için incelemeye gönderildi."
+                mesaj = "İlanın yayımlandı. 30 gün boyunca yayında kalacak."
             }
         );
     }
@@ -140,7 +140,7 @@ public class ListingsController(
         return Ok(new
         {
             id,
-            mesaj = "Değişikliklerin alındı. İlan yeniden incelemeye gönderildi."
+            mesaj = "Değişikliklerin kaydedildi. İlanın 30 gün boyunca yayında."
         });
     }
 
@@ -168,7 +168,7 @@ public class ListingsController(
         return Ok(new
         {
             id,
-            mesaj = "İlan incelemeye gönderildi."
+            mesaj = "İlan yayımlandı. 30 gün boyunca yayında kalacak."
         });
     }
 
