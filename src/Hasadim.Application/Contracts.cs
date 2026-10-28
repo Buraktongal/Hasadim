@@ -50,7 +50,8 @@ public class ListingRequest
     [StringLength(5000)]
     public string Aciklama { get; set; } = "";
 
-    [Required, RegularExpression(@"^[+0-9 ()-]{10,25}$")]
+    // İstemciden telefon kabul edilmez; oturum sahibinin profilinden alınır.
+    [JsonIgnore]
     public string Telefon { get; set; } = "";
 
     public DateTime? HasatTarihi { get; set; }

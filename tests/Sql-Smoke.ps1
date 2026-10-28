@@ -32,6 +32,8 @@ foreach ($x in @(@{Session=$a;Email="seller-$stamp@example.test"},@{Session=$b;E
  Call $x.Session 'POST' '/api/account/login' @{email=$x.Email;password=$password} $t | Out-Null
 }
 $ta=Token $a; $tb=Token $b; $ua=Call $a 'GET' '/api/account/me'
+$profile=Call $a 'GET' '/api/profiles/me'
+Call $a 'PUT' '/api/profiles/me' @{displayName='Local Test';accountType='Individual';activity='Producer';city='Antalya';district='Korkuteli';phone='05011111111';showPhone=$true;version=$profile.version} $ta | Out-Null
 $ids=New-Object System.Collections.Generic.List[string]
 $listing=@{baslik="Test fruit $stamp";meyveTuru='Elma';cesit='Test';miktarKg=500;kilogramFiyati=25;il='Antalya';ilce='Korkuteli';telefon='05000000000';aciklama='Local test';active=$true}
 try {

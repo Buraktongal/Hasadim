@@ -29,10 +29,10 @@ try {
     await sql.ExecuteAsync("""
         INSERT dbo.Users(Id,UserName,NormalizedUserName,Email,NormalizedEmail,DisplayName)
         VALUES(@id,'test','TEST','test@example.test','TEST@EXAMPLE.TEST','SQL test');
-        INSERT dbo.UserProfiles(UserId) VALUES(@id);
+        INSERT dbo.UserProfiles(UserId,Phone) VALUES(@id,'05011111111');
         """, new { id = user.Id });
     var repo = new MarketplaceRepository(factory);
-    var service = new MarketplaceService(repo, user);
+    var service = new MarketplaceService(repo, user, new ProfileRepository(factory));
     var request = new ListingRequest {
         Baslik = "SQL test elma ilanı", MeyveTuru = "Elma", Cesit = "Starking",
         MiktarKg = 100, KilogramFiyati = 20, Il = "Antalya", Ilce = "Korkuteli",
@@ -41,6 +41,7 @@ try {
     var id = await service.Create(request, default, ["one.jpg", "two.jpg"]);
     var persisted = await repo.Find(id, default) ?? throw new Exception("İlan kaydedilmedi");
     Check(persisted.Active && persisted.Status == ListingStatus.Published, "Gerçek SQL kaydı hemen yayında");
+    Check(persisted.Telefon == "05011111111", "SQL ilan telefonu oturum sahibinin profilinden gelir");
     Check(persisted.PublishedAt.HasValue && persisted.ExpiresAt - persisted.PublishedAt == TimeSpan.FromDays(30), "SQL yayın tarihleri tam 30 gün");
     Check((await service.Detail(id, default)).Photos.Count == 2, "İlan ve iki fotoğraf birlikte kaydedildi");
     user.Id = null;

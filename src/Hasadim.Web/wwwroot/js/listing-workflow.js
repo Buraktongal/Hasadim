@@ -144,7 +144,7 @@
                         throw Error('JPG, PNG veya WebP seçin.');
                 }
                 const body = {};
-                for (const key of ['baslik', 'meyveTuru', 'cesit', 'il', 'ilce', 'aciklama', 'telefon'])
+                for (const key of ['baslik', 'meyveTuru', 'cesit', 'il', 'ilce', 'aciklama'])
                     body[key] = String(data.get(key) || '').trim();
                 body.miktarKg = Number(data.get('miktarKg'));
                 body.kilogramFiyati = Number(data.get('kilogramFiyati'));

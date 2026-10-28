@@ -5,11 +5,23 @@ namespace Hasadim.Application;
 
 public class MarketplaceService(
     IMarketplaceRepository repo,
-    ICurrentUser current)
+    ICurrentUser current,
+    IProfileRepository profiles)
 {
     private Guid User =>
         current.Id
         ?? throw new AppException(401, "Giriş yapın.");
+
+    private async Task SetProfilePhone(ListingRequest request, CancellationToken ct)
+    {
+        var profile = await profiles.Find(User, ct);
+        var phone = profile?.Phone?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(phone) ||
+            !System.Text.RegularExpressions.Regex.IsMatch(phone, @"\A[+0-9 ()-]{10,25}\z") ||
+            phone.Count(char.IsAsciiDigit) < 10)
+            throw new AppException(400, "İlan vermeden önce Profilim → Bilgilerimi düzenle bölümünden geçerli telefon numaranı kaydet.");
+        request.Telefon = phone;
+    }
 
     private static bool IsPublic(
         bool active,
@@ -259,6 +271,7 @@ public class MarketplaceService(
         var userId = User;
 
         ValidateRequest(request);
+        await SetProfilePhone(request, ct);
 
         if (photos is null || photos.Count < 1 || photos.Count > 10)
         {
@@ -295,6 +308,7 @@ public class MarketplaceService(
 
         EnsureEditable(listing);
         ValidateRequest(request);
+        await SetProfilePhone(request, ct);
         EnsureVersion(listing, request.Version);
 
         if (listing.Hidden)

@@ -6,7 +6,8 @@ using System.Reflection;
 
 var repo = new MemoryRepo();
 var user = new Current { Id = Guid.NewGuid() };
-var service = new MarketplaceService(repo, user);
+var listingProfiles = new MemoryProfiles();
+var service = new MarketplaceService(repo, user, listingProfiles);
 var ct = CancellationToken.None;
 int checks = 0;
 void Check(bool ok, string name)
@@ -27,7 +28,13 @@ ListingRequest Request(byte[]? version = null) => new()
     Telefon = "0501 343 10 91", Version = version, Active = true
 };
 var owner = user.Id;
+var missingPhoneRequest = Request();
+listingProfiles.Value.Phone = "";
+await Status(400, () => service.Create(missingPhoneRequest, ct, ["photo.jpg"]), "Profil telefonu yoksa istemcinin numarası kabul edilmez");
+Check(repo.Items.Count == 0, "Profil telefonu eksikken ilan oluşturulmaz");
+listingProfiles.Value.Phone = "05011111111";
 var first = await service.Create(Request(), ct, ["photo.jpg"]);
+Check(repo.Items[first].Telefon == "05011111111", "İlan telefonu istemciden değil profilden alınır");
 var second = await service.Create(Request(), ct, ["photo.jpg"]);
 Check(first != second, "Aynı kullanıcı ayrı ilanlar oluşturur");
 Check(repo.Items[first].Status == ListingStatus.Published && repo.Items[first].Active, "Yeni ilan yönetici olmadan otomatik yayımlanır");

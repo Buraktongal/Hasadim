@@ -75,7 +75,7 @@ context.window.setupFruitVarietySelectors=()=>{};
 context.window.setupLocationSelectors=async()=>{};
 const run=s=>vm.runInContext(s,context),tick=()=>new Promise(r=>setTimeout(r,15)),get=s=>doc.querySelector(s);
 const field=(form,name,value)=>get(form).elements.namedItem(name).value=value;
-function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',telefon:'0501 343 10 91',aciklama:'Test'}))field('#editorForm',k,v);}
+function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',aciklama:'Test'}))field('#editorForm',k,v);}
 (async()=>{
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-workflow.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');

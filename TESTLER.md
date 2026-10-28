@@ -81,3 +81,11 @@ dotnet run --project tests/Hasadim.SqlTests
 SQL Server LocalDB gerektirir. Uygulamanın bağlantı ayarlarını kullanmaz: rastgele isimli Hasadim_Test_ veritabanı oluşturur, tüm migration'ları uygular, test sonunda yalnızca bu veritabanını siler. TEST.bat bu testi otomatik çalıştırmaz.
 
 Gerçek LocalDB üzerinde 11 kontrol geçti: yayımlanmış kayıt, 30 günlük tarihlerin saklanması, iki fotoğrafın kaydı, anonim liste/detay erişimi, geçersiz veri ve fotoğrafsız gönderimin reddi, fotoğraf kayıt hatasında tam geri alma, süresi dolan ilanın pazardan çıkıp geçmişte görünmesi. Bu kontrol HTTP yükleme ve gerçek tarayıcı testinin yerine geçmez.
+
+## İlanlarda profil telefonunun kullanılması
+
+Yeni ilan ve ilan düzenleme formlarından telefon girişi kaldırıldı. İlan kaydında sunucu, oturum sahibinin profil telefonunu alır; istemciden gelen telefon alanı JSON sözleşmesinde yok sayılır. Profilde geçerli numara yoksa ilan oluşturulmaz ve kullanıcı Profilim → Bilgilerimi düzenle bölümüne yönlendiren hata alır. Formlarda profil bağlantısı bulunur. Var olan ilanların telefonları topluca değiştirilmez; yeni kayıt ve izin verilen düzenlemeler profil numarasını kullanır.
+
+Bu değişiklik SMS doğrulaması sağlamaz. SMS hizmeti hesabı henüz olmadığından telefonun profilde kayıtlı olması doğrulanmış olması anlamına gelmez.
+
+Derleme 0 hata/0 uyarı; 67 C# kontrolü, arayüz/statik dosya testleri ve ayrı LocalDB üzerinde 12 SQL kontrolü geçti. Testler profil telefonu yokken istemcinin numarasının kabul edilmemesini ve SQL kaydındaki telefonun gerçekten profilden gelmesini kapsar.
