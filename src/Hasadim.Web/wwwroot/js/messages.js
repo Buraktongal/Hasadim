@@ -14,10 +14,24 @@ window.HasadimMessages = (() => {
         const d = new Date(/Z$|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
         return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
-    function create({ root, more, api, currentUser }) {
+    function create({ root, more, api, currentUser, isActive = () => false, onRead = () => {} }) {
         let owner, items = [], page = 1, selected = '', search = '', request = 0, loading = false, hasMore = false;
         const drafts = new Map();
         const sending = new Set(), feedback = new Map();
+        let reading = false;
+        async function readVisible() {
+            if (reading || !isActive() || document.hidden || !selected) return;
+            if (window.matchMedia?.('(max-width: 700px)').matches && !root.className.includes('show-conversation')) return;
+            const unread = items.filter(m => key(m) === selected && m.recipientId === owner && !m.readAt).slice(0, 100);
+            if (!unread.length) return;
+            reading = true;
+            try {
+                await api('/api/messages/read', 'POST', { ids: unread.map(m => m.id) });
+                for (const m of unread) m.readAt = new Date().toISOString();
+                await onRead();
+            } catch { /* Retry on the next notification check. */ }
+            finally { reading = false; }
+        }
         const key = m => m.listingId + ':' + (m.senderId === owner ? m.recipientId : m.senderId);
         function groups() {
             const grouped = new Map();
@@ -32,6 +46,13 @@ window.HasadimMessages = (() => {
             return [...grouped.values()].sort((a, b) => b.messages.at(-1).createdAt.localeCompare(a.messages.at(-1).createdAt));
         }
         function render() {
+            const focused = document.activeElement;
+            const focusReply = focused === root.querySelector('textarea');
+            const focusSearch = focused === root.querySelector('input');
+            const caret = focused?.selectionStart, end = focused?.selectionEnd;
+            const previousHistory = root.querySelector('.conversation-history');
+            const previousScroll = previousHistory?.scrollTop || 0;
+            const nearBottom = !previousHistory || previousHistory.scrollHeight - previousScroll - previousHistory.clientHeight < 60;
             const showConversation = root.className.split(' ').includes('show-conversation');
             root.replaceChildren(); root.className = 'message-center' + (showConversation ? ' show-conversation' : '');
             const conversations = groups();
@@ -113,10 +134,13 @@ window.HasadimMessages = (() => {
                 }
             };
             panel.append(header, history, form); root.append(sidebar, panel);
-            history.scrollTop = history.scrollHeight;
+            history.scrollTop = nearBottom ? history.scrollHeight : previousScroll;
+            if (focusReply) { body.focus(); if (caret != null) body.setSelectionRange(caret, end); }
+            if (focusSearch) filter.focus();
+            void readVisible();
         }
-        async function load(append = false) {
-            if (append && loading) return;
+        async function load(append = false, background = false) {
+            if ((append || background) && loading) return;
             const user = currentUser(); if (!user) return;
             if (owner !== user.id) { items = []; drafts.clear(); feedback.clear(); sending.clear(); selected = ''; search = ''; owner = user.id; }
             const version = ++request; loading = true; more.disabled = true;
@@ -125,16 +149,19 @@ window.HasadimMessages = (() => {
                 const next = append ? page + 1 : 1;
                 const data = await api('/api/messages?page=' + next);
                 if (version !== request || currentUser()?.id !== owner) return;
-                const unique = new Map((append ? items : []).map(m => [m.id, m]));
+                const unique = new Map((append || background ? items : []).map(m => [m.id, m]));
+                const unchanged = background && data.items.every(m => unique.has(m.id) && unique.get(m.id).readAt === m.readAt);
                 for (const m of data.items) unique.set(m.id, m);
                 items = [...unique.values()]; page = next; hasMore = data.hasMore;
-                more.hidden = !hasMore; render();
+                more.hidden = !hasMore;
+                if (!unchanged) render();
+                else await readVisible();
             } catch (e) {
                 if (version !== request) return;
-                const notice = el('p', e.message, 'form-error'); notice.setAttribute('role', 'alert'); root.append(notice);
+                if (!background) { const notice = el('p', e.message, 'form-error'); notice.setAttribute('role', 'alert'); root.append(notice); }
             } finally { if (version === request) { loading = false; more.disabled = false; } }
         }
-        return { load };
+        return { load, readVisible };
     }
     function questions(x, ask) {
         const section = el('section', undefined, 'listing-questions');

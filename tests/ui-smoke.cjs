@@ -63,12 +63,14 @@ async function fetcher(url,opts={}){
  }else if(url.endsWith('/favorite')){items.find(x=>x.id===u.pathname.split('/')[3]).favorite=method==='POST';}
  else if(url.startsWith('/api/profiles/'))result={id:seller,displayName:'Satıcı',emailVerified:true,city:'Antalya',district:'Merkez'};
  else if(url.endsWith('/photo'))result={};
+ else if(url==='/api/messages/notifications')result={unreadCount:0,latestMessageId:null,latestUnreadId:null};
+ else if(url==='/api/messages/read')result={};
  else if(url.startsWith('/api/messages')){if(method==='POST')messages.push({...body,id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',senderId:current.id,createdAt:'2026-09-23T12:00:00Z',listingTitle:'Armut',senderName:'Burak',recipientName:'Satıcı'});else result={items:messages,hasMore:false};}
  else if(url==='/api/admin/reports')result=[];
  return {ok:true,status:200,text:async()=>JSON.stringify(result),json:async()=>result};
 }
 const location={search:'',pathname:'/html/index.html',_href:'https://localhost/html/index.html',get href(){return this._href;},set href(v){this._href=new URL(v,'https://localhost').href;},replace(v){this.href=v;}};
-const context=vm.createContext({document:doc,window:{location},fetch:fetcher,FormData:FD,location,URL,URLSearchParams,Intl,Date,Number,String,Object,Error,TypeError,console,setTimeout:(f,n)=>n===6000?0:setTimeout(f,n),clearTimeout,confirm:()=>true});
+const context=vm.createContext({document:doc,window:{location},fetch:fetcher,FormData:FD,location,URL,URLSearchParams,Intl,Date,Number,String,Object,Error,TypeError,console,setTimeout:(f,n)=>n===6000||n>=10000?0:setTimeout(f,n),clearTimeout,confirm:()=>true});
 context.history={replaceState(_state,_title,url){location.href=new URL(url,'https://localhost').href;}};
 vm.runInContext(fs.readFileSync(path.join(root,'js/phone-input.js'),'utf8'),context);
 assert.equal(context.window.formatListingPhone,undefined,'Listing form no longer asks for a phone');
@@ -97,6 +99,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  console.log('PASS: seller privacy, truthful badges, safe text and quantity estimate limits');
 
  vm.runInContext(fs.readFileSync(path.join(root,'js/messages.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(root,'js/message-notifications.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');
  const menu=get('#accountMenu');
  assert(!menu.querySelector('summary').textContent.includes(current.displayName),'Personal name must stay out of the menu trigger');
@@ -161,6 +164,27 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  const questionBox=run('window.HasadimMessages.questions({},askQuestion)');questionBox.querySelector('button').onclick();
  assert(questionText.includes('mevcut mu'));assert(questionBox.textContent.includes('özel mesaj'));
  console.log('PASS: separate conversations, safe message text, mobile navigation, draft preservation, pagination, replies and seller questions');
+ context.window.messageAlerts.stop();
+ let noticeState={unreadCount:2,latestMessageId:'n1',latestUnreadId:'n1'},noticeUser={id:owner},noticeFailure=false,refreshCount=0;
+ context.noticeOptions={currentUser:()=>noticeUser,api:async()=>{if(noticeFailure)throw Error('Network');return noticeState;},onChange:async()=>{refreshCount++;}};
+ const alerts=run('window.HasadimMessageNotifications.create(noticeOptions)');
+ await alerts.refresh();assert.equal(get('#messageAlert').hidden,false);assert(get('#messageAlertText').textContent.includes('2'));
+ assert.equal(get('[data-message-count]').textContent,'2');assert.equal(get('#accountMenu').open,false);
+ get('#dismissMessageAlert').onclick();await alerts.refresh();assert.equal(get('#messageAlert').hidden,true,'Same unread message must not reopen a dismissed banner');
+ noticeState={unreadCount:3,latestMessageId:'n2',latestUnreadId:'n2'};await alerts.refresh();assert.equal(get('#messageAlert').hidden,false);
+ noticeFailure=true;await alerts.refresh();assert.equal(get('[data-message-count]').textContent,'3','Connection failure preserves unread count');noticeFailure=false;
+ noticeState={unreadCount:0,latestMessageId:'n2',latestUnreadId:null};await alerts.refresh();assert.equal(get('[data-message-count]').hidden,true);assert.equal(get('#messageAlert').hidden,true);
+ noticeUser=null;await alerts.refresh();assert.equal(get('#messageAlert').hidden,true);assert(refreshCount>=4);
+ console.log('PASS: closed-menu badges, new-message banner, dismissal, read clearing, network failure and logout');
+ const scheduled=new Map();let scheduleId=0,pollCalls=0;
+ const pollingContext=vm.createContext({window:{},document:doc,setTimeout:(fn,ms)=>{const id=++scheduleId;scheduled.set(id,{fn,ms});return id;},clearTimeout:id=>scheduled.delete(id)});
+ vm.runInContext(fs.readFileSync(path.join(root,'js/message-notifications.js'),'utf8'),pollingContext);
+ pollingContext.opts={currentUser:()=>({id:owner}),api:async()=>{pollCalls++;return {unreadCount:0,latestMessageId:null,latestUnreadId:null};},onChange:async()=>{}};
+ const polling=vm.runInContext('window.HasadimMessageNotifications.create(opts)',pollingContext);
+ polling.start();await tick();assert.equal(scheduled.size,1);assert.equal([...scheduled.values()][0].ms,10000);
+ const nextPoll=[...scheduled.values()][0];await nextPoll.fn();assert(pollCalls>=2);assert.equal(scheduled.size,1);
+ polling.stop();assert.equal(scheduled.size,0,'Stopping notifications cancels the next poll');
+ console.log('PASS: automatic 10-second polling, single timer and stop');
 
  await run('changeView("all")');const fav=get('#listings').querySelector('.favorite');await fav.listeners.click[0]();assert(items[0].favorite);console.log('PASS: favorite');
  field('#reportForm','id',items[0].id);field('#reportForm','reason','Test');get('#reportForm').onsubmit({preventDefault(){},currentTarget:get('#reportForm')});await tick();assert(logs.some(x=>x.url.endsWith('/report')));console.log('PASS: report');

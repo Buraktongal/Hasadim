@@ -25,6 +25,7 @@ function loadPageScript(source) {
         await loadPageScript('/js/listing-workflow.js');
         await loadPageScript('/js/market-presentation.js');
         await loadPageScript('/js/messages.js');
+        await loadPageScript('/js/message-notifications.js');
         await loadPageScript('/js/app.js');
     } catch (error) {
         console.error(error);

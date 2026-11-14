@@ -218,6 +218,7 @@ public class MessageView
     public string Body { get; set; } = "";
 
     public DateTime CreatedAt { get; set; }
+    public DateTime? ReadAt { get; set; }
 
     public string ListingTitle { get; set; } = "";
     public string SenderName { get; set; } = "";

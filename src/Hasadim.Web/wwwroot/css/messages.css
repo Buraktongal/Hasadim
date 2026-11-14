@@ -1,4 +1,10 @@
 .message-center { display: grid; grid-template-columns: minmax(230px, 32%) minmax(0, 1fr); min-height: 520px; border: 1px solid #dce5d6; border-radius: 22px; overflow: hidden; background: #fff; }
+.message-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 12px; background: #b33227; color: #fff; font-size: 11px; font-weight: 700; }
+#siteLayout .account-menu-toggle { position: relative; }
+.menu-message-count { position: absolute; top: -7px; right: -7px; border: 2px solid #fff; height: 23px; min-width: 23px; }
+.message-alert { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 4vw; background: #e8efdf; border-top: 1px solid #dce5d6; border-bottom: 1px solid #cad9bf; }
+.message-alert a { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: #183e2e; text-decoration: none; font-size: 13px; }
+.message-alert button { border: 0; background: transparent; color: #183e2e; min-width: 44px; min-height: 44px; font-size: 22px; cursor: pointer; }
 .conversation-sidebar { padding: 20px 14px; background: #f7f8f3; border-right: 1px solid #dce5d6; min-width: 0; }
 .conversation-sidebar h3 { margin: 0 8px 16px; }
 .conversation-sidebar input { width: 100%; box-sizing: border-box; margin: 0 0 16px; }

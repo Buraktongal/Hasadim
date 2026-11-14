@@ -380,7 +380,13 @@ window.ListingWorkflow.bindEditor();
 function openCompose(listingId,recipientId,title,question=""){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;f.elements.namedItem('body').value=question;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};
 $('#reportForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));await api('/api/meyve-ilanlari/'+d.id+'/report','POST',{reason:d.reason.trim()});close('reportDialog');toast('Bildirimin yönetime iletildi.');});};
-const messageCenter = window.HasadimMessages.create({root: $('#messagesList'), more: $('#moreMessages'), api, currentUser: () => user});
+const messageCenter = window.HasadimMessages.create({root: $('#messagesList'), more: $('#moreMessages'), api, currentUser: () => user, isActive: () => view === 'messages' && !isDetailPage(), onRead: () => window.messageAlerts?.refresh()});
+window.messageAlerts = window.HasadimMessageNotifications.create({ api, currentUser: () => user, onChange: async changed => {
+    if (view === 'messages' && !document.hidden && !isDetailPage()) {
+        await messageCenter.load(false, true);
+        await messageCenter.readVisible();
+    }
+}});
 function loadMessages(append = false) { return messageCenter.load(append); }
 $('#refreshMessages').onclick=()=>loadMessages();$('#moreMessages').onclick=()=>loadMessages(true);
 async function loadReports(){const parent=$('#reportsList');parent.replaceChildren(el('p','Yükleniyor…'));try{const data=await api('/api/admin/reports');parent.replaceChildren();if(!data.length)empty(parent,'Açık şikâyet yok','Yeni bildirimler burada görüntülenecek.');for(const r of data){const c=el('article',undefined,'report');c.append(el('h3','#'+r.listingId+' · '+r.baslik),el('p',r.reason));const actions=el('div',undefined,'actions');actions.append(button('İlanı incele','secondary',()=>openDetail(r.listingId)),button(r.hidden?'İlanı tekrar göster':'İlanı gizle','danger',async()=>{try{await api(`/api/admin/listings/${r.listingId}/visibility?hidden=${!r.hidden}`,'POST');await loadReports();}catch(e){toast(e.message);}}),button('Şikâyeti kapat','primary',async()=>{try{await api(`/api/admin/reports/${r.id}/resolve`,'POST');await loadReports();}catch(e){toast(e.message);}}));c.append(actions);parent.append(c);}}catch(e){parent.replaceChildren(el('p',e.message,'form-error'));}}

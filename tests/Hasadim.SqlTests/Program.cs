@@ -112,6 +112,26 @@ try {
     async Task<bool> CompleteOnce() { try { await registrations.Complete(concurrent.Id, concurrent.Code, default); return true; } catch (AppException e) when(e.Status==400) { return false; } }
     Check((await Task.WhenAll(CompleteOnce(), CompleteOnce())).Count(x => x) == 1, "Eşzamanlı doğrulama yalnızca bir kez hesap açar");
     await SecurityRegression.Run(config, factory, Check);
+
+    var notifications = new MessageNotifications(factory);
+    var sender = persisted.OwnerId;
+    var recipient = await sql.ExecuteScalarAsync<Guid>("SELECT TOP(1) Id FROM dbo.Users WHERE Id<>@sender",new{sender});
+    var firstMessage = Guid.NewGuid(); var secondMessage = Guid.NewGuid(); var replyMessage = Guid.NewGuid();
+    await repo.Send(firstMessage,sender,new MessageRequest{ListingId=id,RecipientId=recipient,Body="Birinci mesaj"},default);
+    await repo.Send(secondMessage,sender,new MessageRequest{ListingId=id,RecipientId=recipient,Body="İkinci mesaj"},default);
+    await repo.Send(replyMessage,recipient,new MessageRequest{ListingId=id,RecipientId=sender,Body="Yanıt"},default);
+    Check((await notifications.State(recipient,default)).UnreadCount==2,"Bildirim sayısı yalnızca gelen okunmamış mesajları içerir");
+    await notifications.Read(sender,[firstMessage,secondMessage],default);
+    Check((await notifications.State(recipient,default)).UnreadCount==2,"Gönderen karşı tarafın mesajlarını okundu işaretleyemez");
+    await notifications.Read(recipient,[firstMessage,replyMessage],default);
+    Check((await notifications.State(recipient,default)).UnreadCount==1,"Yalnızca alıcı ve belirtilen mesaj okundu işaretlenir");
+    Check((await notifications.State(sender,default)).UnreadCount==1,"Başkasına gelen mesajın okunmamış durumu korunur");
+    await notifications.Read(recipient,[firstMessage],default);
+    Check((await notifications.State(recipient,default)).UnreadCount==1,"Tekrarlanan okundu isteği sayacı bozmaz");
+    await notifications.Read(recipient,[secondMessage],default);
+    var notificationState=await notifications.State(recipient,default);
+    Check(notificationState.UnreadCount==0&&notificationState.LatestUnreadId is null,"Tüm mesajlar okunduğunda sayaç sıfırlanır");
+    Check((await repo.Messages(recipient,1,default)).Where(m=>m.RecipientId==recipient).All(m=>m.ReadAt.HasValue),"Okunma bilgisi mesaj API verisinde kalıcıdır");
     Console.WriteLine($"ALL {checks} SQL CHECKS PASSED");
 } finally {
     SqlConnection.ClearAllPools();
