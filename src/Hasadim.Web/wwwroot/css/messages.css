@@ -1,0 +1,47 @@
+.message-center { display: grid; grid-template-columns: minmax(230px, 32%) minmax(0, 1fr); min-height: 520px; border: 1px solid #dce5d6; border-radius: 22px; overflow: hidden; background: #fff; }
+.conversation-sidebar { padding: 20px 14px; background: #f7f8f3; border-right: 1px solid #dce5d6; min-width: 0; }
+.conversation-sidebar h3 { margin: 0 8px 16px; }
+.conversation-sidebar input { width: 100%; box-sizing: border-box; margin: 0 0 16px; }
+.conversation-list { max-height: 580px; overflow-y: auto; }
+.conversation-item { display: block; width: 100%; text-align: left; padding: 16px; margin: 0 0 8px; background: transparent; border: 1px solid transparent; border-radius: 14px; color: #243c2b; cursor: pointer; }
+.conversation-item:hover { background: #eef2e8; }
+.conversation-item.selected { border-color: #a3b99b; background: #e8efdf; }
+.conversation-item strong,.conversation-product { display: block; overflow-wrap: anywhere; }
+.conversation-product { font-size: 12px; margin-top: 6px; }
+.conversation-preview { margin: 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #66715f; font-size: 13px; }
+.conversation-item small { font-size: 11px; color: #66715f; }
+.conversation-panel { min-width: 0; display: flex; flex-direction: column; }
+.conversation-heading { display: flex; flex-direction: column; gap: 8px; padding: 20px 24px; border-bottom: 1px solid #e4eadd; overflow-wrap: anywhere; }
+.conversation-person { font-size: 18px; font-weight: 700; color: #183e2e; text-decoration: none; }
+.conversation-listing { font-size: 13px; color: #536a42; }
+.conversation-history { display: flex; flex-direction: column; gap: 14px; padding: 24px; height: 380px; overflow-y: auto; background: #fcfcf8; }
+.message-bubble { max-width: 82%; padding: 12px 16px; border-radius: 16px; border: 1px solid #e2e8dc; overflow-wrap: anywhere; }
+.message-bubble p { margin: 6px 0 8px; white-space: pre-wrap; line-height: 1.65; }
+.message-bubble time,.message-bubble small { font-size: 11px; opacity: .8; }
+.message-bubble.outgoing { align-self: flex-end; background: #e8efdf; border-bottom-right-radius: 4px; }
+.message-bubble.incoming { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; }
+.conversation-reply { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; padding: 18px 24px; border-top: 1px solid #e4eadd; }
+.conversation-reply label { grid-column: 1 / -1; font-size: 12px; }
+.conversation-reply textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; resize: vertical; min-height: 75px; max-height: 250px; }
+.conversation-reply .form-error { margin: 0; align-self: center; }
+.conversation-reply button { justify-self: end; }
+.conversation-back { display: none; }
+.inbox-empty { grid-column: 1 / -1; padding: 70px 30px; text-align: center; color: #536a42; }
+.history-note { font-size: 12px; text-align: center; color: #66715f; }
+#detailContent > .listing-questions { grid-column: 1 / -1; padding: 28px; border: 1px solid #dce5d6; border-radius: 20px; background: #f5f6ed; }
+.listing-questions h3 { font-size: 24px; margin: 8px 0; }
+.question-choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
+.question-choices button { border-radius: 24px; background: #fff; }
+.listing-description-title { display: block; font-size: 18px; margin-bottom: 12px; color: #183e2e; }
+@media(max-width:700px) {
+    .message-center { grid-template-columns: minmax(0,1fr); min-height: 400px; }
+    .conversation-sidebar { border: 0; }
+    .conversation-panel { display: none; }
+    .message-center.show-conversation .conversation-sidebar { display: none; }
+    .message-center.show-conversation .conversation-panel { display: flex; }
+    .conversation-back { display: block; align-self: flex-start; padding-left: 0; }
+    .conversation-heading,.conversation-history,.conversation-reply { padding: 16px; }
+    .conversation-history { height: 45dvh; min-height: 230px; }
+    .message-bubble { max-width: 90%; }
+    #detailContent > .listing-questions { padding: 20px; }
+}

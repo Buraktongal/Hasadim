@@ -96,6 +96,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  quantity.value='1.5';quantity.listeners.input[0]();assert(result.textContent.includes('45,00'));
  console.log('PASS: seller privacy, truthful badges, safe text and quantity estimate limits');
 
+ vm.runInContext(fs.readFileSync(path.join(root,'js/messages.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');
  const menu=get('#accountMenu');
  assert(!menu.querySelector('summary').textContent.includes(current.displayName),'Personal name must stay out of the menu trigger');
@@ -133,6 +134,34 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  console.log('PASS: expired listings move from current listings into history');
  await run('openDetail('+JSON.stringify(items[0].id)+')');assert.equal(location.href,'https://localhost/html/ilan.html?id='+items[0].id+'&from=mine');console.log('PASS: details');
  run('openCompose('+JSON.stringify(items[0].id)+','+JSON.stringify(seller)+',"Armut")');field('#composeForm','body','Merhaba');get('#composeForm').onsubmit({preventDefault(){},currentTarget:get('#composeForm')});await tick();assert.equal(messages[0].listingId,items[0].id);await run('changeView("messages")');assert(get('#messagesList').textContent.includes('Merhaba'));console.log('PASS: messages preserve GUID');
+ const inboxRoot=doc.createElement('div'),older=doc.createElement('button');
+ const otherBuyer='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+ const sample=(id,listingId,senderId,recipientId,body,createdAt)=>({id,listingId,senderId,recipientId,body,createdAt,senderName:'Alıcı',recipientName:'Satıcı',listingTitle:'Elma'});
+ const firstMessage=sample('m1',items[0].id,owner,seller,'<img src=x onerror=alert(1)>','2026-10-01T10:00:00Z');
+ let failReply=true,replyCalls=0;
+ context.inboxOptions={root:inboxRoot,more:older,currentUser:()=>({id:seller}),api:async(url,method,data)=>{
+  if(method==='POST'){replyCalls++;assert.equal(data.recipientId,owner);assert.equal(data.listingId,items[0].id);if(failReply)throw Error('Gönderim başarısız');return;}
+  return url.endsWith('page=2')?{items:[firstMessage,sample('m0',items[0].id,owner,seller,'Eski mesaj','2026-09-30T10:00:00Z')],hasMore:false}:{items:[firstMessage,sample('m2',items[0].id,otherBuyer,seller,'Ayrı alıcı','2026-10-01T09:00:00Z'),sample('m3',items[1].id,owner,seller,'Ayrı ilan','2026-10-01T08:00:00Z')],hasMore:true};
+ }};
+ const inbox=run('window.HasadimMessages.create(inboxOptions)');await inbox.load();
+ assert.equal(inboxRoot.querySelectorAll('.conversation-item').length,3,'Listing and participant both separate threads');
+ assert.equal(inboxRoot.querySelectorAll('img').length,0,'Message body is plain text');
+ inboxRoot.querySelector('.conversation-item').onclick();assert(inboxRoot.className.includes('show-conversation'));
+ inboxRoot.querySelector('.conversation-back').onclick();assert(!inboxRoot.className.includes('show-conversation'));
+ let reply=inboxRoot.querySelector('.conversation-reply'),text=reply.querySelector('textarea');
+ text.value='Test yanıtı';text.oninput();await reply.onsubmit({preventDefault(){}});
+ assert(reply.textContent.includes('Gönderim başarısız'));assert.equal(text.value,'Test yanıtı');
+ await inbox.load(true);assert.equal(inboxRoot.querySelectorAll('.message-bubble').length,2,'Older pages merge without duplicate messages');
+ assert.equal(inboxRoot.querySelector('textarea').value,'Test yanıtı','Loading older messages preserves draft');
+ failReply=false;reply=inboxRoot.querySelector('.conversation-reply');
+ const sending=reply.onsubmit({preventDefault(){}});await reply.onsubmit({preventDefault(){}});await sending;
+ assert.equal(replyCalls,2,'Repeated submit while sending is ignored');
+ assert.equal(inboxRoot.querySelector('textarea').value,'','Successful send clears draft');
+ let questionText;context.askQuestion=t=>questionText=t;
+ const questionBox=run('window.HasadimMessages.questions({},askQuestion)');questionBox.querySelector('button').onclick();
+ assert(questionText.includes('mevcut mu'));assert(questionBox.textContent.includes('özel mesaj'));
+ console.log('PASS: separate conversations, safe message text, mobile navigation, draft preservation, pagination, replies and seller questions');
+
  await run('changeView("all")');const fav=get('#listings').querySelector('.favorite');await fav.listeners.click[0]();assert(items[0].favorite);console.log('PASS: favorite');
  field('#reportForm','id',items[0].id);field('#reportForm','reason','Test');get('#reportForm').onsubmit({preventDefault(){},currentTarget:get('#reportForm')});await tick();assert(logs.some(x=>x.url.endsWith('/report')));console.log('PASS: report');
  await get('#logoutBtn').onclick();run('openEditor()');assert.equal(location.href,'https://localhost/html/giris.html');console.log('PASS: separate login page redirect');

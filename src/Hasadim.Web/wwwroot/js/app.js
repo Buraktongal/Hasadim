@@ -4,7 +4,7 @@ const fruits = {Elma:'🍎',Armut:'🍐',Portakal:'🍊',Mandalina:'🍊',Limon:
 const money = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n);
 const number = n => new Intl.NumberFormat('tr-TR').format(n);
 const date = v => v ? v.slice(0,10).split('-').reverse().join('.') : 'Belirtilmedi';
-let user=null, csrf='', view='all', page=1, registration=false, listRequest=0, detailRequest=0, messageBefore=1;
+let user=null, csrf='', view='all', page=1, registration=false, listRequest=0, detailRequest=0;
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function button(text,cls,fn){const b=el('button',text,cls);b.type='button';b.addEventListener('click',fn);return b;}
 let toastTimer;
@@ -253,7 +253,9 @@ async function renderDetail(id)
         for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
-        } content.append(grid, el('p', x.aciklama || 'Açıklama eklenmemiş.', 'description'));
+        } const description = el('section', undefined, 'description');
+ description.append(el('h3', 'Ürün açıklaması', 'listing-description-title'), el('p', x.aciklama || 'Açıklama eklenmemiş.'));
+ content.append(grid, description);
  window.ListingWorkflow.appendStatus(content, x);
  const actions = el('div', undefined, 'actions');
  const publiclyVisible = x.status === 4 && x.active && !x.hidden;
@@ -275,7 +277,7 @@ async function renderDetail(id)
          tel.href = 'tel:' + x.telefon.replace(/[^+0-9]/g, '');
          actions.append(tel);
      }
-     actions.append(button('Satıcıya mesaj gönder', 'primary',
+     actions.append(button('Satıcıya soru sor', 'primary',
          () => openCompose(x.id, x.ownerId, x.baslik)));
      actions.append(button('İlanı bildir', 'textbtn', () => {
          $('#reportForm').reset();
@@ -287,7 +289,12 @@ async function renderDetail(id)
      actions.append(button('İletişim için giriş yap', 'primary', openAuth));
  }
  window.ListingWorkflow.appendReviewActions(content, x);
- content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);window.MarketPresentation.seller(seller,p);}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
+ content.append(actions);
+ if (!x.isMine && publiclyVisible) content.append(window.HasadimMessages.questions(x, question => {
+     if (!mustLogin()) return;
+     openCompose(x.id, x.ownerId, x.baslik, question);
+ }));
+ const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);window.MarketPresentation.seller(seller,p);}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
  }catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
 
 async function openEditor(x) {
@@ -370,13 +377,11 @@ document
         button.onclick = openNewListingFromMenu;
     });
 window.ListingWorkflow.bindEditor();
-function openCompose(listingId,recipientId,title){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;show('composeDialog');}
+function openCompose(listingId,recipientId,title,question=""){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;f.elements.namedItem('body').value=question;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};
 $('#reportForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));await api('/api/meyve-ilanlari/'+d.id+'/report','POST',{reason:d.reason.trim()});close('reportDialog');toast('Bildirimin yönetime iletildi.');});};
-async function loadMessages(append=false){const parent=$('#messagesList');if(!append){parent.replaceChildren(el('p','Yükleniyor…'));messageBefore=1;}$('#moreMessages').disabled=true;
- try{const data=await api('/api/messages'+(append&&messageBefore?'?page='+messageBefore:''));if(!append)parent.replaceChildren();if(!data.items.length&&!append)empty(parent,'Henüz mesajın yok','Bir ilandan satıcıya mesaj göndererek başlayabilirsin.');
- for(const m of data.items){const sent=m.senderId===user.id;const c=el('article',undefined,'message '+(sent?'sent':'received'));c.append(el('small',`${sent?'Gönderen: sen':'Gönderen: '+m.senderName} → ${sent?m.recipientName:'sen'} · ${new Date(m.createdAt.endsWith('Z')?m.createdAt:m.createdAt+'Z').toLocaleString('tr-TR')}`),el('h3',m.listingTitle),el('p',m.body));if(!sent)c.append(button('Yanıtla','secondary',()=>openCompose(m.listingId,m.senderId,m.listingTitle)));parent.append(c);}messageBefore++;$('#moreMessages').hidden=!data.hasMore;
- }catch(e){if(!append)parent.replaceChildren(el('p',e.message,'form-error'));else toast(e.message);}finally{$('#moreMessages').disabled=false;}}
+const messageCenter = window.HasadimMessages.create({root: $('#messagesList'), more: $('#moreMessages'), api, currentUser: () => user});
+function loadMessages(append = false) { return messageCenter.load(append); }
 $('#refreshMessages').onclick=()=>loadMessages();$('#moreMessages').onclick=()=>loadMessages(true);
 async function loadReports(){const parent=$('#reportsList');parent.replaceChildren(el('p','Yükleniyor…'));try{const data=await api('/api/admin/reports');parent.replaceChildren();if(!data.length)empty(parent,'Açık şikâyet yok','Yeni bildirimler burada görüntülenecek.');for(const r of data){const c=el('article',undefined,'report');c.append(el('h3','#'+r.listingId+' · '+r.baslik),el('p',r.reason));const actions=el('div',undefined,'actions');actions.append(button('İlanı incele','secondary',()=>openDetail(r.listingId)),button(r.hidden?'İlanı tekrar göster':'İlanı gizle','danger',async()=>{try{await api(`/api/admin/listings/${r.listingId}/visibility?hidden=${!r.hidden}`,'POST');await loadReports();}catch(e){toast(e.message);}}),button('Şikâyeti kapat','primary',async()=>{try{await api(`/api/admin/reports/${r.id}/resolve`,'POST');await loadReports();}catch(e){toast(e.message);}}));c.append(actions);parent.append(c);}}catch(e){parent.replaceChildren(el('p',e.message,'form-error'));}}
 $('#refreshAdmin').onclick = () => Promise.all([
