@@ -93,6 +93,7 @@ public class ListingQuery
 
     public Guid? OwnerId { get; set; }
 
+    [Required, RegularExpression("^(new|priceAsc|priceDesc)$", ErrorMessage = "Geçersiz sıralama seçeneği.")]
     public string Sort { get; set; } = "new";
 
     [Range(1, 100000)]

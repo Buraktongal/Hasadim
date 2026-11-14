@@ -111,6 +111,7 @@ try {
     var concurrent = await registrations.Start(NewUser("parallel@example.test"), default);
     async Task<bool> CompleteOnce() { try { await registrations.Complete(concurrent.Id, concurrent.Code, default); return true; } catch (AppException e) when(e.Status==400) { return false; } }
     Check((await Task.WhenAll(CompleteOnce(), CompleteOnce())).Count(x => x) == 1, "Eşzamanlı doğrulama yalnızca bir kez hesap açar");
+    await SecurityRegression.Run(config, factory, Check);
     Console.WriteLine($"ALL {checks} SQL CHECKS PASSED");
 } finally {
     SqlConnection.ClearAllPools();

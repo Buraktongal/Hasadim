@@ -2,6 +2,7 @@
   <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Hasadim.Infrastructure/Hasadim.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Hasadim.DependencyInjection/Hasadim.DependencyInjection.csproj" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 </Project>

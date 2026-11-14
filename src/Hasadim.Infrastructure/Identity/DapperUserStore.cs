@@ -28,10 +28,24 @@ public class DapperUserStore(SqlConnectionFactory factory,IDataProtectionProvide
   catch(SqlException e)when(e.Number is 2601 or 2627){return Fail("DuplicateUser","Hesap bilgileri kullanılamıyor.");}
  }
  public Task<IdentityResult> DeleteAsync(AppUser u,CancellationToken ct)=>Task.FromResult(Fail("NotSupported","Hesap silme bu sürümde desteklenmiyor."));
- async Task<AppUser?> Find(string condition,object args,CancellationToken ct){await using var c=await factory.Open(ct);var u=await c.QuerySingleOrDefaultAsync<AppUser>(new CommandDefinition("SELECT * FROM dbo.Users WHERE "+condition,args,cancellationToken:ct));if(u?.AuthenticatorKey is not null)u.AuthenticatorKey=protection.CreateProtector("Hasadim.Authenticator.v1").Unprotect(u.AuthenticatorKey);return u;}
- public Task<AppUser?> FindByIdAsync(string id,CancellationToken ct)=>Guid.TryParse(id,out var guid)?Find("Id=@guid",new{guid},ct):Task.FromResult<AppUser?>(null);
- public Task<AppUser?> FindByNameAsync(string name,CancellationToken ct)=>Find("NormalizedUserName=@name",new{name},ct);
- public Task<AppUser?> FindByEmailAsync(string email,CancellationToken ct)=>Find("NormalizedEmail=@email",new{email},ct);
+ // Only code-defined queries may select an account. Values always remain parameters.
+ enum UserLookup { Id, Name, Email }
+ async Task<AppUser?> Find(UserLookup lookup,object value,CancellationToken ct)
+ {
+  var sql=lookup switch {
+   UserLookup.Id => "SELECT * FROM dbo.Users WHERE Id=@value",
+   UserLookup.Name => "SELECT * FROM dbo.Users WHERE NormalizedUserName=@value",
+   UserLookup.Email => "SELECT * FROM dbo.Users WHERE NormalizedEmail=@value",
+   _ => throw new ArgumentOutOfRangeException(nameof(lookup))
+  };
+  await using var c=await factory.Open(ct);
+  var u=await c.QuerySingleOrDefaultAsync<AppUser>(new CommandDefinition(sql,new{value},cancellationToken:ct));
+  if(u?.AuthenticatorKey is not null)u.AuthenticatorKey=protection.CreateProtector("Hasadim.Authenticator.v1").Unprotect(u.AuthenticatorKey);
+  return u;
+ }
+ public Task<AppUser?> FindByIdAsync(string id,CancellationToken ct)=>Guid.TryParse(id,out var guid)?Find(UserLookup.Id,guid,ct):Task.FromResult<AppUser?>(null);
+ public Task<AppUser?> FindByNameAsync(string name,CancellationToken ct)=>Find(UserLookup.Name,name,ct);
+ public Task<AppUser?> FindByEmailAsync(string email,CancellationToken ct)=>Find(UserLookup.Email,email,ct);
  public Task<string?> GetUserNameAsync(AppUser u,CancellationToken ct)=>Task.FromResult(u.UserName);
  public Task SetUserNameAsync(AppUser u,string? value,CancellationToken ct){ct.ThrowIfCancellationRequested();u.UserName=value;return Task.CompletedTask;}
  public Task<string?> GetNormalizedUserNameAsync(AppUser u,CancellationToken ct)=>Task.FromResult(u.NormalizedUserName);
