@@ -194,6 +194,7 @@ function card(x) {
     );
     body.append(el('span', x.meyveTuru + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
         el('h3', x.baslik), el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
+ body.append(window.MarketPresentation.facts(x));
  window.ListingWorkflow.appendStatus(body, x);
  const price=el('p',money(x.kilogramFiyati),'price');price.append(el('small',' / kg'));body.append(price);
     const bottom = el('div', undefined, 'card-bottom'); bottom.append(el('span', x.ownerName, 'card-owner'), button('İlanı incele ↗', 'textbtn', () => openDetail(x.id)));
@@ -256,6 +257,7 @@ async function renderDetail(id)
  window.ListingWorkflow.appendStatus(content, x);
  const actions = el('div', undefined, 'actions');
  const publiclyVisible = x.status === 4 && x.active && !x.hidden;
+ if (publiclyVisible) content.append(window.MarketPresentation.estimate(x));
  if (x.isMine) {
      if (window.ListingWorkflow.editable(x)) {
          actions.append(button('İlanı düzenle', 'primary', () => openEditor(x)));
@@ -285,7 +287,7 @@ async function renderDetail(id)
      actions.append(button('İletişim için giriş yap', 'primary', openAuth));
  }
  window.ListingWorkflow.appendReviewActions(content, x);
- content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);if(p.photoUrl){const img=el('img',undefined,'avatar');img.src=p.photoUrl;img.alt=p.displayName;seller.append(img);}const link=el('a',p.displayName);link.href='/html/satici.html?id='+p.id;seller.append(el('h3','Satıcı bilgileri'),link,el('p',[p.businessName,p.city,p.district].filter(Boolean).join(' · ')),el('p',p.emailVerified?'E-posta doğrulandı':'E-posta doğrulanmadı'));}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
+ content.append(actions);const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);window.MarketPresentation.seller(seller,p);}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
  }catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
 
 async function openEditor(x) {

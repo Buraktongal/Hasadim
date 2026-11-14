@@ -78,6 +78,23 @@ const field=(form,name,value)=>get(form).elements.namedItem(name).value=value;
 function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',aciklama:'Test'}))field('#editorForm',k,v);}
 (async()=>{
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-workflow.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(root,'js/market-presentation.js'),'utf8'),context);
+ const profileRoot=run("document.createElement('section')");
+ context.profileRoot=profileRoot;
+ run("window.MarketPresentation.seller(profileRoot,{id:'seller',displayName:'<script>test</script>',activity:'Producer',accountType:'Business',emailVerified:false,activeListingCount:0},true)");
+ assert(profileRoot.textContent.includes('E-posta doğrulanmadı'));
+ assert(profileRoot.textContent.includes('Üretici'));
+ assert(profileRoot.textContent.includes('Kullanıcı beyanı'));
+ assert.equal(profileRoot.querySelectorAll('script').length,0);
+ assert.equal(profileRoot.querySelectorAll('a').length,0,'Hidden phone must not create a contact link');
+ const estimate=run("window.MarketPresentation.estimate({miktarKg:1500,kilogramFiyati:30})");
+ const quantity=estimate.querySelector('input'),result=estimate.querySelector('.estimate-result');
+ assert(result.textContent.includes('3.000,00'));
+ quantity.value='2000';quantity.listeners.input[0]();assert.equal(quantity.attributes['aria-invalid'],'true');
+ quantity.value='';quantity.listeners.input[0]();assert.equal(quantity.attributes['aria-invalid'],'true');
+ quantity.value='1.5';quantity.listeners.input[0]();assert(result.textContent.includes('45,00'));
+ console.log('PASS: seller privacy, truthful badges, safe text and quantity estimate limits');
+
  vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');
  field('#filters','il','Mersin');await run('loadListings()');assert(get('#listings').textContent.includes('Henüz ilan yok'));get('#filters').reset();
  field('#filters','minFiyat','40');field('#filters','maxFiyat','20');await run('loadListings()');assert(get('#listStatus').textContent.includes('büyük olamaz'));get('#filters').reset();console.log('PASS: filters');
