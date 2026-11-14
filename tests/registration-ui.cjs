@@ -5,8 +5,10 @@ const assert = require('node:assert/strict');
 const root = path.join(__dirname, '../src/Hasadim.Web/wwwroot');
 const html = fs.readFileSync(path.join(root, 'html/kayit.html'), 'utf8');
 assert.match(html, /name="phone"/);
+assert(!html.includes('role="search"'));
+assert(html.includes('placeholder="555 555 55 55"'));
 assert.match(html, /id="registrationCodeForm" hidden/);
-class Field { constructor(value = '') { this.value = value; this.disabled = false; this.textContent = ''; } focus() {} }
+class Field { constructor(value = '') { this.value = value; this.disabled = false; this.textContent = ''; } focus() {} addEventListener(type,fn) { (this.listeners??={})[type]=fn; } setCustomValidity(text) { this.validationMessage=text; } setSelectionRange(start,end) { this.selectionStart=start;this.selectionEnd=end; } }
 class Form {
     constructor(fields) { this.fields = fields; this.button = new Field(); this.hidden = false; this.elements = { namedItem: n => fields[n] }; }
     querySelector() { return this.button; }
@@ -21,7 +23,7 @@ const nodes = { '#registerForm': form, '#registrationCodeForm': codeForm, '#comp
 let now = Date.now(), interval, message, sent = 0, completed = 0, failMail = true;
 class ClockDate extends Date { static now() { return now; } }
 const context = vm.createContext({
-    document: { querySelector: n => nodes[n] }, Date: ClockDate,
+    window: {}, document: { querySelector: n => nodes[n] }, Date: ClockDate,
     FormData: class { constructor(f) { this.values = Object.entries(f.fields).map(([k, v]) => [k, v.value]); } [Symbol.iterator]() { return this.values[Symbol.iterator](); } },
     status: text => { message = text; }, setInterval: fn => { interval = fn; return 1; }, clearInterval() {},
     api: async (route, data) => {
@@ -39,8 +41,18 @@ const context = vm.createContext({
     }
 });
 (async () => {
+    vm.runInContext(fs.readFileSync(path.join(root, 'js/registration-phone.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(root, 'js/registration.js'), 'utf8'), context);
     const event = { preventDefault() {} };
+    const phone=form.fields.phone;
+    assert.equal(phone.value,'501 111 11 11');
+    for(const [input,expected,valid] of [['5555555555','555 555 55 55',true],['+90 (555) 555 55 55','555 555 55 55',true],['05555555555','555 555 55 55',true],['55555555559999','555 555 55 55',true],['55555','555 55',false],['4444444444','444 444 44 44',false],['','',false]]) {
+        phone.value=input;phone.selectionStart=input.length;phone.listeners.input({inputType:'insertText'});
+        assert.equal(phone.value,expected);assert.equal(!phone.validationMessage,valid);
+    }
+    phone.value='555 55';await form.submit(event);assert.equal(sent,0);assert.equal(message,undefined,'Incomplete phone does not call the API');
+    phone.value='05011111111';phone.listeners.input({inputType:'insertFromPaste'});
+    console.log('PASS: phone mask, paste, length limit, mobile prefix and incomplete submission');
     await form.submit(event);
     assert.equal(form.hidden, false); assert.equal(codeForm.hidden, true); assert.equal(sent, 0);
     failMail = false;

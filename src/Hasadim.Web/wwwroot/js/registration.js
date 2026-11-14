@@ -7,6 +7,8 @@
     const confirm = document.querySelector('#completeRegistration');
     const restart = document.querySelector('#restartRegistration');
     const timer = document.querySelector('#registrationTimer');
+    const phone = form.elements.namedItem('phone');
+    window.RegistrationPhone.bind(phone);
     let ticket = null, timerId = null, sending = false, confirming = false;
     function updateTimer() {
         const seconds = ticket ? Math.max(0, Math.ceil((ticket.deadline - Date.now()) / 1000)) : 0;
@@ -17,10 +19,13 @@
     }
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        if (sending || !form.reportValidity()) return;
+        const validPhone = window.RegistrationPhone.format(phone);
+        if (sending || !form.reportValidity() || !validPhone) return;
         sending = true; submit.disabled = true; status('Kod gönderiliyor…');
         try {
             const data = Object.fromEntries(new FormData(form));
+            // API stores the national 11-digit form; the input shows 555 555 55 55.
+            data.phone = '0' + window.RegistrationPhone.digits(phone.value);
             const response = await api('register', data);
             ticket = { id: response.challengeId, deadline: Date.parse(response.expiresAt) };
             form.elements.namedItem('password').value = '';
