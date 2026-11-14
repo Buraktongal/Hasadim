@@ -1,0 +1,48 @@
+/* A fixed-size menu trigger keeps personal names out of the logo row. */
+#siteLayout .topbar.market-header,
+#siteLayout .topbar.market-header.is-compact {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 20px;
+}
+#siteLayout .market-header > .account-dropdown { grid-column: 1; grid-row: 1; min-width: 0; }
+#siteLayout .market-header > .site-logo { grid-column: 2; grid-row: 1; min-width: 0; }
+#siteLayout .market-header > .global-search { grid-column: 3; grid-row: 1; }
+#siteLayout .market-header > .header-new-listing {
+    grid-column: 4; grid-row: 1; display: inline-flex; align-items: center;
+    justify-content: center; gap: 8px; min-height: 44px; margin: 0; padding: 10px 18px;
+    background: #183e2e; color: #fff; border: 1px solid #183e2e;
+    border-radius: 12px; font-size: 14px; font-weight: 650; white-space: nowrap;
+    box-shadow: 0 3px 8px #183e2e14;
+}
+#siteLayout .header-new-listing:hover { background: #28583e; }
+#siteLayout .listing-plus { font-size: 22px; font-weight: 400; line-height: 1; }
+#siteLayout .account-menu-toggle {
+    min-height: 44px; min-width: 44px; box-sizing: border-box; padding: 10px;
+    border: 1px solid #dce5d6; border-radius: 12px; background: #fff; color: #183e2e;
+}
+#siteLayout .account-dropdown[open] > summary { background: #edf3e8; border-color: #7c987e; }
+#siteLayout .menu-bars { display: flex; flex-direction: column; gap: 4px; width: 19px; }
+#siteLayout .menu-bars > span { display: block; height: 2px; background: currentColor; border-radius: 2px; }
+#siteLayout .account-dropdown > .account-menu-panel {
+    left: 0; right: auto; top: calc(100% + 10px); width: 300px;
+    max-width: calc(100vw - 32px); max-height: calc(100dvh - 100px);
+    border-radius: 18px; padding: 14px;
+}
+#siteLayout .menu-identity { padding: 6px 12px 16px; margin-bottom: 8px; border-bottom: 1px solid #e5ece4; }
+#siteLayout .menu-identity .account-menu-heading { display: block; padding: 0 0 8px; font-size: 10px; }
+#siteLayout #accountMenuName { display: block; overflow-wrap: anywhere; white-space: normal; line-height: 1.5; }
+#siteLayout .account-menu-panel > [data-account-action="create-listing"] { background: #edf3e8; font-weight: 700; }
+@media (max-width: 1000px) {
+    #siteLayout .topbar.market-header,
+    #siteLayout .topbar.market-header.is-compact { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; padding: 10px 16px; }
+    #siteLayout .menu-label { display: none; }
+    #siteLayout .market-header > .header-new-listing { grid-column: 3; padding: 10px 12px; }
+    #siteLayout .market-header > .global-search { grid-column: 1 / -1; grid-row: 2; }
+    #siteLayout .site-logo img { width: min(165px, 100%); height: auto; }
+    #siteLayout .market-header > .site-logo { width: 100%; max-width: 165px; justify-self: center; }
+}
+@media (max-width: 360px) {
+    #siteLayout .topbar.market-header,
+    #siteLayout .topbar.market-header.is-compact { gap: 8px; padding-left: 12px; padding-right: 12px; }
+    #siteLayout .market-header > .header-new-listing { gap: 5px; padding: 10px; font-size: 13px; }
+}

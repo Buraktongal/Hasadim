@@ -70,7 +70,8 @@ async function fetcher(url,opts={}){
 const location={search:'',pathname:'/html/index.html',_href:'https://localhost/html/index.html',get href(){return this._href;},set href(v){this._href=new URL(v,'https://localhost').href;},replace(v){this.href=v;}};
 const context=vm.createContext({document:doc,window:{location},fetch:fetcher,FormData:FD,location,URL,URLSearchParams,Intl,Date,Number,String,Object,Error,TypeError,console,setTimeout:(f,n)=>n===6000?0:setTimeout(f,n),clearTimeout,confirm:()=>true});
 context.history={replaceState(_state,_title,url){location.href=new URL(url,'https://localhost').href;}};
-context.window.formatListingPhone=()=>{};
+vm.runInContext(fs.readFileSync(path.join(root,'js/phone-input.js'),'utf8'),context);
+assert.equal(context.window.formatListingPhone,undefined,'Listing form no longer asks for a phone');
 context.window.setupFruitVarietySelectors=()=>{};
 context.window.setupLocationSelectors=async()=>{};
 const run=s=>vm.runInContext(s,context),tick=()=>new Promise(r=>setTimeout(r,15)),get=s=>doc.querySelector(s);
@@ -96,9 +97,19 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  console.log('PASS: seller privacy, truthful badges, safe text and quantity estimate limits');
 
  vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');
+ const menu=get('#accountMenu');
+ assert(!menu.querySelector('summary').textContent.includes(current.displayName),'Personal name must stay out of the menu trigger');
+ assert(menu.querySelector('.menu-identity').textContent.includes(current.displayName));
+ menu.open=true;
+ await get('[data-view="all"]').onclick();assert.equal(menu.open,false,'Navigation closes the menu');
+ menu.open=true;
+ for(const handler of doc.listeners.keydown||[])handler({key:'Escape'});
+ assert.equal(menu.open,false,'Escape closes the menu');
+ console.log('PASS: name stays inside menu; navigation and Escape close it');
  field('#filters','il','Mersin');await run('loadListings()');assert(get('#listings').textContent.includes('Henüz ilan yok'));get('#filters').reset();
  field('#filters','minFiyat','40');field('#filters','maxFiyat','20');await run('loadListings()');assert(get('#listStatus').textContent.includes('büyük olamaz'));get('#filters').reset();console.log('PASS: filters');
- run('openEditor()');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,2);const first=items[1].id;
+ await get('#newBtn').onclick();assert.equal(get('#editorDialog').open,true,'Header action opens the listing form without a phone formatter');get('#editorDialog').close();
+ await get('[data-account-action="create-listing"]').onclick();assert.equal(get('#editorDialog').open,true,'Menu action opens the listing form');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,2);const first=items[1].id;
  run('openEditor()');assert.equal(get('#editorForm').elements.namedItem('id').value,'');assert.equal(get('#editorForm').elements.namedItem('version').value,'');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,3);assert.notEqual(items[2].id,first);assert.equal(items[1].ownerId,items[2].ownerId);assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,2);console.log('PASS: same user creates two listings with fresh GUID IDs');
  assert.equal(items[1].status,4);assert(get('#listings').textContent.includes('Yayında'));
  assert(items[1].active);assert(items[2].active);

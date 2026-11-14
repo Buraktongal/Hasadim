@@ -549,11 +549,7 @@ p { margin: 12px 0; }
 
 }
 
-@media (hover: hover) and (pointer: fine) {
 
-  #siteLayout .account-dropdown:hover > .account-menu-panel { display: flex; }
-
-}
 
 
 /* 4. Ana sayfa ve tanıtım */

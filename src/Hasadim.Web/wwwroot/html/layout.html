@@ -1,50 +1,11 @@
 <header class="topbar market-header">
-
-    <!-- Logo -->
-    <a class="site-logo"
-       href="/"
-       aria-label="Hasadım ana sayfa">
-        <img src="/images/hasadim-logo.png"
-             alt="Hasadım"
-             width="2048"
-             height="683">
-    </a>
-
-    <!-- Genel arama -->
-    <form action="/"
-          method="get"
-          role="search"
-          class="global-search">
-
-        <label class="sr-only" for="globalQuery">
-            Ürün veya ilan ara
-        </label>
-
-        <input id="globalQuery"
-               name="q"
-               type="search"
-               placeholder="Meyve, çeşit veya ilan ara…"
-               maxlength="150">
-
-        <button type="submit" class="primary">
-            Ara
-        </button>
-    </form>
-
-    <!-- Hesap ve ilan işlemleri -->
-    <div class="header-actions">
-
         <details id="accountMenu" class="account-dropdown">
 
-            <summary class="account-menu-toggle">
-                <span id="accountMenuName">Hesabım</span>
-                <span class="account-menu-arrow" aria-hidden="true">
-                    ⌄
-                </span>
-            </summary>
+            <summary class="account-menu-toggle" aria-label="Gezinme menüsü"><span class="menu-bars" aria-hidden="true"><span></span><span></span><span></span></span><span class="menu-label">Menü</span></summary>
 
             <nav class="account-menu-panel"
                  aria-label="Hesap ve gezinme">
+                <div class="menu-identity"><span class="account-menu-heading">HOŞ GELDİN</span><strong id="accountMenuName">Hesabım</strong></div>
 
                 <p class="account-menu-heading">
                     KEŞFET
@@ -141,13 +102,43 @@
             </nav>
         </details>
 
-        <button id="newBtn"
+    <!-- Logo -->
+    <a class="site-logo"
+       href="/"
+       aria-label="Hasadım ana sayfa">
+        <img src="/images/hasadim-logo.png"
+             alt="Hasadım"
+             width="2048"
+             height="683">
+    </a>
+
+    <!-- Genel arama -->
+    <form action="/"
+          method="get"
+          role="search"
+          class="global-search">
+
+        <label class="sr-only" for="globalQuery">
+            Ürün veya ilan ara
+        </label>
+
+        <input id="globalQuery"
+               name="q"
+               type="search"
+               placeholder="Meyve, çeşit veya ilan ara…"
+               maxlength="150">
+
+        <button type="submit" class="primary">
+            Ara
+        </button>
+    </form>
+
+    <!-- Hızlı ilan oluşturma -->
+    <button id="newBtn"
                 type="button"
                 class="primary header-new-listing">
-            + İlan ver
+            <span class="listing-plus" aria-hidden="true">+</span><span>İlan ver</span>
         </button>
-
-    </div>
 </header>
 
 <nav id="breadcrumbs"

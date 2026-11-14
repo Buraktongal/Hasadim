@@ -334,7 +334,7 @@ async function openEditor(x) {
     $('#photoPreviews').replaceChildren();
 
     try {
-        window.formatListingPhone();
+        window.formatListingPhone?.();
 
         window.setupFruitVarietySelectors(
             form,
