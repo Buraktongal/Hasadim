@@ -101,6 +101,16 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  quantity.value='2000';quantity.listeners.input[0]();assert.equal(quantity.attributes['aria-invalid'],'true');
  quantity.value='';quantity.listeners.input[0]();assert.equal(quantity.attributes['aria-invalid'],'true');
  quantity.value='1.5';quantity.listeners.input[0]();assert(result.textContent.includes('45,00'));
+ const discount=run("window.MarketPresentation.price({kilogramFiyati:15,oncekiKilogramFiyati:20})");
+ assert(discount.textContent.includes('%25 indirim'));
+ assert(!run("window.MarketPresentation.price({kilogramFiyati:20,oncekiKilogramFiyati:15})").textContent.includes('indirim'));
+ assert(run("window.MarketPresentation.stats({viewCount:12,favoriteCount:3})").textContent.includes('12 görüntülenme · 3 favori'));
+ let viewCalls=0; const viewApi=async()=>{viewCalls++;return {viewCount:9};};
+ const tracked={id:'view-test',isMine:false,status:4,active:true};
+ await context.window.MarketPresentation.recordView(tracked,viewApi);
+ await context.window.MarketPresentation.recordView(tracked,viewApi);
+ await context.window.MarketPresentation.recordView({...tracked,id:'own-view',isMine:true},viewApi);
+ assert.equal(viewCalls,1);assert.equal(tracked.viewCount,9);
  console.log('PASS: seller privacy, truthful badges, safe text and quantity estimate limits');
 
  vm.runInContext(fs.readFileSync(path.join(root,'js/messages.js'),'utf8'),context);

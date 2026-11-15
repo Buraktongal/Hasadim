@@ -38,6 +38,10 @@ public class ListingsController(
         return Ok(await service.Detail(id, ct));
     }
 
+    [HttpPost("{id:guid}/view")]
+    public async Task<IActionResult> RecordView(Guid id, CancellationToken ct)
+        => Ok(new { viewCount = await service.RecordView(id, ct) });
+
     // Fotoğrafsız eski oluşturma endpoint'i yayın yapamaz.
     [Authorize]
     [HttpPost]
@@ -140,7 +144,7 @@ public class ListingsController(
         return Ok(new
         {
             id,
-            mesaj = "Değişikliklerin kaydedildi. İlanın 30 gün boyunca yayında."
+            mesaj = "Değişikliklerin kaydedildi. İlanın mevcut yayın bitiş tarihi korundu."
         });
     }
 

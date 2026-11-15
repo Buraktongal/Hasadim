@@ -13,6 +13,34 @@ window.MarketPresentation = (() => {
         if (cls) n.className = cls;
         return n;
     };
+    function stats(x) {
+        return node('p', number(x.viewCount || 0) + ' görüntülenme · ' + number(x.favoriteCount || 0) + ' favori', 'listing-stats');
+    }
+    function price(x) {
+        const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY'}).format(value);
+        const root = node('div', undefined, 'listing-price');
+        root.append(node('p', currency(x.kilogramFiyati) + ' / kg', 'price'));
+        if (x.oncekiKilogramFiyati > x.kilogramFiyati && x.kilogramFiyati > 0) {
+            const percent = Math.round((1 - x.kilogramFiyati / x.oncekiKilogramFiyati) * 1000) / 10;
+            const old = node('del', currency(x.oncekiKilogramFiyati) + ' / kg');
+            old.setAttribute('aria-label', 'Önceki ilan fiyatı: ' + currency(x.oncekiKilogramFiyati));
+            root.append(old, node('span', (percent ? '%' + number(percent) : '%0,1’den az') + ' indirim', 'discount-badge'));
+        }
+        return root;
+    }
+    const countedViews = new Set();
+    async function recordView(x, api) {
+        if (x.isMine || x.status !== 4 || !x.active || x.hidden) return;
+        const key = 'hasadim-view:' + x.id;
+        if (countedViews.has(key)) return;
+        try { if (sessionStorage.getItem(key)) return; } catch {}
+        countedViews.add(key);
+        try {
+            const result = await api('/api/meyve-ilanlari/' + x.id + '/view', 'POST');
+            x.viewCount = result.viewCount;
+            try { sessionStorage.setItem(key, '1'); } catch {}
+        } catch { countedViews.delete(key); }
+    }
     function facts(x) {
         const root = node('dl', undefined, 'harvest-facts');
         for (const [label, value] of [['Miktar', number(x.miktarKg) + ' kg'], ['Hasat tarihi', date(x.hasatTarihi)]]) {
@@ -81,5 +109,5 @@ window.MarketPresentation = (() => {
         root.append(heading, label, result, node('small', 'İlan fiyatına göre hesaplanır. Sipariş oluşturmaz; teslimat, ek masraflar ve satış koşullarını satıcıyla netleştir.', 'muted'));
         return root;
     }
-    return { facts, seller, estimate };
+    return { facts, seller, estimate, stats, price, recordView };
 })();

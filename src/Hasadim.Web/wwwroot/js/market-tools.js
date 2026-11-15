@@ -25,7 +25,7 @@ window.MarketTools = (() => {
             b.onclick = () => { form.elements.namedItem('meyveTuru').value = fruit; reload(); }; quick.append(b);
         }
     }
-    function detailActions(x, { api, requireLogin }) {
+    function detailActions(x, { api, requireLogin, onFavorite }) {
         const root = node('div', undefined, 'detail-tools');
         const favorite = node('button', x.favorite ? '♥ Favorilerimde' : '♡ Favorilere ekle', 'secondary'); favorite.type = 'button';
         favorite.setAttribute('aria-pressed', String(Boolean(x.favorite)));
@@ -34,7 +34,8 @@ window.MarketTools = (() => {
             if (!requireLogin()) return; favorite.disabled = true;
             try {
                 await api('/api/meyve-ilanlari/' + x.id + '/favorite', x.favorite ? 'DELETE' : 'POST');
-                x.favorite = !x.favorite; favorite.textContent = x.favorite ? '♥ Favorilerimde' : '♡ Favorilere ekle';
+                x.favoriteCount = Math.max(0, (x.favoriteCount || 0) + (x.favorite ? -1 : 1));
+                x.favorite = !x.favorite; onFavorite?.(); favorite.textContent = x.favorite ? '♥ Favorilerimde' : '♡ Favorilere ekle';
                 favorite.setAttribute('aria-pressed', String(x.favorite)); feedback.textContent = x.favorite ? 'İlan favorilerine eklendi.' : 'İlan favorilerinden çıkarıldı.';
             } catch (e) { feedback.textContent = e.message; }
             finally { favorite.disabled = false; }

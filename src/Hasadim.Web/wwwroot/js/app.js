@@ -177,11 +177,14 @@ function card(x) {
         , media = el('div', undefined, 'card-media');
 
     media.append(picture(x));
+    const stats = window.MarketPresentation.stats(x);
     const fav = button(x.favorite ? '♥' : '♡', 'favorite' + (x.favorite ? ' on' : ''),
         async () => {
             if (!mustLogin()) return; fav.disabled = true;
             try {
                 await api(`/api/meyve-ilanlari/${x.id}/favorite`, x.favorite ? 'DELETE' : 'POST');
+                x.favoriteCount = Math.max(0, (x.favoriteCount || 0) + (x.favorite ? -1 : 1));
+                stats.textContent = window.MarketPresentation.stats(x).textContent;
                 x.favorite = !x.favorite; fav.textContent = x.favorite ? '♥' : '♡';
                 fav.classList.toggle('on', x.favorite);
                 fav.setAttribute('aria-pressed', String(x.favorite)); if (view === 'favorites') await loadListings();
@@ -198,7 +201,7 @@ function card(x) {
         el('h3', x.baslik), el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
  body.append(window.MarketPresentation.facts(x));
  window.ListingWorkflow.appendStatus(body, x);
- const price=el('p',money(x.kilogramFiyati),'price');price.append(el('small',' / kg'));body.append(price);
+ body.append(window.MarketPresentation.price(x), stats);
     const bottom = el('div', undefined, 'card-bottom'); bottom.append(el('span', x.ownerName, 'card-owner'), button('İlanı incele ↗', 'textbtn', () => openDetail(x.id)));
 
     body.append(bottom);
@@ -249,19 +252,21 @@ async function renderDetail(id)
     content.replaceChildren(el('p', 'Yükleniyor…'));
     try {
         const x = await api('/api/meyve-ilanlari/' + id);
+        await window.MarketPresentation.recordView(x, api);
         if (request !== detailRequest) return;
-        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
+        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), window.MarketPresentation.price(x));
         const grid = el('div', undefined, 'detail-grid');
-        for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
+        for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'Yayın tarihi': date(x.publishedAt), 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
         } const description = el('section', undefined, 'description');
  description.append(el('h3', 'Ürün açıklaması', 'listing-description-title'), el('p', x.aciklama || 'Açıklama eklenmemiş.'));
  content.append(grid, description);
  window.ListingWorkflow.appendStatus(content, x);
+ const statistics = window.MarketPresentation.stats(x); content.append(statistics);
  const actions = el('div', undefined, 'actions');
  const publiclyVisible = x.status === 4 && x.active && !x.hidden;
- if (publiclyVisible) content.append(window.MarketTools.detailActions(x, {api, requireLogin: mustLogin}));
+ if (publiclyVisible) content.append(window.MarketTools.detailActions(x, {api, requireLogin: mustLogin, onFavorite: () => { statistics.textContent = window.MarketPresentation.stats(x).textContent; }}));
  if (publiclyVisible) content.append(window.MarketPresentation.estimate(x));
  if (x.isMine) {
      if (window.ListingWorkflow.editable(x)) {
@@ -308,6 +313,7 @@ async function openEditor(x) {
     }
 
     const form = $('#editorForm');
+    form.dataset.published = String(x?.status === 4);
 
     form.reset();
     form.elements.namedItem('id').value = '';

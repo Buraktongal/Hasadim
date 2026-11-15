@@ -121,6 +121,9 @@ public record ListingPhoto(
 
 public class ListingView
 {
+    public long ViewCount { get; set; }
+    public int FavoriteCount { get; set; }
+    public decimal? OncekiKilogramFiyati { get; set; }
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
 
@@ -250,6 +253,7 @@ public class ReportView
 
 public interface IMarketplaceRepository
 {
+    Task<long> RecordView(Guid id, Guid? user, CancellationToken ct);
     Task<Paged<ListingView>> Search(
         ListingQuery q,
         Guid? user,

@@ -6,7 +6,7 @@ namespace Hasadim.Infrastructure.Repositories;
 
 public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceRepository
 {
-    const string ViewColumns = "l.*,COALESCE((SELECT p.ShowPhone FROM dbo.UserProfiles p WHERE p.UserId=l.OwnerId),CAST(1 AS bit)) AS ShowPhone,u.DisplayName AS OwnerName,CAST(CASE WHEN l.OwnerId=@user THEN 1 ELSE 0 END AS bit) AS IsMine,CAST(CASE WHEN EXISTS(SELECT 1 FROM dbo.Favorites f WHERE f.ListingId=l.Id AND f.UserId=@user) THEN 1 ELSE 0 END AS bit) AS Favorite";
+    const string ViewColumns = "l.*,COALESCE((SELECT s.ViewCount FROM dbo.ListingStatistics s WHERE s.ListingId=l.Id),0) AS ViewCount,(SELECT COUNT(*) FROM dbo.Favorites f WHERE f.ListingId=l.Id) AS FavoriteCount,COALESCE((SELECT p.ShowPhone FROM dbo.UserProfiles p WHERE p.UserId=l.OwnerId),CAST(1 AS bit)) AS ShowPhone,u.DisplayName AS OwnerName,CAST(CASE WHEN l.OwnerId=@user THEN 1 ELSE 0 END AS bit) AS IsMine,CAST(CASE WHEN EXISTS(SELECT 1 FROM dbo.Favorites f WHERE f.ListingId=l.Id AND f.UserId=@user) THEN 1 ELSE 0 END AS bit) AS Favorite";
     public async Task<Paged<ListingView>> Search(ListingQuery q, Guid? user, CancellationToken ct)
     {
         await using var c = await factory.Open(ct); var where = "l.IsDeleted=0";
@@ -182,7 +182,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         var status = await c.QuerySingleOrDefaultAsync<int?>(
             new CommandDefinition(
                 """
-            SELECT Status
+            SELECT CASE WHEN Hidden=1 OR (Status=4 AND (Active=0 OR ExpiresAt IS NULL OR ExpiresAt<=SYSUTCDATETIME())) THEN -1 ELSE Status END
             FROM dbo.Listings WITH (UPDLOCK, HOLDLOCK)
             WHERE Id = @id AND IsDeleted = 0;
             """,
@@ -198,7 +198,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         }
 
         if (status != (int)ListingStatus.Draft &&
-            status != (int)ListingStatus.ChangesRequested)
+            status != (int)ListingStatus.ChangesRequested && status != (int)ListingStatus.Published)
         {
             throw new AppException(
                 409,
@@ -300,6 +300,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Cesit = @Cesit,
             MiktarKg = @MiktarKg,
             KilogramFiyati = @KilogramFiyati,
+            OncekiKilogramFiyati = @OncekiKilogramFiyati,
             Il = @Il,
             Ilce = @Ilce,
             Aciklama = @Aciklama,
@@ -328,6 +329,25 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
 
         return affected == 1;
     }
+    public async Task<long> RecordView(Guid id, Guid? user, CancellationToken ct)
+    {
+        await using var c = await factory.Open(ct);
+        using var tx = c.BeginTransaction();
+        const string sql = """
+        IF EXISTS(SELECT 1 FROM dbo.Listings WHERE Id=@id AND IsDeleted=0 AND Hidden=0
+            AND Active=1 AND Status=4 AND ExpiresAt>SYSUTCDATETIME() AND (@user IS NULL OR OwnerId<>@user))
+        BEGIN
+            IF NOT EXISTS(SELECT 1 FROM dbo.ListingStatistics WITH(UPDLOCK,HOLDLOCK) WHERE ListingId=@id)
+                INSERT dbo.ListingStatistics(ListingId,ViewCount) VALUES(@id,0);
+            UPDATE dbo.ListingStatistics SET ViewCount=ViewCount+1 WHERE ListingId=@id;
+        END;
+        SELECT COALESCE((SELECT ViewCount FROM dbo.ListingStatistics WHERE ListingId=@id),0);
+        """;
+        var count = await c.ExecuteScalarAsync<long>(new CommandDefinition(sql,new {id,user},tx,cancellationToken:ct));
+        tx.Commit();
+        return count;
+    }
+
     public async Task Delete(Guid id, CancellationToken ct) { await using var c = await factory.Open(ct); await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.Listings SET IsDeleted=1,Active=0 WHERE Id=@id", new { id }, cancellationToken: ct)); }
     public async Task SetPhoto(
         Guid id,
@@ -343,7 +363,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         WHERE
             Id = @id
             AND IsDeleted = 0
-            AND Status IN (@Draft, @ChangesRequested);
+            AND Hidden=0 AND (Status IN (@Draft, @ChangesRequested) OR (Status=4 AND Active=1 AND ExpiresAt>SYSUTCDATETIME()));
         """,
             new
             {

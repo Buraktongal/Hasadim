@@ -54,6 +54,29 @@ try {
     await service.Update(id,request,default);
     var tradeDetail=await service.Detail(id,default);
     Check(tradeDetail.Ambalaj=="Koli" && tradeDetail.Teslimat=="Görüşülür" && tradeDetail.MinAlimKg==25,"Ticaret bilgileri güncellenir ve detayda okunur");
+    var publication = tradeDetail.PublishedAt; var expiration = tradeDetail.ExpiresAt;
+    request.Version = tradeDetail.Version; request.KilogramFiyati = 15;
+    await service.Update(id,request,default);
+    var discounted = await service.Detail(id,default);
+    Check(discounted.OncekiKilogramFiyati==20 && discounted.KilogramFiyati==15,"Yayındaki fiyat indirimi önceki fiyatla kaydedilir");
+    Check(discounted.PublishedAt==publication && discounted.ExpiresAt==expiration && discounted.Active,"Düzenleme yayın süresini sıfırlamaz");
+    request.Version=discounted.Version; request.Aciklama="Açıklama güncellendi";
+    await service.Update(id,request,default);
+    Check((await service.Detail(id,default)).OncekiKilogramFiyati==20,"Fiyat değişmeyen düzenleme indirim bilgisini korur");
+    request.Version=(await service.Detail(id,default)).Version; request.KilogramFiyati=18;
+    await service.Update(id,request,default);
+    Check((await service.Detail(id,default)).OncekiKilogramFiyati is null,"Fiyat artışında indirim etiketi kalkar");
+    var versionBeforeViews=(await service.Detail(id,default)).Version;
+    Check(await service.RecordView(id,default)==0,"Satıcının kendi görüntülemesi sayılmaz");
+    user.Id=null;
+    await Task.WhenAll(Enumerable.Range(0,8).Select(_=>service.RecordView(id,default)));
+    var stats=await service.Detail(id,default);
+    Check(stats.ViewCount==8 && stats.Version.SequenceEqual(versionBeforeViews),"Eşzamanlı görüntülenmeler kaybolmaz ve düzenleme sürümünü değiştirmez");
+    user.Id=persisted.OwnerId;
+    await repo.Favorite(id,persisted.OwnerId,true,default);
+    Check((await service.Detail(id,default)).FavoriteCount==1,"Favori sayısı gerçek kayıtlardan hesaplanır");
+    await repo.Favorite(id,persisted.OwnerId,false,default);
+    Check((await service.Detail(id,default)).FavoriteCount==0,"Favoriden çıkarma sayıyı düşürür");
     request.MinAlimKg=101;
     try { await service.Create(request,default,["one.jpg"]); throw new Exception("Minimum alım sınırı kabul edildi"); }
     catch(AppException e){Check(e.Status==400,"Ürün miktarını aşan minimum alım sunucuda reddedilir");}

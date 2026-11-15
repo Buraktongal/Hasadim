@@ -71,12 +71,13 @@ public class MarketplaceService(
 
     private static void EnsureEditable(Listing listing)
     {
-        if (listing.Status != ListingStatus.Draft &&
-            listing.Status != ListingStatus.ChangesRequested)
+        if (listing.Hidden || (listing.Status != ListingStatus.Draft &&
+            listing.Status != ListingStatus.ChangesRequested &&
+            !(listing.Status == ListingStatus.Published && listing.Active && listing.ExpiresAt > DateTime.UtcNow)))
         {
             throw new AppException(
                 409,
-                "Yalnızca taslak veya düzeltme bekleyen ilan düzenlenebilir."
+                "Yalnızca taslak, düzeltme bekleyen veya yayındaki ilan düzenlenebilir."
             );
         }
     }
@@ -263,6 +264,8 @@ public class MarketplaceService(
         return listing;
     }
 
+    public Task<long> RecordView(Guid id, CancellationToken ct) => repo.RecordView(id, current.Id, ct);
+
     public async Task<Guid> Create(
         ListingRequest request,
         CancellationToken ct,
@@ -323,8 +326,11 @@ public class MarketplaceService(
         Apply(() =>
         {
             listing.Update(request.Data());
-            listing.SubmitForReview();
-            listing.PublishAutomatically();
+            if (listing.Status != ListingStatus.Published)
+            {
+                listing.SubmitForReview();
+                listing.PublishAutomatically();
+            }
         });
 
         await Save(listing, request.Version!, ct);

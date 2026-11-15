@@ -11,10 +11,12 @@ window.ListingEditor = (() => {
     }
     function ready(form) {
         const data = new FormData(form);
+        const editing = Boolean(data.get('id'));
+        const published = form.dataset.published === 'true';
         const fingerprint = JSON.stringify([...data].map(([key, value]) => [key, typeof value === 'string' ? value : [value.name, value.size, value.lastModified]]));
         if (signature === fingerprint) return true;
         const preview = document.querySelector('#listingPreview');
-        preview.replaceChildren(node('p', 'YAYIN ÖNCESİ KONTROL', 'eyebrow'), node('h3', data.get('baslik')));
+        preview.replaceChildren(node('p', editing ? 'DEĞİŞİKLİKLERİ KONTROL ET' : 'YAYIN ÖNCESİ KONTROL', 'eyebrow'), node('h3', data.get('baslik')));
         const facts = node('dl', undefined, 'preview-facts');
         const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
         for (const [label, value] of [
@@ -27,12 +29,12 @@ window.ListingEditor = (() => {
             ['Ambalaj', data.get('ambalaj') || 'Belirtilmedi'],
             ['Teslimat', data.get('teslimat') || 'Belirtilmedi'],
             ['Minimum alım', data.get('minAlimKg') ? data.get('minAlimKg') + ' kg' : 'Belirtilmedi'],
-            ['Yayın süresi', '30 gün']
+            ['Yayın süresi', published ? 'Mevcut bitiş tarihi korunacak' : '30 gün']
         ]) { const item = node('div'); item.append(node('dt', label), node('dd', value)); facts.append(item); }
         preview.append(facts, node('p', data.get('aciklama') || 'Açıklama eklenmemiş.', 'preview-description'),
-            node('p', 'Bilgileri kontrol et. Düzeltmek için yukarıdaki alanları değiştirebilirsin. İlanı yayımla düğmesiyle başvurun gönderilir.', 'muted'));
+            node('p', editing ? 'Bilgileri kontrol et ve Değişiklikleri kaydet düğmesine bas.' : 'Bilgileri kontrol et. Düzeltmek için yukarıdaki alanları değiştirebilirsin. İlanı yayımla düğmesiyle başvurun gönderilir.', 'muted'));
         preview.hidden = false; signature = fingerprint;
-        form.querySelector('[type="submit"]').textContent = 'İlanı yayımla';
+        form.querySelector('[type="submit"]').textContent = editing ? 'Değişiklikleri kaydet' : 'İlanı yayımla';
         preview.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
         preview.focus?.();
         return false;

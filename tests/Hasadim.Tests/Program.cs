@@ -153,6 +153,7 @@ class MemoryRepo : IMarketplaceRepository
 {
     public Dictionary<Guid, Listing> Items = [];
     public Dictionary<Guid, IReadOnlyList<string>> Photos = [];
+    public Task<long> RecordView(Guid id, Guid? user, CancellationToken ct) => Task.FromResult(0L);
     public bool UpdateSuccess = true;
     private static Listing Clone(Listing l) => (Listing)typeof(object)
         .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(l, null)!;

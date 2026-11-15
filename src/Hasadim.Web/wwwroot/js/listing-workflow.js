@@ -9,7 +9,7 @@
     let queueRequest = 0;
 
     function editable(x) {
-        return x.isMine && !x.hidden && [0, 2].includes(x.status);
+        return x.isMine && !x.hidden && ([0, 2].includes(x.status) || (x.status === 4 && x.active && new Date(x.expiresAt + (/(?:Z|[+-]\d{2}:\d{2})$/i.test(x.expiresAt) ? '' : 'Z')) > new Date()));
     }
 
     function appendStatus(parent, x) {
@@ -26,7 +26,7 @@
         }
         if (x.status === 3)
             box.append(el('p', 'İlan daha önce onaylanmış. Yönetim 30 günlük yayını başlatabilir.'));
-        if (x.publishedAt) box.append(el('p', 'Yayın başlangıcı: ' + displayDate(x.publishedAt)));
+        if (x.publishedAt) box.append(el('p', 'Yayın tarihi: ' + displayDate(x.publishedAt)));
         if (x.expiresAt) box.append(el('p', 'Yayın bitişi: ' + displayDate(x.expiresAt)));
         if (x.status === 5)
             box.append(el('p', 'Yayın süresi doldu. İlanın Geçmiş ilanlar bölümünde saklanıyor.'));
@@ -36,7 +36,7 @@
     function displayDate(value) {
         const utc = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : value + 'Z';
         return new Intl.DateTimeFormat('tr-TR', {
-            dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Istanbul'
+            dateStyle: 'medium', timeZone: 'Europe/Istanbul'
         }).format(new Date(utc));
     }
 
@@ -185,7 +185,7 @@
                     return;
                 }
                 await changeView('mine');
-                toast(result.mesaj || 'İlanın yayımlandı. 30 gün boyunca yayında kalacak.');
+                toast(id ? 'İlanın güncellendi. Mevcut yayın süresi korundu.' : (result.mesaj || 'İlanın yayımlandı. 30 gün boyunca yayında kalacak.'));
             });
         };
     }

@@ -47,8 +47,11 @@ const workflow = context.window.ListingWorkflow;
     const published = new Node('div');
     workflow.appendStatus(published, { ...item, status: 4,
         publishedAt: '2026-10-15T09:00:00', expiresAt: '2026-11-14T09:00:00' });
-    assert(published.textContent.includes('Yayın başlangıcı:'));
+    assert(published.textContent.includes('Yayın tarihi:'));
     assert(published.textContent.includes('Yayın bitişi:'));
+    assert(!/\d{2}:\d{2}/.test(published.textContent));
+    assert(workflow.editable({isMine:true,status:4,active:true,expiresAt:'2099-01-01T00:00:00'}));
+    assert(!workflow.editable({isMine:true,status:4,active:true,expiresAt:'2000-01-01T00:00:00'}));
     const expired = new Node('div'); workflow.appendStatus(expired, { ...item, status: 5 });
     assert(expired.textContent.includes('Geçmiş ilanlar'));
     const legacy = new Node('div'); workflow.appendReviewActions(legacy, { ...item, status: 3 });

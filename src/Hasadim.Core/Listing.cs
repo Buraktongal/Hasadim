@@ -44,6 +44,7 @@ public class Listing
 
     public decimal MiktarKg { get; private set; }
     public decimal KilogramFiyati { get; private set; }
+    public decimal? OncekiKilogramFiyati { get; private set; }
 
     public string Il { get; private set; } = "";
     public string Ilce { get; private set; } = "";
@@ -103,17 +104,9 @@ public class Listing
     {
         EnsureNotDeleted();
 
-        // Onaylanan veya incelemedeki içerik sessizce değişmesin.
-        // Bu sürümde düzenleme yalnızca taslak ve
-        // düzeltme bekleyen ilanlarda yapılır.
-        if (Status != ListingStatus.Draft &&
-            Status != ListingStatus.ChangesRequested)
-        {
-            throw new InvalidOperationException(
-                "Bu durumdaki ilan doğrudan düzenlenemez."
-            );
-        }
-
+        if (Hidden || (Status != ListingStatus.Draft && Status != ListingStatus.ChangesRequested &&
+            !(Status == ListingStatus.Published && Active && ExpiresAt > DateTime.UtcNow)))
+            throw new InvalidOperationException("Bu durumdaki ilan düzenlenemez.");
         ValidateData(data);
 
         Baslik = data.Baslik.Trim();
@@ -121,6 +114,8 @@ public class Listing
         Cesit = (data.Cesit ?? "").Trim();
 
         MiktarKg = data.MiktarKg;
+        if (KilogramFiyati > 0 && data.KilogramFiyati != KilogramFiyati)
+            OncekiKilogramFiyati = data.KilogramFiyati < KilogramFiyati ? KilogramFiyati : null;
         KilogramFiyati = data.KilogramFiyati;
 
         Il = data.Il.Trim();
@@ -132,8 +127,8 @@ public class Listing
         Teslimat = string.IsNullOrWhiteSpace(data.Teslimat) ? null : data.Teslimat;
         MinAlimKg = data.MinAlimKg;
 
-        // data.Active bilerek kullanılmıyor.
-        Active = false;
+        // Yayındaki düzenleme mevcut yayın tarihlerini ve durumunu korur.
+        Active = Status == ListingStatus.Published;
     }
 
     public void SubmitForReview()
@@ -266,6 +261,8 @@ public class Listing
 
     private static void ValidateData(ListingData data)
     {
+        if (decimal.Round(data.KilogramFiyati, 2) != data.KilogramFiyati)
+            throw new ArgumentException("Fiyat en fazla iki ondalık basamak içerebilir.");
         if (data.MinAlimKg is not null && (data.MinAlimKg < 0.01m || data.MinAlimKg > data.MiktarKg || decimal.Round(data.MinAlimKg.Value,2) != data.MinAlimKg))
             throw new ArgumentException("Minimum alım miktarı sıfırdan büyük olmalı ve ürün miktarını aşmamalı.");
         if (!string.IsNullOrEmpty(data.Ambalaj) && data.Ambalaj is not ("Kasa" or "Koli" or "Dökme" or "Çuval" or "Diğer"))
