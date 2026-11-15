@@ -21,9 +21,12 @@ function loadPageScript(source) {
         await loadPageScript('/js/locations.js');
         await loadPageScript('/js/fruit-varieties.js');
         await loadPageScript('/js/navigation.js');
+        await loadPageScript('/js/return-path.js');
         await loadPageScript('/js/phone-input.js');
+        await loadPageScript('/js/listing-editor.js');
         await loadPageScript('/js/listing-workflow.js');
         await loadPageScript('/js/market-presentation.js');
+        await loadPageScript('/js/market-tools.js');
         await loadPageScript('/js/messages.js');
         await loadPageScript('/js/message-notifications.js');
         await loadPageScript('/js/app.js');

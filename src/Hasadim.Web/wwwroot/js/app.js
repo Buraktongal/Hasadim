@@ -43,8 +43,9 @@ async function session() {
         item.hidden = !user;
     }
     await token();
+    void window.messageAlerts?.refresh();
 }
-function openAuth(){closeAccountMenu();window.location.href=user?'/html/profilim.html':'/html/giris.html';}
+function openAuth(){closeAccountMenu();window.location.href=user?'/html/profilim.html':'/html/giris.html?returnUrl='+encodeURIComponent(window.HasadimReturn.resolve(location.pathname+location.search));}
 async function submit(form,task){const b=form.querySelector('[type=submit]')||form.querySelector('button');if(b.disabled)return;b.disabled=true;form.querySelector('.form-error').textContent='';try{await task();}catch(e){form.querySelector('.form-error').textContent=e.message;}finally{b.disabled=false;}}
 $('#accountBtn').onclick=openAuth;
 $('#logoutBtn').onclick=async()=>{closeAccountMenu();try{await api('/api/account/logout','POST');if(isDetailPage()){window.location.href='/';return;}await session();await changeView('all');toast('Çıkış yapıldı.');}catch(e){toast(e.message);}};
@@ -152,6 +153,7 @@ function updateMarketAddress() {
 }
 function empty(parent,title,text){const n=el('div',undefined,'empty');n.append(el('strong',title),el('p',text));parent.append(n);}
 async function loadListings(){
+ window.MarketTools.filterSummary($('#filters'), () => { page=1; return loadListings(); });
  syncHeaderQuery($('#filters').elements.namedItem('q').value);
  updateMarketAddress();
  const request=++listRequest;const f=new FormData($('#filters'));const p=new URLSearchParams();for(const [k,v]of f)if(v)p.set(k,v.trim());
@@ -250,7 +252,7 @@ async function renderDetail(id)
         if (request !== detailRequest) return;
         content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), el('p', money(x.kilogramFiyati) + ' / kg', 'price'));
         const grid = el('div', undefined, 'detail-grid');
-        for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
+        for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'İlan tarihi': date(x.olusturulmaTarihi), 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
         } const description = el('section', undefined, 'description');
@@ -259,6 +261,7 @@ async function renderDetail(id)
  window.ListingWorkflow.appendStatus(content, x);
  const actions = el('div', undefined, 'actions');
  const publiclyVisible = x.status === 4 && x.active && !x.hidden;
+ if (publiclyVisible) content.append(window.MarketTools.detailActions(x, {api, requireLogin: mustLogin}));
  if (publiclyVisible) content.append(window.MarketPresentation.estimate(x));
  if (x.isMine) {
      if (window.ListingWorkflow.editable(x)) {
@@ -315,7 +318,8 @@ async function openEditor(x) {
         ? 'İlanını düzenle'
         : 'Yeni ilan ver';
     form.querySelector('[type="submit"]').textContent = x
-        ? 'Değişiklikleri gönder' : 'İlan ver';
+        ? 'İlanı önizle' : 'İlanı önizle';
+    window.ListingEditor.reset();
 
     if (x) {
         for (const [key, value] of Object.entries(x)) {
@@ -364,6 +368,10 @@ async function openEditor(x) {
 
 function openNewListingFromMenu() {
     closeAccountMenu();
+    if (!user) {
+        window.location.href = '/html/giris.html?returnUrl=' + encodeURIComponent('/?action=new-listing');
+        return;
+    }
     return openEditor();
 }
 
@@ -377,6 +385,7 @@ document
         button.onclick = openNewListingFromMenu;
     });
 window.ListingWorkflow.bindEditor();
+window.MarketTools.bindFilters($('#filters'), () => { page=1; return loadListings(); });
 function openCompose(listingId,recipientId,title,question=""){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;f.elements.namedItem('body').value=question;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};
 $('#reportForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));await api('/api/meyve-ilanlari/'+d.id+'/report','POST',{reason:d.reason.trim()});close('reportDialog');toast('Bildirimin yönetime iletildi.');});};
@@ -396,6 +405,7 @@ $('#refreshAdmin').onclick = () => Promise.all([
 (async () => {
     try {
         await session();
+        window.messageAlerts.start();
         const params = new URLSearchParams(location.search);
         if (isDetailPage()) {
             syncHeaderQuery(params.get('q') || '');
@@ -407,6 +417,10 @@ $('#refreshAdmin').onclick = () => Promise.all([
             const permittedView = initialView === 'admin' && !user?.isAdmin
                 ? 'all' : initialView;
             await changeView(permittedView, { query: (params.get('q') || '').slice(0, 150) });
+            if (params.get('action') === 'new-listing' && user) {
+                const url = new URL(location.href); url.searchParams.delete('action'); history.replaceState(null, '', url.pathname + url.search);
+                await openEditor();
+            }
         }
     } catch (error) {
         const target = isDetailPage() ? $('#detailContent') : $('#listStatus');

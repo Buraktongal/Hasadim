@@ -62,15 +62,16 @@ window.MarketPresentation = (() => {
         const heading = node('h3', 'Alım tutarını hesapla');
         const label = node('label', 'Almak istediğin miktar (kg)');
         const input = node('input');
-        input.type = 'number'; input.min = '0.01'; input.max = String(x.miktarKg); input.step = '0.01';
-        input.inputMode = 'decimal'; input.value = String(Math.min(100, x.miktarKg));
+        const minimum = x.minAlimKg || 0.01;
+        input.type = 'number'; input.min = String(minimum); input.max = String(x.miktarKg); input.step = '0.01';
+        input.inputMode = 'decimal'; input.value = String(Math.min(Math.max(100, minimum), x.miktarKg));
         label.append(input);
         const result = node('p', undefined, 'estimate-result');
         result.setAttribute('role', 'status');
         const update = () => {
             const amount = Number(input.value);
-            if (!Number.isFinite(amount) || amount <= 0 || amount > x.miktarKg) {
-                result.textContent = '0’dan büyük, en fazla ' + number(x.miktarKg) + ' kg gir.';
+            if (!Number.isFinite(amount) || amount < minimum || amount > x.miktarKg) {
+                result.textContent = number(minimum) + ' ile ' + number(x.miktarKg) + ' kg arasında bir miktar gir.';
                 input.setAttribute('aria-invalid', 'true'); return;
             }
             input.setAttribute('aria-invalid', 'false');

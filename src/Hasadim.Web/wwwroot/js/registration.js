@@ -3,7 +3,7 @@
     const form = document.querySelector('#registerForm');
     if (!form) return;
     const codeForm = document.querySelector('#registrationCodeForm');
-    const submit = form.querySelector('button');
+    const submit = form.querySelector('[type="submit"]') || form.querySelector('button');
     const confirm = document.querySelector('#completeRegistration');
     const restart = document.querySelector('#restartRegistration');
     const timer = document.querySelector('#registrationTimer');

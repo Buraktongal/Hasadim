@@ -27,7 +27,10 @@ public record ListingData(
 
     // Mevcut Application kodunun derlenebilmesi için
     // geçici olarak duruyor. Yayın kararında kullanılmaz.
-    bool Active
+    bool Active,
+    string? Ambalaj = null,
+    string? Teslimat = null,
+    decimal? MinAlimKg = null
 );
 
 public class Listing
@@ -47,6 +50,9 @@ public class Listing
     public string Aciklama { get; private set; } = "";
     public string Telefon { get; private set; } = "";
 
+    public string? Ambalaj { get; private set; }
+    public string? Teslimat { get; private set; }
+    public decimal? MinAlimKg { get; private set; }
     public DateTime? HasatTarihi { get; private set; }
     public DateTime OlusturulmaTarihi { get; private set; }
 
@@ -122,6 +128,9 @@ public class Listing
         Aciklama = (data.Aciklama ?? "").Trim();
         Telefon = data.Telefon.Trim();
         HasatTarihi = data.HasatTarihi?.Date;
+        Ambalaj = string.IsNullOrWhiteSpace(data.Ambalaj) ? null : data.Ambalaj;
+        Teslimat = string.IsNullOrWhiteSpace(data.Teslimat) ? null : data.Teslimat;
+        MinAlimKg = data.MinAlimKg;
 
         // data.Active bilerek kullanılmıyor.
         Active = false;
@@ -157,7 +166,7 @@ public class Listing
             throw new InvalidOperationException("İlan otomatik yayına uygun değil.");
 
         ValidateData(new(Baslik, MeyveTuru, Cesit, MiktarKg, KilogramFiyati,
-            Il, Ilce, Aciklama, Telefon, HasatTarihi, false));
+            Il, Ilce, Aciklama, Telefon, HasatTarihi, false, Ambalaj, Teslimat, MinAlimKg));
         var now = DateTime.UtcNow;
         Status = ListingStatus.Published;
         Active = true;
@@ -257,6 +266,12 @@ public class Listing
 
     private static void ValidateData(ListingData data)
     {
+        if (data.MinAlimKg is not null && (data.MinAlimKg < 0.01m || data.MinAlimKg > data.MiktarKg || decimal.Round(data.MinAlimKg.Value,2) != data.MinAlimKg))
+            throw new ArgumentException("Minimum alım miktarı sıfırdan büyük olmalı ve ürün miktarını aşmamalı.");
+        if (!string.IsNullOrEmpty(data.Ambalaj) && data.Ambalaj is not ("Kasa" or "Koli" or "Dökme" or "Çuval" or "Diğer"))
+            throw new ArgumentException("Ambalaj seçeneği geçersiz.");
+        if (!string.IsNullOrEmpty(data.Teslimat) && data.Teslimat is not ("Yerinden teslim" or "Satıcı teslimatı" or "Görüşülür"))
+            throw new ArgumentException("Teslimat seçeneği geçersiz.");
         if (string.IsNullOrWhiteSpace(data.Baslik) ||
             string.IsNullOrWhiteSpace(data.MeyveTuru) ||
             string.IsNullOrWhiteSpace(data.Il) ||

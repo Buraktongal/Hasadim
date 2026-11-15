@@ -1,0 +1,21 @@
+#quickFruits { display: flex; gap: 10px; overflow-x: auto; padding: 8px 0 18px; margin-top: 20px; }
+.quick-fruit { flex-shrink: 0; border: 1px solid #d8e2ce; background: #fff; color: #31533a; border-radius: 24px; padding: 10px 22px; cursor: pointer; }
+.quick-fruit:hover { background: #edf3e5; border-color: #79936d; }
+#activeFilters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.filter-chip { display: inline-flex; gap: 8px; align-items: center; border-radius: 20px; background: #e8efdf; color: #31533a; border: 1px solid #d6e0cd; padding: 8px 12px; font-size: 12px; overflow-wrap: anywhere; }
+.detail-tools { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border-top: 1px solid #e1e7d9; padding-top: 18px; }
+.detail-tools > span { font-size: 12px; }
+#toggleFilters { display: none; }
+.hero { min-height: 290px; }
+.hero-copy { padding: 36px 42px; }
+.market-layout > aside { min-width: 0; }
+#filters { border-radius: 18px; }
+#toast { z-index: 1200; }
+@media(max-width:700px) {
+    #toggleFilters { display: block; width: 100%; text-align: left; margin-bottom: 12px; min-height: 44px; }
+    #filters:not(.filters-open) { display: none; }
+    .hero { min-height: auto; }
+    .hero-copy { padding: 24px; }
+    .hero-copy h1 { font-size: 32px; }
+    .detail-tools > button { flex: 1 1 140px; }
+}

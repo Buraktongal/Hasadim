@@ -54,6 +54,9 @@ public class ListingRequest
     [JsonIgnore]
     public string Telefon { get; set; } = "";
 
+    public string? Ambalaj { get; set; }
+    public string? Teslimat { get; set; }
+    public decimal? MinAlimKg { get; set; }
     public DateTime? HasatTarihi { get; set; }
 
     // Eski istemcilerle uyumluluk için korunuyor.
@@ -73,7 +76,7 @@ public class ListingRequest
         Aciklama,
         Telefon,
         HasatTarihi,
-        false
+        false, Ambalaj, Teslimat, MinAlimKg
     );
 }
 
@@ -136,6 +139,9 @@ public class ListingView
 
     public string? Telefon { get; set; }
 
+    public string? Ambalaj { get; set; }
+    public string? Teslimat { get; set; }
+    public decimal? MinAlimKg { get; set; }
     public DateTime? HasatTarihi { get; set; }
     public DateTime OlusturulmaTarihi { get; set; }
 

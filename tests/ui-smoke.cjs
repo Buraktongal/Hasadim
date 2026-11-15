@@ -22,6 +22,7 @@ const html=fs.readFileSync(path.join(root,'html/index.html'),'utf8')
 const stack=[doc],voids=new Set(['meta','link','input','br']);
 for(const m of html.matchAll(/<\/?([a-z][\w-]*)([^>]*)>/gi)){const tag=m[1].toLowerCase();if(m[0].startsWith('</')){if(stack.at(-1).tagName===tag)stack.pop();continue;}const e=new E(tag);for(const a of m[2].matchAll(/([\w-]+)(?:="([^"]*)")?/g)){e.setAttribute(a[1],a[2]??'');if(['hidden','checked','disabled'].includes(a[1]))e[a[1]]=true;}stack.at(-1).append(e);if(!voids.has(tag))stack.push(e);}
 doc.body=doc.querySelector("body");
+E.prototype.getAttribute=function(name){return this.attributes[name]??null;};
 E.prototype.removeAttribute=function(name){delete this.attributes[name];};
 E.prototype.closest=function(selector){return match(this,selector)?this:this.parent?.closest(selector)||null;};
 E.prototype.contains=function(node){return node===this||this.all().includes(node);};
@@ -78,8 +79,12 @@ context.window.setupFruitVarietySelectors=()=>{};
 context.window.setupLocationSelectors=async()=>{};
 const run=s=>vm.runInContext(s,context),tick=()=>new Promise(r=>setTimeout(r,15)),get=s=>doc.querySelector(s);
 const field=(form,name,value)=>get(form).elements.namedItem(name).value=value;
+async function publish(){ const form=get('#editorForm'); const before=logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length; await form.onsubmit({preventDefault(){},currentTarget:form}); assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,before,'Preview must not create a listing'); assert.equal(get('#listingPreview').hidden,false); await form.onsubmit({preventDefault(){},currentTarget:form}); }
 function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',aciklama:'Test'}))field('#editorForm',k,v);}
 (async()=>{
+ vm.runInContext(fs.readFileSync(path.join(root,'js/return-path.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(root,'js/listing-editor.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(root,'js/market-tools.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-workflow.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/market-presentation.js'),'utf8'),context);
  const profileRoot=run("document.createElement('section')");
@@ -100,7 +105,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
 
  vm.runInContext(fs.readFileSync(path.join(root,'js/messages.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/message-notifications.js'),'utf8'),context);
- vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');
+ vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);console.log('PASS: listing loaded');assert(logs.some(x=>x.url==='/api/messages/notifications'),'Application startup must start unread checks');
  const menu=get('#accountMenu');
  assert(!menu.querySelector('summary').textContent.includes(current.displayName),'Personal name must stay out of the menu trigger');
  assert(menu.querySelector('.menu-identity').textContent.includes(current.displayName));
@@ -112,9 +117,11 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  console.log('PASS: name stays inside menu; navigation and Escape close it');
  field('#filters','il','Mersin');await run('loadListings()');assert(get('#listings').textContent.includes('Henüz ilan yok'));get('#filters').reset();
  field('#filters','minFiyat','40');field('#filters','maxFiyat','20');await run('loadListings()');assert(get('#listStatus').textContent.includes('büyük olamaz'));get('#filters').reset();console.log('PASS: filters');
+ get('#toggleFilters').onclick();assert.equal(get('#toggleFilters').getAttribute('aria-expanded'),'true');assert(get('#filters').className.includes('filters-open'));
+ field('#filters','il','Antalya');await run('loadListings()');assert(get('#activeFilters').textContent.includes('Antalya'));get('#activeFilters').querySelector('button').onclick();await tick();assert.equal(get('#filters').elements.namedItem('il').value,'');
  await get('#newBtn').onclick();assert.equal(get('#editorDialog').open,true,'Header action opens the listing form without a phone formatter');get('#editorDialog').close();
- await get('[data-account-action="create-listing"]').onclick();assert.equal(get('#editorDialog').open,true,'Menu action opens the listing form');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,2);const first=items[1].id;
- run('openEditor()');assert.equal(get('#editorForm').elements.namedItem('id').value,'');assert.equal(get('#editorForm').elements.namedItem('version').value,'');fill();get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});await tick();assert.equal(items.length,3);assert.notEqual(items[2].id,first);assert.equal(items[1].ownerId,items[2].ownerId);assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,2);console.log('PASS: same user creates two listings with fresh GUID IDs');
+ await get('[data-account-action="create-listing"]').onclick();assert.equal(get('#editorDialog').open,true,'Menu action opens the listing form');fill();await publish();await tick();assert.equal(items.length,2);const first=items[1].id;
+ run('openEditor()');assert.equal(get('#editorForm').elements.namedItem('id').value,'');assert.equal(get('#editorForm').elements.namedItem('version').value,'');fill();await publish();await tick();assert.equal(items.length,3);assert.notEqual(items[2].id,first);assert.equal(items[1].ownerId,items[2].ownerId);assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,2);console.log('PASS: same user creates two listings with fresh GUID IDs');
  assert.equal(items[1].status,4);assert(get('#listings').textContent.includes('Yayında'));
  assert(items[1].active);assert(items[2].active);
  const ownerDetail=new E('div');ownerDetail.id='detailContent';doc.append(ownerDetail);
@@ -125,7 +132,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  await run('renderDetail('+JSON.stringify(first)+')');
  assert(ownerDetail.textContent.includes('İlçeyi kontrol et'));
  assert(ownerDetail.textContent.includes('İlanı düzenle'));
- const edit={...items[1],isMine:true,hasatTarihi:'2026-09-25T00:00:00'};await run('openEditor('+JSON.stringify(edit)+')');assert.equal(get('#editorForm').elements.namedItem('hasatTarihi').value,'2026-09-25');assert.equal(get('#editorForm').querySelector('[type="submit"]').textContent,'Değişiklikleri gönder');get('#editorForm').elements.namedItem('photo').files=[];field('#editorForm','baslik','Düzenlenmiş ilan');await get('#editorForm').onsubmit({preventDefault(){},currentTarget:get('#editorForm')});assert.equal(items[1].baslik,'Düzenlenmiş ilan');console.log('PASS: edit sends version and preserves date');
+ const edit={...items[1],isMine:true,hasatTarihi:'2026-09-25T00:00:00'};await run('openEditor('+JSON.stringify(edit)+')');assert.equal(get('#editorForm').elements.namedItem('hasatTarihi').value,'2026-09-25');assert.equal(get('#editorForm').querySelector('[type="submit"]').textContent,'İlanı önizle');get('#editorForm').elements.namedItem('photo').files=[];field('#editorForm','baslik','Düzenlenmiş ilan');await publish();assert.equal(items[1].baslik,'Düzenlenmiş ilan');console.log('PASS: edit sends version and preserves date');
  items[1].status=4;items[1].active=true;items[1].expiresAt=new Date(Date.now()-1000).toISOString();
  await run('changeView("history")');
  assert(get('#listings').textContent.includes('Düzenlenmiş ilan'));
@@ -188,7 +195,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
 
  await run('changeView("all")');const fav=get('#listings').querySelector('.favorite');await fav.listeners.click[0]();assert(items[0].favorite);console.log('PASS: favorite');
  field('#reportForm','id',items[0].id);field('#reportForm','reason','Test');get('#reportForm').onsubmit({preventDefault(){},currentTarget:get('#reportForm')});await tick();assert(logs.some(x=>x.url.endsWith('/report')));console.log('PASS: report');
- await get('#logoutBtn').onclick();run('openEditor()');assert.equal(location.href,'https://localhost/html/giris.html');console.log('PASS: separate login page redirect');
+ await get('#logoutBtn').onclick();run('openEditor()');assert.equal(new URL(location.href).pathname,'/html/giris.html');assert(new URL(location.href).searchParams.get('returnUrl'));console.log('PASS: separate login page redirect');
  const detail=ownerDetail;await run('renderDetail('+JSON.stringify(items[0].id)+')');assert(detail.textContent.includes('Satıcı bilgileri'));assert(detail.textContent.includes('İletişim için giriş yap'));console.log('PASS: separate detail content and seller card');
  const gallery=run('createGallery([{photoUrl:"/one.png"},{photoUrl:"/two.png"}],"Elma")');assert(gallery.querySelector('.photo-counter').textContent.includes('1 / 2'));await gallery.querySelectorAll('.thumbnail')[1].listeners.click[0]();assert(gallery.querySelector('.detail-image').src==='/two.png');assert(gallery.querySelector('.photo-counter').textContent.includes('2 / 2'));await gallery.querySelector('.gallery-open').listeners.click[0]();const modal=gallery.querySelector('dialog');assert(modal.open);modal.listeners.keydown[0]({key:'ArrowRight',preventDefault(){}});assert(gallery.querySelector('.lightbox-image').src==='/one.png');console.log('PASS: gallery count, thumbnail switch, enlargement and keyboard navigation');
  console.log('ALL MOCK UI TESTS PASSED');

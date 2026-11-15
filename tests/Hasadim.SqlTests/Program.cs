@@ -39,7 +39,7 @@ try {
     var request = new ListingRequest {
         Baslik = "SQL test elma ilanı", MeyveTuru = "Elma", Cesit = "Starking",
         MiktarKg = 100, KilogramFiyati = 20, Il = "Antalya", Ilce = "Korkuteli",
-        Telefon = "0501 343 10 91", Aciklama = "Test"
+        Telefon = "0501 343 10 91", Aciklama = "Test", Ambalaj = "Kasa", Teslimat = "Yerinden teslim", MinAlimKg = 50
     };
     var id = await service.Create(request, default, ["one.jpg", "two.jpg"]);
     var persisted = await repo.Find(id, default) ?? throw new Exception("İlan kaydedilmedi");
@@ -47,6 +47,17 @@ try {
     Check(persisted.Telefon == "05011111111", "SQL ilan telefonu oturum sahibinin profilinden gelir");
     Check(persisted.PublishedAt.HasValue && persisted.ExpiresAt - persisted.PublishedAt == TimeSpan.FromDays(30), "SQL yayın tarihleri tam 30 gün");
     Check((await service.Detail(id, default)).Photos.Count == 2, "İlan ve iki fotoğraf birlikte kaydedildi");
+    Check(persisted.Ambalaj=="Kasa" && persisted.Teslimat=="Yerinden teslim" && persisted.MinAlimKg==50,"Ticaret bilgileri SQL kaydına taşınır");
+    await sql.ExecuteAsync("UPDATE dbo.Listings SET Status=2,Active=0 WHERE Id=@id",new{id});
+    request.Version=(await repo.Find(id,default))!.Version;
+    request.Ambalaj="Koli";request.Teslimat="Görüşülür";request.MinAlimKg=25;
+    await service.Update(id,request,default);
+    var tradeDetail=await service.Detail(id,default);
+    Check(tradeDetail.Ambalaj=="Koli" && tradeDetail.Teslimat=="Görüşülür" && tradeDetail.MinAlimKg==25,"Ticaret bilgileri güncellenir ve detayda okunur");
+    request.MinAlimKg=101;
+    try { await service.Create(request,default,["one.jpg"]); throw new Exception("Minimum alım sınırı kabul edildi"); }
+    catch(AppException e){Check(e.Status==400,"Ürün miktarını aşan minimum alım sunucuda reddedilir");}
+    request.MinAlimKg=25;
     user.Id = null;
     Check((await service.Search(new ListingQuery(), default)).Items.Any(x => x.Id == id), "İlan herkese açık SQL listesinde");
     Check((await service.Detail(id, default)).Status == ListingStatus.Published, "Anonim kullanıcı yeni ilanı görebilir");

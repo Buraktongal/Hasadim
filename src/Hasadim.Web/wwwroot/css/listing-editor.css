@@ -1,0 +1,20 @@
+#editorDialog { width: min(850px,96vw); padding: 28px; border-radius: 22px; }
+#editorForm .editor-section { border: 1px solid #dce5d6; border-radius: 16px; margin: 24px 0; padding: 22px; min-width: 0; }
+#editorForm .editor-section legend { padding: 0 10px; font-weight: 700; color: #183e2e; font-size: 16px; }
+.editor-intro { padding: 14px 18px; background: #f2f5e9; border-radius: 12px; color: #526247; font-size: 13px; line-height: 1.7; }
+.editor-section > p { font-size: 13px; line-height: 1.7; color: #66715f; }
+#editorForm textarea { min-height: 120px; }
+.editor-submit-bar { position: sticky; bottom: -28px; padding: 18px 0; background: #fff; border-top: 1px solid #e1e7d9; margin-top: 20px; z-index: 2; }
+.editor-submit-bar button { min-height: 48px; }
+#listingPreview { border: 1px solid #9db58b; background: #f4f7ee; border-radius: 16px; padding: 24px; margin-top: 24px; outline-offset: 3px; }
+#listingPreview h3 { font-size: 24px; overflow-wrap: anywhere; }
+.preview-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.preview-facts dt { color: #66715f; font-size: 12px; }
+.preview-facts dd { margin: 5px 0 0; font-weight: 650; overflow-wrap: anywhere; }
+.preview-description { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+@media(max-width:600px) {
+    #editorDialog { padding: 18px; }
+    #editorForm .editor-section { padding: 16px; }
+    .editor-submit-bar { bottom: -18px; }
+    .preview-facts { grid-template-columns: minmax(0,1fr); }
+}
