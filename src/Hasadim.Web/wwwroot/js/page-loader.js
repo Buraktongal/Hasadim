@@ -24,6 +24,8 @@ function loadPageScript(source) {
         await loadPageScript('/js/return-path.js');
         await loadPageScript('/js/phone-input.js');
         await loadPageScript('/js/listing-editor.js');
+        await loadPageScript('/js/listing-wizard.js');
+        await loadPageScript('/js/market-catalog.js');
         await loadPageScript('/js/listing-workflow.js');
         await loadPageScript('/js/market-presentation.js');
         await loadPageScript('/js/market-tools.js');

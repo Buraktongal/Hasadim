@@ -27,10 +27,30 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         if (!string.IsNullOrWhiteSpace(q.Q)) where += " AND (l.Baslik LIKE @term OR l.Cesit LIKE @term)";
         if (!string.IsNullOrWhiteSpace(q.MeyveTuru)) where += " AND l.MeyveTuru=@fruit";
         if (!string.IsNullOrWhiteSpace(q.Il)) where += " AND l.Il=@city";
+        if (!string.IsNullOrWhiteSpace(q.Ilce)) where += " AND l.Ilce=@district";
+        if (!string.IsNullOrWhiteSpace(q.Cesit)) where += " AND l.Cesit=@variety";
+        if (!string.IsNullOrWhiteSpace(q.Ambalaj)) where += " AND l.Ambalaj=@packaging";
+        if (!string.IsNullOrWhiteSpace(q.Teslimat)) where += " AND l.Teslimat=@delivery";
         if (q.MinFiyat.HasValue) where += " AND l.KilogramFiyati>=@min";
         if (q.MaxFiyat.HasValue) where += " AND l.KilogramFiyati<=@max";
-        var order = q.Sort switch { "priceAsc" => "l.KilogramFiyati ASC,l.Id", "priceDesc" => "l.KilogramFiyati DESC,l.Id", _ => "l.OlusturulmaTarihi DESC,l.Id" };
-        var args = new { user, owner = q.OwnerId, term = "%" + q.Q?.Trim() + "%", fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim(), min = q.MinFiyat, max = q.MaxFiyat, skip = (q.Page - 1) * q.PageSize, take = q.PageSize };
+        if (q.MinMiktar.HasValue) where += " AND l.MiktarKg>=@minQty";
+        if (q.MaxMiktar.HasValue) where += " AND l.MiktarKg<=@maxQty";
+        // Sıralama kullanıcı girdisinden değil, sabit listeden seçilir.
+        var order = q.Sort switch
+        {
+            "priceAsc" => "l.KilogramFiyati ASC,l.Id",
+            "priceDesc" => "l.KilogramFiyati DESC,l.Id",
+            "qtyDesc" => "l.MiktarKg DESC,l.Id",
+            "qtyAsc" => "l.MiktarKg ASC,l.Id",
+            _ => "l.OlusturulmaTarihi DESC,l.Id"
+        };
+        var args = new
+        {
+            user, owner = q.OwnerId, term = "%" + q.Q?.Trim() + "%", fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim(),
+            district = q.Ilce?.Trim(), variety = q.Cesit?.Trim(), packaging = q.Ambalaj, delivery = q.Teslimat,
+            min = q.MinFiyat, max = q.MaxFiyat, minQty = q.MinMiktar, maxQty = q.MaxMiktar,
+            skip = (q.Page - 1) * q.PageSize, take = q.PageSize
+        };
         using var results = await c.QueryMultipleAsync(new CommandDefinition("SELECT COUNT(*) FROM dbo.Listings l WHERE " + where + "; SELECT " + ViewColumns + " FROM dbo.Listings l JOIN dbo.Users u ON u.Id=l.OwnerId WHERE " + where + " ORDER BY " + order + " OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY", args, cancellationToken: ct));
         var total = await results.ReadSingleAsync<int>(); var items = (await results.ReadAsync<ListingView>()).ToList(); foreach (var x in items) { x.Telefon = null; if (x.PhotoUrl is not null) x.PhotoUrl = $"/api/meyve-ilanlari/{x.Id}/photo"; }
         return new(items, total, q.Page, q.PageSize);
@@ -328,6 +348,19 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         ));
 
         return affected == 1;
+    }
+    public async Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct)
+    {
+        await using var c = await factory.Open(ct);
+        const string sql = """
+        SELECT l.MeyveTuru, COUNT(*) AS Count
+        FROM dbo.Listings l
+        WHERE l.IsDeleted = 0 AND l.Active = 1 AND l.Hidden = 0 AND l.Status = 4
+            AND (l.ExpiresAt IS NULL OR l.ExpiresAt > SYSUTCDATETIME())
+        GROUP BY l.MeyveTuru
+        ORDER BY COUNT(*) DESC, l.MeyveTuru;
+        """;
+        return (await c.QueryAsync<CategoryCount>(new CommandDefinition(sql, cancellationToken: ct))).ToList();
     }
     public async Task<long> RecordView(Guid id, Guid? user, CancellationToken ct)
     {

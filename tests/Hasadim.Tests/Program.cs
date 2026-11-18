@@ -102,6 +102,9 @@ await Status(401, () => service.Search(new ListingQuery { History = true }, ct),
 typeof(Listing).GetProperty(nameof(Listing.ExpiresAt))!.SetValue(repo.Items[first], DateTime.UtcNow.AddSeconds(-1));
 await Status(404, () => service.Detail(first, ct), "Süre dolunca anonim detay erişimi kapanır");
 Check(!(await service.Search(new ListingQuery(), ct)).Items.Any(x => x.Id == first), "Süresi dolan ilan pazar yerinde yoktur");
+await Status(400, () => service.Search(new ListingQuery { MinMiktar = 500, MaxMiktar = 100 }, ct), "Ters miktar aralığı reddedilir");
+await Status(400, () => service.Search(new ListingQuery { Sort = "l.Id; DROP TABLE x" }, ct), "Tanımsız sıralama reddedilir");
+await Status(400, () => service.Search(new ListingQuery { Ambalaj = "Bidon" }, ct), "Tanımsız ambalaj filtresi reddedilir");
 user.Id = owner;
 Check(!(await service.Search(new ListingQuery { Mine = true }, ct)).Items.Any(x => x.Id == first), "Süresi dolan ilan güncel ilanlardan çıkar");
 var past = await service.Search(new ListingQuery { History = true }, ct);
@@ -154,6 +157,8 @@ class MemoryRepo : IMarketplaceRepository
     public Dictionary<Guid, Listing> Items = [];
     public Dictionary<Guid, IReadOnlyList<string>> Photos = [];
     public Task<long> RecordView(Guid id, Guid? user, CancellationToken ct) => Task.FromResult(0L);
+    public Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<CategoryCount>>([]);
     public bool UpdateSuccess = true;
     private static Listing Clone(Listing l) => (Listing)typeof(object)
         .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(l, null)!;

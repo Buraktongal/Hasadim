@@ -207,6 +207,13 @@ public class MarketplaceService(
             throw new AppException(400, "Fiyat aralığı geçersiz.");
         }
 
+        if (q.MinMiktar < 0 ||
+            q.MaxMiktar < 0 ||
+            q.MinMiktar > q.MaxMiktar)
+        {
+            throw new AppException(400, "Miktar aralığı geçersiz.");
+        }
+
         var result = await repo.Search(q, current.Id, ct);
 
         foreach (var listing in result.Items)
@@ -263,6 +270,8 @@ public class MarketplaceService(
 
         return listing;
     }
+
+    public Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct) => repo.Categories(ct);
 
     public Task<long> RecordView(Guid id, CancellationToken ct) => repo.RecordView(id, current.Id, ct);
 

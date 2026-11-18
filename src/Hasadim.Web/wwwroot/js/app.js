@@ -98,7 +98,7 @@ if (globalSearchForm) {
     };
 }
 
-async function changeView(next, { query = '' } = {}) {
+async function changeView(next, { query = '', filters = null } = {}) {
     const titles = {
         all: 'Pazar yeri', mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim',
         messages: 'Mesajlar', admin: 'Yönetim'
@@ -129,6 +129,7 @@ async function changeView(next, { query = '' } = {}) {
 
     $('#filters').reset();
     $('#filters').elements.namedItem('q').value = query;
+    await window.MarketCatalog.apply($('#filters'), filters || {});
     syncHeaderQuery(query);
     updateMarketAddress();
     if (next === 'messages') return loadMessages();
@@ -149,6 +150,7 @@ function updateMarketAddress() {
     const query = $('#filters').elements.namedItem('q').value.trim();
     if (query && !['messages', 'admin'].includes(view)) url.searchParams.set('q', query);
     else url.searchParams.delete('q');
+    window.MarketCatalog.writeUrl(url, $('#filters'), !['messages', 'admin'].includes(view));
     history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
 function empty(parent,title,text){const n=el('div',undefined,'empty');n.append(el('strong',title),el('p',text));parent.append(n);}
@@ -162,7 +164,7 @@ async function loadListings(){
  $('#listStatus').textContent='İlanlar yükleniyor…';$('#prevPage').disabled=true;$('#nextPage').disabled=true;
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
- $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan';
+ $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value;window.MarketCatalog.highlight(selectedFruit);if(view==='all')$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':'Tüm meyve ilanları';
  if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
  $('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#prevPage').disabled=page<=1;$('#nextPage').disabled=page*data.pageSize>=data.total;
@@ -173,8 +175,9 @@ function picture(x, cls) {
     const n = el('div', fruits[x.meyveTuru] || '🌱', 'fruit-placeholder'); n.setAttribute('aria-label', x.meyveTuru + ' — fotoğraf eklenmemiş'); return n;
 }
 function card(x) {
-    const c = el('article', undefined, 'card')
-        , media = el('div', undefined, 'card-media');
+    // Liste görünümünde satır, galeri görünümünde kart olarak çizilir (CSS).
+    const c = el('article', undefined, 'card listing-item'),
+        media = el('div', undefined, 'card-media');
 
     media.append(picture(x));
     const stats = window.MarketPresentation.stats(x);
@@ -193,36 +196,54 @@ function card(x) {
     fav.setAttribute('aria-label', 'Favorilere ekle / çıkar');
     fav.setAttribute('aria-pressed', String(x.favorite));
     if (x.status === 4 && x.active && !x.hidden) media.append(fav);
-    const body = el('div', undefined, 'card-body');
-    body.append(
-        el('small', 'İlan No: ' + x.listingNumber, 'listing-number')
-    );
-    body.append(el('span', x.meyveTuru + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
-        el('h3', x.baslik), el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
- body.append(window.MarketPresentation.facts(x));
- window.ListingWorkflow.appendStatus(body, x);
- body.append(window.MarketPresentation.price(x), stats);
-    const bottom = el('div', undefined, 'card-bottom'); bottom.append(el('span', x.ownerName, 'card-owner'), button('İlanı incele ↗', 'textbtn', () => openDetail(x.id)));
 
-    body.append(bottom);
-    c.append(media, body);
+    const main = el('div', undefined, 'card-body card-main');
+    const title = el('h3');
+    const link = el('a', x.baslik, 'card-title');
+    link.href = '/html/ilan.html?id=' + encodeURIComponent(x.id) + '&from=' + encodeURIComponent(view);
+    link.addEventListener('click', event => { event.preventDefault(); openDetail(x.id); });
+    title.append(link);
+    main.append(
+        el('span', x.meyveTuru + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
+        title,
+        el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
+    const badges = el('div', undefined, 'card-badges');
+    if (x.minAlimKg) badges.append(el('span', 'Min. ' + number(x.minAlimKg) + ' kg', 'badge'));
+    if (x.ambalaj) badges.append(el('span', x.ambalaj, 'badge'));
+    if (x.teslimat) badges.append(el('span', x.teslimat, 'badge'));
+    if (x.hasatTarihi) badges.append(el('span', 'Hasat ' + date(x.hasatTarihi), 'badge'));
+    if (badges.children.length) main.append(badges);
+    window.ListingWorkflow.appendStatus(main, x);
+    main.append(el('small', 'İlan No: ' + x.listingNumber + ' · ' + (x.ownerName || ''), 'listing-number'));
+
+    const column = (cls, label, value) => {
+        const n = el('div', undefined, 'card-col ' + cls);
+        n.append(el('span', label, 'col-label'));
+        if (typeof value === 'string') n.append(el('strong', value)); else n.append(value);
+        return n;
+    };
+    const priceBox = window.MarketPresentation.price(x);
+    c.append(media, main,
+        column('col-variety', 'Çeşit', x.cesit || '—'),
+        column('col-qty', 'Miktar', number(x.miktarKg) + ' kg'),
+        column('col-price', 'Fiyat', priceBox),
+        column('col-date', 'İlan tarihi', date(x.publishedAt || x.olusturulmaTarihi)),
+        column('col-location', 'İl / İlçe', x.il + '\n' + x.ilce));
+    const bottom = el('div', undefined, 'card-bottom');
+    bottom.append(stats, button('İlanı incele ↗', 'textbtn', () => openDetail(x.id)));
+    c.append(bottom);
 
     c.classList.add('clickable-card');
-
     c.addEventListener('click', event => {
-        if (event.target.closest(
-            'a, button, input, select, textarea, label'
-        )) {
-            return;
-        }
-
+        if (event.target.closest('a, button, input, select, textarea, label')) return;
         openDetail(x.id);
     });
-
     return c;
 }
 $('#filters').onsubmit = e => { e.preventDefault(); page = 1; loadListings(); }; $('#clearFilters').onclick = () => {
     $('#filters').reset();
+    window.MarketCatalog.fillVarieties($('#filters'));
+    window.MarketCatalog.syncSort($('#filters'));
     page = 1; loadListings();
 }; $('#prevPage').onclick = () => { page--; loadListings(); }; $('#nextPage').onclick = () => { page++; loadListings(); };
 function openDetail(id){window.location.href='/html/ilan.html?id='+encodeURIComponent(id)+'&from='+encodeURIComponent(view);}
@@ -254,56 +275,113 @@ async function renderDetail(id)
         const x = await api('/api/meyve-ilanlari/' + id);
         await window.MarketPresentation.recordView(x, api);
         if (request !== detailRequest) return;
-        content.replaceChildren(); document.title = x.baslik + ' — Hasadım'; window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[new URLSearchParams(location.search).get('from')] || 'İlanlar', href: '/?view=' + encodeURIComponent(new URLSearchParams(location.search).get('from') || 'all') }, { label: x.baslik }]); const originSeller = new URLSearchParams(location.search).get('seller'); if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]); const photos = x.photos || []; if (photos.length) content.append(createGallery(photos, x.baslik)); content.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik), window.MarketPresentation.price(x));
-        const grid = el('div', undefined, 'detail-grid');
-        for (const [k, v] of Object.entries({ 'Konum': x.il + ' / ' + x.ilce, 'Miktar': number(x.miktarKg) + ' kg', 'Hasat tarihi': date(x.hasatTarihi), 'Yayın tarihi': date(x.publishedAt), 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Satıcı': x.ownerName, 'İlan numarası': String(x.listingNumber) })) {
+        content.replaceChildren(); document.title = x.baslik + ' — Hasadım';
+        const params = new URLSearchParams(location.search);
+        const from = params.get('from');
+        const crumbs = [{ label: 'Ana sayfa', href: '/' },
+            { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[from] || 'İlanlar', href: '/?view=' + encodeURIComponent(from || 'all') }];
+        if (!from || from === 'all') crumbs.push({ label: x.meyveTuru, href: '/html/index.html?meyveTuru=' + encodeURIComponent(x.meyveTuru) });
+        crumbs.push({ label: x.baslik });
+        window.setBreadcrumbs?.(crumbs);
+        const originSeller = params.get('seller');
+        if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]);
+        window.MarketCatalog?.highlight(x.meyveTuru);
+
+        // Başlık satırı
+        const head = el('header', undefined, 'detail-head');
+        head.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik),
+            el('p', 'İlan No: ' + x.listingNumber + ' · ' + x.il + ' / ' + x.ilce, 'detail-sub'));
+        content.append(head);
+
+        const layout = el('div', undefined, 'detail-layout');
+        const mediaCol = el('div', undefined, 'detail-media');
+        const infoCol = el('div', undefined, 'detail-info');
+        const sideCol = el('aside', undefined, 'detail-side');
+        layout.append(mediaCol, infoCol, sideCol);
+        content.append(layout);
+
+        const photos = x.photos || [];
+        if (photos.length) mediaCol.append(createGallery(photos, x.baslik));
+        else { const ph = el('div', fruits[x.meyveTuru] || '🌱', 'fruit-placeholder detail-placeholder'); ph.setAttribute('aria-label', 'Fotoğraf eklenmemiş'); mediaCol.append(ph); }
+
+        // Fiyat ve ilan bilgileri tablosu
+        infoCol.append(window.MarketPresentation.price(x));
+        const grid = el('div', undefined, 'detail-grid info-table');
+        for (const [k, v] of Object.entries({ 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Meyve türü': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' kg', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName, 'Yayın bitişi': date(x.expiresAt) })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
-        } const description = el('section', undefined, 'description');
- description.append(el('h3', 'Ürün açıklaması', 'listing-description-title'), el('p', x.aciklama || 'Açıklama eklenmemiş.'));
- content.append(grid, description);
- window.ListingWorkflow.appendStatus(content, x);
- const statistics = window.MarketPresentation.stats(x); content.append(statistics);
- const actions = el('div', undefined, 'actions');
- const publiclyVisible = x.status === 4 && x.active && !x.hidden;
- if (publiclyVisible) content.append(window.MarketTools.detailActions(x, {api, requireLogin: mustLogin, onFavorite: () => { statistics.textContent = window.MarketPresentation.stats(x).textContent; }}));
- if (publiclyVisible) content.append(window.MarketPresentation.estimate(x));
- if (x.isMine) {
-     if (window.ListingWorkflow.editable(x)) {
-         actions.append(button('İlanı düzenle', 'primary', () => openEditor(x)));
-     }
-     actions.append(button('İlanı sil', 'danger', async () => {
-         if (!confirm('İlan silinsin mi? Mesaj geçmişi korunacak.')) return;
-         try {
-             await api('/api/meyve-ilanlari/' + id, 'DELETE');
-             window.location.href = '/?view=mine';
-         } catch (error) { toast(error.message); }
-     }));
- } else if (user && publiclyVisible) {
-     if (x.telefon) {
-         const tel = el('a', 'Telefon: ' + x.telefon, 'secondary');
-         tel.href = 'tel:' + x.telefon.replace(/[^+0-9]/g, '');
-         actions.append(tel);
-     }
-     actions.append(button('Satıcıya soru sor', 'primary',
-         () => openCompose(x.id, x.ownerId, x.baslik)));
-     actions.append(button('İlanı bildir', 'textbtn', () => {
-         $('#reportForm').reset();
-         $('#reportForm [name=id]').value = id;
-         $('#reportForm .form-error').textContent = '';
-         show('reportDialog');
-     }));
- } else if (!user && publiclyVisible) {
-     actions.append(button('İletişim için giriş yap', 'primary', openAuth));
- }
- window.ListingWorkflow.appendReviewActions(content, x);
- content.append(actions);
- if (!x.isMine && publiclyVisible) content.append(window.HasadimMessages.questions(x, question => {
-     if (!mustLogin()) return;
-     openCompose(x.id, x.ownerId, x.baslik, question);
- }));
- const seller=el('section',undefined,'seller-box');content.append(seller);try{const p=await api('/api/profiles/'+x.ownerId);window.MarketPresentation.seller(seller,p);}catch{const link=el('a',x.ownerName+' — Satıcı profili');link.href='/html/satici.html?id='+x.ownerId;seller.append(link);}
- }catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
+        }
+        infoCol.append(grid);
+        window.ListingWorkflow.appendStatus(infoCol, x);
+        const statistics = window.MarketPresentation.stats(x); infoCol.append(statistics);
+        const publiclyVisible = x.status === 4 && x.active && !x.hidden;
+        if (publiclyVisible) infoCol.append(window.MarketTools.detailActions(x, { api, requireLogin: mustLogin, onFavorite: () => { statistics.textContent = window.MarketPresentation.stats(x).textContent; } }));
+
+        // Sağ sütun: satıcı ve iletişim
+        const seller = el('section', undefined, 'seller-box'); sideCol.append(seller);
+        const actions = el('div', undefined, 'actions contact-actions');
+        if (x.isMine) {
+            if (window.ListingWorkflow.editable(x)) {
+                actions.append(button('İlanı düzenle', 'primary', () => openEditor(x)));
+            }
+            actions.append(button('İlanı sil', 'danger', async () => {
+                if (!confirm('İlan silinsin mi? Mesaj geçmişi korunacak.')) return;
+                try {
+                    await api('/api/meyve-ilanlari/' + id, 'DELETE');
+                    window.location.href = '/?view=mine';
+                } catch (error) { toast(error.message); }
+            }));
+        } else if (user && publiclyVisible) {
+            if (x.telefon) {
+                const tel = el('a', 'Telefon: ' + x.telefon, 'secondary phone-link');
+                tel.href = 'tel:' + x.telefon.replace(/[^+0-9]/g, '');
+                actions.append(tel);
+            }
+            actions.append(button('Satıcıya mesaj gönder', 'primary',
+                () => openCompose(x.id, x.ownerId, x.baslik)));
+            actions.append(button('İlanı bildir', 'textbtn', () => {
+                $('#reportForm').reset();
+                $('#reportForm [name=id]').value = id;
+                $('#reportForm .form-error').textContent = '';
+                show('reportDialog');
+            }));
+        } else if (!user && publiclyVisible) {
+            actions.append(button('İletişim için giriş yap', 'primary', openAuth));
+        }
+        sideCol.append(actions);
+        if (publiclyVisible) sideCol.append(window.MarketPresentation.estimate(x));
+
+        // Alt bölüm: açıklama, sorular, yönetim işlemleri
+        const lower = el('div', undefined, 'detail-lower');
+        const description = el('section', undefined, 'description');
+        description.append(el('h3', 'Ürün açıklaması', 'listing-description-title'), el('p', x.aciklama || 'Açıklama eklenmemiş.'));
+        lower.append(description);
+        content.append(lower);
+        window.ListingWorkflow.appendReviewActions(lower, x);
+        if (!x.isMine && publiclyVisible) lower.append(window.HasadimMessages.questions(x, question => {
+            if (!mustLogin()) return;
+            openCompose(x.id, x.ownerId, x.baslik, question);
+        }));
+
+        try { const p = await api('/api/profiles/' + x.ownerId); window.MarketPresentation.seller(seller, p); }
+        catch { const link = el('a', x.ownerName + ' — Satıcı profili'); link.href = '/html/satici.html?id=' + x.ownerId; seller.append(link); }
+        if (publiclyVisible) void renderSimilar(content, x);
+}catch(e){if(request===detailRequest)content.replaceChildren(el('p',e.message,'form-error'));}}
+
+// Aynı meyve türündeki diğer güncel ilanlar.
+async function renderSimilar(content, x) {
+    try {
+        const data = await api('/api/meyve-ilanlari?meyveTuru=' + encodeURIComponent(x.meyveTuru) + '&pageSize=5');
+        const others = (data?.items || []).filter(item => item.id !== x.id).slice(0, 4);
+        if (!others.length) return;
+        const section = el('section', undefined, 'similar-listings');
+        section.append(el('h3', 'Benzer ' + x.meyveTuru.toLocaleLowerCase('tr-TR') + ' ilanları'));
+        const list = el('div', undefined, 'cards gallery-view');
+        for (const item of others) list.append(card(item));
+        section.append(list);
+        content.append(section);
+    } catch { /* Benzer ilanlar isteğe bağlıdır. */ }
+}
 
 async function openEditor(x) {
     if (!mustLogin()) return;
@@ -326,6 +404,7 @@ async function openEditor(x) {
     form.querySelector('[type="submit"]').textContent = x
         ? 'İlanı önizle' : 'İlanı önizle';
     window.ListingEditor.reset();
+    window.ListingWizard?.reset(Boolean(x));
 
     if (x) {
         for (const [key, value] of Object.entries(x)) {
@@ -365,6 +444,7 @@ async function openEditor(x) {
             x?.ilce ?? ''
         );
 
+        window.ListingWizard?.refreshTiles();
         show('editorDialog');
     } catch (error) {
         toast(error.message);
@@ -392,6 +472,15 @@ document
     });
 window.ListingWorkflow.bindEditor();
 window.MarketTools.bindFilters($('#filters'), () => { page=1; return loadListings(); });
+window.MarketCatalog.bind($('#filters'), () => { page = 1; return loadListings(); });
+window.MarketCatalog.onCategory = async fruit => {
+    if (view !== 'all') return changeView('all', { filters: { meyveTuru: fruit } });
+    const form = $('#filters');
+    form.elements.namedItem('meyveTuru').value = fruit;
+    window.MarketCatalog.fillVarieties(form);
+    page = 1;
+    await loadListings();
+};
 function openCompose(listingId,recipientId,title,question=""){const f=$('#composeForm');f.reset();f.elements.namedItem('listingId').value=listingId;f.elements.namedItem('recipientId').value=recipientId;f.querySelector('.form-error').textContent='';$('#composeContext').textContent=title;f.elements.namedItem('body').value=question;show('composeDialog');}
 $('#composeForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));d.body=d.body.trim();await api('/api/messages','POST',d);close('composeDialog');toast('Mesaj gönderildi.');if(view==='messages')await loadMessages();});};
 $('#reportForm').onsubmit=e=>{e.preventDefault();const f=e.currentTarget;submit(f,async()=>{const d=Object.fromEntries(new FormData(f));await api('/api/meyve-ilanlari/'+d.id+'/report','POST',{reason:d.reason.trim()});close('reportDialog');toast('Bildirimin yönetime iletildi.');});};
@@ -417,12 +506,14 @@ $('#refreshAdmin').onclick = () => Promise.all([
             syncHeaderQuery(params.get('q') || '');
             const id = params.get('id');
             if (!id) throw Error('İlan bağlantısında ilan kimliği bulunamadı.');
+            window.MarketCatalog.highlight('');
             await renderDetail(id);
         } else {
             const initialView = params.get('view') || 'all';
             const permittedView = initialView === 'admin' && !user?.isAdmin
                 ? 'all' : initialView;
-            await changeView(permittedView, { query: (params.get('q') || '').slice(0, 150) });
+            await changeView(permittedView, { query: (params.get('q') || '').slice(0, 150), filters: window.MarketCatalog.readUrl() });
+            void window.MarketCatalog.refresh(api, $('#filters').elements.namedItem('meyveTuru').value);
             if (params.get('action') === 'new-listing' && user) {
                 const url = new URL(location.href); url.searchParams.delete('action'); history.replaceState(null, '', url.pathname + url.search);
                 await openEditor();

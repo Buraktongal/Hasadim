@@ -30,6 +30,13 @@ public class ListingsController(
         return Ok(await service.Search(query, ct));
     }
 
+    // Kategori menüsü için yayındaki ilan sayıları.
+    [HttpGet("kategoriler")]
+    public async Task<IActionResult> Categories(CancellationToken ct)
+    {
+        return Ok(await service.Categories(ct));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Detail(
         Guid id,

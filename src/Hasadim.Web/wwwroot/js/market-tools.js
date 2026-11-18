@@ -4,7 +4,7 @@ window.MarketTools = (() => {
     function filterSummary(form, reload) {
         const root = document.querySelector('#activeFilters'); if (!root) return;
         root.replaceChildren();
-        const labels = { q: 'Arama', meyveTuru: 'Meyve', il: 'İl', minFiyat: 'En az TL/kg', maxFiyat: 'En çok TL/kg' };
+        const labels = { q: 'Arama', meyveTuru: 'Meyve', cesit: 'Çeşit', il: 'İl', ilce: 'İlçe', minFiyat: 'En az TL/kg', maxFiyat: 'En çok TL/kg', minMiktar: 'En az kg', maxMiktar: 'En çok kg', ambalaj: 'Ambalaj', teslimat: 'Teslimat' };
         for (const [key, label] of Object.entries(labels)) {
             const field = form.elements.namedItem(key); if (!field?.value.trim()) continue;
             const chip = node('button', label + ': ' + field.value + ' ×', 'filter-chip'); chip.type = 'button';

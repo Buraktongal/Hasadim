@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/market-presentation.css"><link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/market-experience.css">
     <link rel="stylesheet" href="/css/listing-form.css"><link rel="stylesheet" href="/css/listing-editor.css">
     <link rel="stylesheet" href="/css/listing-workflow.css">
+    <link rel="stylesheet" href="/css/ticaret.css">
 
 
     <script src="/js/layout.js" defer></script>
@@ -24,31 +25,43 @@
         </section>
         <section id="messagesView" hidden><div class="section-heading"><h2>Mesajlarım</h2><button id="refreshMessages" class="secondary">Yenile</button></div><p class="muted">İlanlarla ilgili yazışmaların burada. Yeni mesajlar otomatik olarak güncellenir.</p><div id="messagesList"></div><button id="moreMessages" class="secondary" hidden>Eski konuşmaları ve mesajları yükle</button></section>
         <section id="adminView" hidden><div class="section-heading"><h2>Şikâyet yönetimi</h2><button id="refreshAdmin" class="secondary">Yenile</button></div><p class="muted">Açık şikâyetleri inceleyebilir, ilanları yayından gizleyebilirsin.</p><div id="reportsList"></div></section>
-    </main><main class="detail-page"><a href="/">← Pazara dön</a><div id="detailContent" aria-live="polite"></div></main>
+    </main><main class="detail-page"><a class="back-link" href="/">← İlanlara dön</a><div id="detailContent" aria-live="polite"></div></main>
 
 
     <div id="toast" role="status" hidden></div>
     <dialog id="editorDialog" class="wide">
         <div class="dialog-head"><div><p class="eyebrow">HASADINI PAYLAŞ</p><h2 id="editorTitle">Yeni ilan ver</h2></div><button class="close" data-close="editorDialog" aria-label="Kapat">×</button></div>
-        <form id="editorForm">
+        <form id="editorForm" class="listing-wizard">
 <input name="id" type="hidden"><input name="version" type="hidden">
-<p class="editor-intro">Ürün bilgilerini ve fotoğraflarını ekle, önizlemeyi kontrol et ve ilanını yayımla. Zorunlu kontrolleri geçen ilanlar 30 gün yayında kalır.</p>
-<fieldset class="editor-section"><legend>1 · Ürün bilgileri</legend>
-<label>İlan başlığı<input name="baslik" required minlength="5" maxlength="150" placeholder="Örn. Korkuteli bahçesinden Deveci armut"></label>
+<ol class="wizard-steps" id="wizardSteps" aria-label="İlan verme adımları">
+<li><button type="button" class="wizard-step-link" data-step-target="1"><span class="step-no">1</span><span>Kategori</span></button></li>
+<li><button type="button" class="wizard-step-link" data-step-target="2"><span class="step-no">2</span><span>İlan detayları</span></button></li>
+<li><button type="button" class="wizard-step-link" data-step-target="3"><span class="step-no">3</span><span>Fiyat ve teslimat</span></button></li>
+<li><button type="button" class="wizard-step-link" data-step-target="4"><span class="step-no">4</span><span>Fotoğraf ve yayın</span></button></li>
+</ol>
+<fieldset class="editor-section wizard-step" data-step="1"><legend>1 · Kategori seç</legend>
+<p class="step-help">Satacağın meyveyi seç. Alıcılar ilanını bu kategoride ve çeşit filtresinde bulur.</p>
+<div id="categoryTiles" class="category-tiles" role="group" aria-label="Meyve türü seçimi"></div>
 <div class="two"><label>Meyve türü<select name="meyveTuru" id="editorFruit" required></select></label><label>Çeşit<select name="cesit" required disabled><option value="">Önce meyve türü seçin</option></select></label></div>
-<label>Hasat tarihi <span class="muted">(isteğe bağlı)</span><input name="hasatTarihi" type="date" aria-describedby="harvestDateHelp"></label><small id="harvestDateHelp" class="muted">Ürünün hasat edildiği veya edileceği tarih.</small>
-<label>Ürün açıklaması<textarea name="aciklama" rows="5" maxlength="5000" placeholder="Ürünün kalitesi ve boyutu, hasat durumu, ambalajı, minimum alım miktarı ve teslimat koşullarını anlat."></textarea></label>
 </fieldset>
-<fieldset class="editor-section"><legend>2 · Fiyat ve konum</legend><p>Fiyatı kilogram başına, miktarı kilogram olarak belirt.</p>
-<div class="two"><label>Miktar (kg)<input name="miktarKg" type="number" inputmode="decimal" required min="0.01" max="100000000" step="0.01" placeholder="Örn. 1500"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" inputmode="decimal" required min="0.01" max="1000000" step="0.01" placeholder="Örn. 35"></label></div>
-<div class="two"><label>İl<select name="il" required><option value="">İl seçin</option></select></label><label>İlçe<select name="ilce" required disabled><option value="">Önce il seçin</option></select></label></div>
-<div class="two"><label>Ambalaj <span class="muted">(isteğe bağlı)</span><select name="ambalaj"><option value="">Belirtilmedi</option><option value="Kasa">Kasa</option><option value="Koli">Koli</option><option value="Dökme">Dökme</option><option value="Çuval">Çuval</option><option value="Diğer">Diğer</option></select></label><label>Teslimat <span class="muted">(isteğe bağlı)</span><select name="teslimat"><option value="">Belirtilmedi</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select></label></div><label>Minimum alım (kg) <span class="muted">(isteğe bağlı)</span><input name="minAlimKg" type="number" min="0.01" max="100000000" step="0.01" inputmode="decimal" placeholder="Örn. 100"></label>
-<p>İletişim için profilindeki telefon kullanılır. Görünürlüğünü <a href="/html/profilim.html">profilinden yönetebilirsin</a>.</p></fieldset>
-<fieldset class="editor-section"><legend>3 · Ürün fotoğrafları</legend><p>Ürünü yakından ve genel görünümüyle göster. İlk fotoğraf ilanın kapağı olacak.</p>
-<label>Fotoğraf seç<input name="photo" type="file" multiple required accept="image/jpeg,image/png,image/webp" aria-describedby="photoHelp"></label>
-<small id="photoHelp" class="muted">En az 1, en fazla 10 fotoğraf. JPG, PNG veya WebP; fotoğraf başına en fazla 5 MB. Düzenlerken seçilenler mevcut galeriye eklenir.</small><div id="photoPreviews" class="thumbnails"></div></fieldset>
+<fieldset class="editor-section wizard-step" data-step="2"><legend>2 · İlan detayları</legend>
+<label>İlan başlığı<input name="baslik" required minlength="5" maxlength="150" placeholder="Örn. Korkuteli bahçesinden Deveci armut — 1. sınıf, kasalı"></label>
+<small class="muted">Başlıkta çeşit, kalite sınıfı ve bölgeyi belirtmek alıcıların ilanını bulmasını kolaylaştırır.</small>
+<label>Hasat tarihi <span class="muted">(isteğe bağlı)</span><input name="hasatTarihi" type="date" aria-describedby="harvestDateHelp"></label><small id="harvestDateHelp" class="muted">Ürünün hasat edildiği veya edileceği tarih.</small>
+<label>Ürün açıklaması<textarea name="aciklama" rows="6" maxlength="5000" placeholder="Kalibre / boy, kalite sınıfı, renk, depolama durumu, ilaçlama bilgisi, ödeme ve yükleme koşulları…"></textarea></label>
+</fieldset>
+<fieldset class="editor-section wizard-step" data-step="3"><legend>3 · Fiyat, miktar ve teslimat</legend><p class="step-help">Fiyatı kilogram başına, miktarı kilogram olarak gir. Toptan alıcılar en çok bu bilgilere bakar.</p>
+<div class="two"><label>Toplam miktar (kg)<input name="miktarKg" type="number" inputmode="decimal" required min="0.01" max="100000000" step="0.01" placeholder="Örn. 15000"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" inputmode="decimal" required min="0.01" max="1000000" step="0.01" placeholder="Örn. 35"></label></div>
+<div class="two"><label>Minimum alım (kg) <span class="muted">(isteğe bağlı)</span><input name="minAlimKg" type="number" min="0.01" max="100000000" step="0.01" inputmode="decimal" placeholder="Örn. 1000"></label><label>Ambalaj <span class="muted">(isteğe bağlı)</span><select name="ambalaj"><option value="">Belirtilmedi</option><option value="Kasa">Kasa</option><option value="Koli">Koli</option><option value="Dökme">Dökme</option><option value="Çuval">Çuval</option><option value="Diğer">Diğer</option></select></label></div>
+<div class="two"><label>Ürünün bulunduğu il<select name="il" required><option value="">İl seçin</option></select></label><label>İlçe<select name="ilce" required disabled><option value="">Önce il seçin</option></select></label></div>
+<label>Teslimat <span class="muted">(isteğe bağlı)</span><select name="teslimat"><option value="">Belirtilmedi</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select></label>
+<p class="step-help">İletişim için profilindeki telefon kullanılır. Görünürlüğünü <a href="/html/profilim.html">profilinden yönetebilirsin</a>.</p></fieldset>
+<fieldset class="editor-section wizard-step" data-step="4"><legend>4 · Fotoğraflar ve yayın</legend><p class="step-help">Ürünü yakından, kasada ve bahçede göster. İlk fotoğraf ilanın vitrin fotoğrafı olur.</p>
+<label class="photo-drop">Fotoğraf seç<input name="photo" type="file" multiple required accept="image/jpeg,image/png,image/webp" aria-describedby="photoHelp"></label>
+<small id="photoHelp" class="muted">En az 1, en fazla 10 fotoğraf. JPG, PNG veya WebP; fotoğraf başına en fazla 5 MB. Düzenlerken seçilenler mevcut galeriye eklenir.</small><div id="photoPreviews" class="thumbnails"></div>
 <section id="listingPreview" tabindex="-1" aria-label="İlan önizlemesi" hidden></section>
-<div class="editor-submit-bar"><p class="form-error" role="alert"></p><button class="primary full" type="submit">İlanı önizle</button></div>
+</fieldset>
+<div class="editor-submit-bar"><p class="form-error" role="alert"></p><div class="wizard-nav"><button type="button" class="secondary wizard-back">← Geri</button><button type="button" class="primary wizard-next">Devam et →</button><button class="primary" type="submit">İlanı önizle</button></div></div>
 </form>
     </dialog>
     <dialog id="composeDialog"><div class="dialog-head"><h2>Mesaj gönder</h2><button class="close" data-close="composeDialog" aria-label="Kapat">×</button></div><p id="composeContext" class="muted"></p><form id="composeForm"><input type="hidden" name="listingId"><input type="hidden" name="recipientId"><label>Mesajın<textarea name="body" required maxlength="2000" rows="5"></textarea></label><p class="form-error" role="alert"></p><button class="primary full">Gönder</button></form></dialog>

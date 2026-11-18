@@ -91,12 +91,28 @@ public class ListingQuery
     [StringLength(100)]
     public string? Il { get; set; }
 
+    [StringLength(100)]
+    public string? Ilce { get; set; }
+
+    [StringLength(100)]
+    public string? Cesit { get; set; }
+
+    [RegularExpression("^(Kasa|Koli|Dökme|Çuval|Diğer)$", ErrorMessage = "Geçersiz ambalaj seçeneği.")]
+    public string? Ambalaj { get; set; }
+
+    [RegularExpression("^(Yerinden teslim|Satıcı teslimatı|Görüşülür)$", ErrorMessage = "Geçersiz teslimat seçeneği.")]
+    public string? Teslimat { get; set; }
+
     public decimal? MinFiyat { get; set; }
     public decimal? MaxFiyat { get; set; }
 
+    // Toptan alıcılar için ürün miktarı aralığı (kg).
+    public decimal? MinMiktar { get; set; }
+    public decimal? MaxMiktar { get; set; }
+
     public Guid? OwnerId { get; set; }
 
-    [Required, RegularExpression("^(new|priceAsc|priceDesc)$", ErrorMessage = "Geçersiz sıralama seçeneği.")]
+    [Required, RegularExpression("^(new|priceAsc|priceDesc|qtyDesc|qtyAsc)$", ErrorMessage = "Geçersiz sıralama seçeneği.")]
     public string Sort { get; set; } = "new";
 
     [Range(1, 100000)]
@@ -190,6 +206,8 @@ public class ListingView
     };
 }
 
+public record CategoryCount(string MeyveTuru, int Count);
+
 public record Paged<T>(
     IReadOnlyList<T> Items,
     int Total,
@@ -254,6 +272,9 @@ public class ReportView
 public interface IMarketplaceRepository
 {
     Task<long> RecordView(Guid id, Guid? user, CancellationToken ct);
+
+    // Yayındaki ilanların meyve türüne göre sayıları.
+    Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct);
     Task<Paged<ListingView>> Search(
         ListingQuery q,
         Guid? user,
