@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/auth-experience.css">
     <link rel="stylesheet" href="/css/hesap.css">
     <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
     <script src="/js/fruit-icons.js" defer></script>
     <script src="/js/market-catalog.js" defer></script>
     <script src="/js/confirm-dialog.js" defer></script>
@@ -26,23 +27,20 @@
     <div class="account-layout">
         <aside class="account-sidebar">
             <nav class="account-nav" aria-label="Hesabım menüsü">
-                <p class="account-nav-title">HESABIM</p>
+                <p class="account-nav-title">Hesabım</p>
                 <a href="/html/profilim.html">Profil bilgilerim</a>
                 <a href="/html/hesabim.html" aria-current="page">Hesap güvenliği</a>
-                <a href="/?view=mine">İlanlarım</a>
-                <a href="/?view=favorites">Favorilerim</a>
-                <a href="/?view=messages">Mesajlarım</a>
             </nav>
         </aside>
         <div class="account-content">
             <header class="account-head">
-                <p class="eyebrow">HESABIM</p>
+                <p class="eyebrow">Hesabım</p>
                 <h1>Hesap güvenliği</h1>
-                <p>Şifreni, iki adımlı doğrulamayı ve açık oturumlarını yönet.</p>
+                <p>Şifreni ve açık oturumlarını yönet.</p>
             </header>
             <p id="accountStatus" role="status"></p>
 
-            <section class="account-panel" id="twoFactorPanel" aria-labelledby="twoFactorTitle">
+            <section class="account-panel" id="twoFactorPanel" aria-labelledby="twoFactorTitle" hidden>
                 <div class="panel-head">
                     <div>
                         <h2 id="twoFactorTitle">İki adımlı doğrulama</h2>
@@ -118,5 +116,6 @@
         </div>
     </div>
 </main>
+<div id="siteFooter"></div>
 </body>
 </html>

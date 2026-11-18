@@ -101,7 +101,7 @@ window.MarketCatalog = (() => {
         const fruit = form.elements.namedItem('meyveTuru')?.value || '';
         const select = form.elements.namedItem('cesit');
         if (!select || typeof select.replaceChildren !== 'function') return;
-        select.replaceChildren(option(fruit ? 'Tüm çeşitler' : 'Önce meyve seçin', ''));
+        select.replaceChildren(option(fruit ? 'Tüm çeşitler' : 'Önce meyve seç', ''));
         const list = fruit && typeof fruitVarieties !== 'undefined' ? (fruitVarieties[fruit] || []) : [];
         for (const variety of list) select.append(option(variety, variety));
         if (selected && !list.includes(selected)) select.append(option(selected, selected));
@@ -120,7 +120,7 @@ window.MarketCatalog = (() => {
             await window.setupLocationSelectors(form, city, district);
             const rename = () => {
                 if (citySelect.options[0]) citySelect.options[0].textContent = 'Tüm iller';
-                if (districtSelect.options[0]) districtSelect.options[0].textContent = citySelect.value ? 'Tüm ilçeler' : 'Önce il seçin';
+                if (districtSelect.options[0]) districtSelect.options[0].textContent = citySelect.value ? 'Tüm ilçeler' : 'Önce il seç';
             };
             rename();
             citySelect.addEventListener('change', rename);

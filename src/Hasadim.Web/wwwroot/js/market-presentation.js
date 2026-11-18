@@ -58,7 +58,7 @@ window.MarketPresentation = (() => {
         if (p.photoUrl) { avatar.src = p.photoUrl; avatar.alt = p.displayName; }
         else avatar.setAttribute('aria-hidden', 'true');
         const identity = node('div');
-        identity.append(node('p', 'HASADIM SATICI PROFİLİ', 'eyebrow'), node(full ? 'h1' : 'h3', full ? p.displayName : 'Satıcı bilgileri'));
+        identity.append(node('p', 'Hasadım satıcı profili', 'eyebrow'), node(full ? 'h1' : 'h3', full ? p.displayName : 'Satıcı bilgileri'));
         if (!full) {
             const link = node('a', p.displayName, 'seller-name');
             link.href = '/html/satici.html?id=' + encodeURIComponent(p.id);

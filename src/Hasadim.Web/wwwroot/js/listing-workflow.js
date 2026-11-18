@@ -136,13 +136,13 @@
                 const data = new FormData(form);
                 const files = data.getAll('photo').filter(file => file.size);
                 const id = data.get('id');
-                if (!id && !files.length) throw Error('En az bir fotoğraf seçin.');
+                if (!id && !files.length) throw Error('En az bir fotoğraf seç.');
                 if (files.length + Number(form.dataset.photoCount || 0) > 10)
                     throw Error('En fazla 10 fotoğraf yükleyebilirsiniz.');
                 for (const file of files) {
                     if (file.size > 5_000_000) throw Error('Her fotoğraf en fazla 5 MB olabilir.');
                     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
-                        throw Error('JPG, PNG veya WebP seçin.');
+                        throw Error('JPG, PNG veya WebP seç.');
                 }
                 const minimum = Number(data.get('minAlimKg'));
                 if (data.get('minAlimKg') && (!Number.isFinite(minimum) || minimum <= 0 || minimum > Number(data.get('miktarKg'))))

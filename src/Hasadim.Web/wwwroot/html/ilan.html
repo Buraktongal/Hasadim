@@ -12,15 +12,16 @@
 
 
     <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
     <script src="/js/page-loader.js" defer></script>
 
 </head>
 <body data-page="detail">
     <div id="siteLayout"></div>
     <main hidden>
-        <section class="hero" id="hero"><div class="hero-copy"><p class="eyebrow">TOPRAKTAN GELEN FIRSATLAR</p><h1>İyi ürün,<br>doğru alıcıyla buluşur.</h1><p>Hasadını paylaş, üreticiye doğrudan ulaş.<br>Meyve ticaretinin yeni buluşma noktası.</p><div class="hero-tags"><span>Üreticiden doğrudan</span><span>Türkiye genelinde</span><span>Kolay ilan verme</span></div></div><div class="harvest-art" aria-hidden="true"><div class="sun"></div><div class="leaf leaf-one"></div><div class="leaf leaf-two"></div><div class="fruit orange"></div><div class="fruit apple"></div><div class="fruit pear"></div><span class="art-label">Mevsimin bereketi burada.</span></div></section>
+        <section class="hero" id="hero"><div class="hero-copy"><p class="eyebrow">Topraktan gelen fırsatlar</p><h1>İyi ürün,<br>doğru alıcıyla buluşur.</h1><p>Hasadını paylaş, üreticiye doğrudan ulaş.<br>Meyve ticaretinin yeni buluşma noktası.</p><div class="hero-tags"><span>Üreticiden doğrudan</span><span>Türkiye genelinde</span><span>Kolay ilan verme</span></div></div><div class="harvest-art" aria-hidden="true"><div class="sun"></div><div class="leaf leaf-one"></div><div class="leaf leaf-two"></div><div class="fruit orange"></div><div class="fruit apple"></div><div class="fruit pear"></div><span class="art-label">Mevsimin bereketi burada.</span></div></section>
         <section id="marketView">
-            <div class="section-heading"><div><p class="eyebrow">HASADIM PAZAR YERİ</p><h2 id="viewTitle">Taze ilanları keşfet</h2></div><span id="resultCount" class="muted"></span></div>
+            <div class="section-heading"><div><p class="eyebrow">Hasadım pazar yeri</p><h2 id="viewTitle">Taze ilanları keşfet</h2></div><span id="resultCount" class="muted"></span></div>
             <div class="market-layout"><aside><button id="toggleFilters" type="button" class="secondary" aria-expanded="false" aria-controls="filters">Filtreleri aç / kapat</button><form id="filters"><div class="filter-heading"><h3>İlanları filtrele</h3><button id="clearFilters" type="button" class="textbtn">Temizle</button></div><label>Ne arıyorsun?<input name="q" placeholder="Ürün, çeşit veya ilan başlığı" maxlength="150"></label><label>Meyve türü<select name="meyveTuru" id="fruitFilter"><option value="">Tüm meyveler</option></select></label><label>İl<input name="il" list="cities" placeholder="Tüm iller" maxlength="100"></label><div class="two"><label>En az TL/kg<input name="minFiyat" type="number" min="0" step="0.01" placeholder="0"></label><label>En çok TL/kg<input name="maxFiyat" type="number" min="0" step="0.01" placeholder="Sınırsız"></label></div><label>Sıralama<select name="sort"><option value="new">En yeni ilanlar</option><option value="priceAsc">Fiyat: düşükten yükseğe</option><option value="priceDesc">Fiyat: yüksekten düşüğe</option></select></label><button class="primary full" type="submit">İlanları göster</button></form><div class="sidebar-note"><span>✳</span><h3>Bir hasat, yeni bir başlangıç.</h3><p>Ürününü ekle, alıcılarla doğrudan iletişime geç.</p></div></aside><div><p id="listStatus" role="status"></p><div id="activeFilters" aria-label="Uygulanan filtreler" hidden></div><div id="listings" class="cards"></div><div class="pagination"><button id="prevPage" class="secondary">← Önceki</button><span id="pageLabel"></span><button id="nextPage" class="secondary">Sonraki →</button></div></div></div>
         </section>
         <section id="messagesView" hidden><div class="section-heading"><h2>Mesajlarım</h2><button id="refreshMessages" class="secondary">Yenile</button></div><p class="muted">İlanlarla ilgili yazışmaların burada. Yeni mesajlar otomatik olarak güncellenir.</p><div id="messagesList"></div><button id="moreMessages" class="secondary" hidden>Eski konuşmaları ve mesajları yükle</button></section>
@@ -28,9 +29,10 @@
     </main><main class="detail-page"><a class="back-link" href="/">← İlanlara dön</a><div id="detailContent" aria-live="polite"></div></main>
 
 
+    <div id="siteFooter"></div>
     <div id="toast" role="status" hidden></div>
     <dialog id="editorDialog" class="wide">
-        <div class="dialog-head"><div><p class="eyebrow">HASADINI PAYLAŞ</p><h2 id="editorTitle">Yeni ilan ver</h2></div><button class="close" data-close="editorDialog" aria-label="Kapat">×</button></div>
+        <div class="dialog-head"><div><p class="eyebrow">Ücretsiz ilan ver</p><h2 id="editorTitle">Yeni ilan ver</h2></div><button class="close" data-close="editorDialog" aria-label="Kapat">×</button></div>
         <form id="editorForm" class="listing-wizard">
 <input name="id" type="hidden"><input name="version" type="hidden">
 <ol class="wizard-steps" id="wizardSteps" aria-label="İlan verme adımları">
@@ -42,7 +44,7 @@
 <fieldset class="editor-section wizard-step" data-step="1"><legend>1 · Kategori seç</legend>
 <p class="step-help">Satacağın meyveyi seç. Alıcılar ilanını bu kategoride ve çeşit filtresinde bulur.</p>
 <div id="categoryTiles" class="category-tiles" role="group" aria-label="Meyve türü seçimi"></div>
-<div class="two"><label>Meyve türü<select name="meyveTuru" id="editorFruit" required></select></label><label>Çeşit<select name="cesit" required disabled><option value="">Önce meyve türü seçin</option></select></label></div>
+<div class="two"><label>Meyve türü<select name="meyveTuru" id="editorFruit" required></select></label><label>Çeşit<select name="cesit" required disabled><option value="">Önce meyve türü seç</option></select></label></div>
 </fieldset>
 <fieldset class="editor-section wizard-step" data-step="2"><legend>2 · İlan detayları</legend>
 <label>İlan başlığı<input name="baslik" required minlength="5" maxlength="150" placeholder="Örn. Korkuteli bahçesinden Deveci armut — 1. sınıf, kasalı"></label>
@@ -53,7 +55,7 @@
 <fieldset class="editor-section wizard-step" data-step="3"><legend>3 · Fiyat, miktar ve teslimat</legend><p class="step-help">Fiyatı kilogram başına, miktarı kilogram olarak gir. Toptan alıcılar en çok bu bilgilere bakar.</p>
 <div class="two"><label>Toplam miktar (kg)<input name="miktarKg" type="number" inputmode="decimal" required min="0.01" max="100000000" step="0.01" placeholder="Örn. 15000"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" inputmode="decimal" required min="0.01" max="1000000" step="0.01" placeholder="Örn. 35"></label></div>
 <div class="two"><label>Minimum alım (kg) <span class="muted">(isteğe bağlı)</span><input name="minAlimKg" type="number" min="0.01" max="100000000" step="0.01" inputmode="decimal" placeholder="Örn. 1000"></label><label>Ambalaj <span class="muted">(isteğe bağlı)</span><select name="ambalaj"><option value="">Belirtilmedi</option><option value="Kasa">Kasa</option><option value="Koli">Koli</option><option value="Dökme">Dökme</option><option value="Çuval">Çuval</option><option value="Diğer">Diğer</option></select></label></div>
-<div class="two"><label>Ürünün bulunduğu il<select name="il" required><option value="">İl seçin</option></select></label><label>İlçe<select name="ilce" required disabled><option value="">Önce il seçin</option></select></label></div>
+<div class="two"><label>Ürünün bulunduğu il<select name="il" required><option value="">İl seç</option></select></label><label>İlçe<select name="ilce" required disabled><option value="">Önce il seç</option></select></label></div>
 <label>Teslimat <span class="muted">(isteğe bağlı)</span><select name="teslimat"><option value="">Belirtilmedi</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select></label>
 <p class="step-help">İletişim için profilindeki telefon kullanılır. Görünürlüğünü <a href="/html/profilim.html">profilinden yönetebilirsin</a>.</p></fieldset>
 <fieldset class="editor-section wizard-step" data-step="4"><legend>4 · Fotoğraflar ve yayın</legend><p class="step-help">Ürünü yakından, kasada ve bahçede göster. İlk fotoğraf ilanın vitrin fotoğrafı olur.</p>

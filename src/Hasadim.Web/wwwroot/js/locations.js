@@ -50,7 +50,7 @@ window.setupLocationSelectors = async function (
     districtSelect.disabled = true;
 
     citySelect.replaceChildren(new Option('Yükleniyor…', ''));
-    districtSelect.replaceChildren(new Option('Önce il seçin', ''));
+    districtSelect.replaceChildren(new Option('Önce il seç', ''));
 
     const provinces = await getLocationData();
 
@@ -58,7 +58,7 @@ window.setupLocationSelectors = async function (
         a.name.localeCompare(b.name, 'tr')
     );
 
-    citySelect.replaceChildren(new Option('İl seçin', ''));
+    citySelect.replaceChildren(new Option('İl seç', ''));
 
     for (const province of sortedProvinces) {
         citySelect.add(new Option(province.name, province.name));
@@ -70,7 +70,7 @@ window.setupLocationSelectors = async function (
         );
 
         districtSelect.replaceChildren(
-            new Option(province ? 'İlçe seçin' : 'Önce il seçin', '')
+            new Option(province ? 'İlçe seç' : 'Önce il seç', '')
         );
 
         districtSelect.disabled = !province;

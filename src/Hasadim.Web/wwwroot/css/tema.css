@@ -55,3 +55,22 @@ dialog { border-radius: var(--radius-l); }
 .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .confirm-actions button { min-width: 110px; min-height: 42px; border-radius: 12px; font-weight: 800; }
 .confirm-actions .primary { background: #d9661f; color: #fff; }
+
+/* Küçük üst başlıklar metinde normal yazılır, görünümde büyük harfe çevrilir
+   (html lang="tr" sayesinde i → İ doğru dönüşür). */
+.eyebrow, .account-menu-heading, .auth-side-eyebrow, .account-nav-title { text-transform: uppercase; }
+
+/* Kapat (×) düğmeleri: işaret tam ortada */
+.close, .dialog-head .close {
+    display: inline-grid; place-items: center; flex: none;
+    width: 36px; height: 36px; padding: 0; margin: 0;
+    font-size: 0; line-height: 0; border-radius: 50%;
+}
+.close::before {
+    content: ""; width: 14px; height: 14px; display: block;
+    background:
+        linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat,
+        linear-gradient(currentColor, currentColor) center / 2px 100% no-repeat;
+    transform: rotate(45deg); border-radius: 2px;
+}
+.close:hover { background: #e3ebdf; }

@@ -17,8 +17,11 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config):ControllerBase
 {
+ // İki adımlı doğrulama kurulumu şimdilik kapalı; açmak için "Features:TwoFactorSetup": true.
+ bool TwoFactorSetupAvailable=>config.GetValue("Features:TwoFactorSetup",false);
+ IActionResult SetupClosed()=>BadRequest(new{mesaj="İki adımlı doğrulama şu anda kullanıma kapalı."});
  IActionResult Errors(IdentityResult r)=>BadRequest(new{mesaj=string.Join(" ",r.Errors.Select(x=>x.Description))});
  async Task<AppUser> MeUser()=>await users.GetUserAsync(User)??throw new Hasadim.Application.AppException(401,"Giriş yapın.");
  [HttpGet("me")]
@@ -88,7 +91,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  public async Task<IActionResult> Reset(ResetRequest r){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is null)return BadRequest(new{mesaj="Bağlantı geçersiz."});var result=await users.ResetPasswordAsync(u,r.Token,r.Password);return result.Succeeded?Ok():Errors(result);}
  // İki adımlı doğrulama durumu ve kalan kurtarma kodu sayısı.
  [Authorize,HttpGet("2fa/status")]
- public async Task<IActionResult> TwoFactorStatus(){var u=await MeUser();return Ok(new{enabled=u.TwoFactorEnabled,recoveryCodesLeft=u.TwoFactorEnabled?await users.CountRecoveryCodesAsync(u):0});}
+ public async Task<IActionResult> TwoFactorStatus(){var u=await MeUser();return Ok(new{enabled=u.TwoFactorEnabled,setupAvailable=TwoFactorSetupAvailable,recoveryCodesLeft=u.TwoFactorEnabled?await users.CountRecoveryCodesAsync(u):0});}
  // Kapatma şifre ister; anahtar sıfırlanır ve diğer oturumlar kapanır.
  [Authorize,HttpPost("2fa/disable")]
  public async Task<IActionResult> Disable(PasswordRequest r)
@@ -102,7 +105,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   return Ok(new{mesaj="İki adımlı doğrulama kapatıldı."});
  }
  [Authorize,HttpPost("2fa/setup")]
- public async Task<IActionResult> Setup(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});if(u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten açık."});var result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);await signIn.RefreshSignInAsync(u);return Ok(new{key=await users.GetAuthenticatorKeyAsync(u),email=u.Email});}
+ public async Task<IActionResult> Setup(PasswordRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});if(u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten açık."});var result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);await signIn.RefreshSignInAsync(u);return Ok(new{key=await users.GetAuthenticatorKeyAsync(u),email=u.Email});}
  [Authorize,HttpPost("2fa/enable")]
- public async Task<IActionResult> Enable(CodeRequest r){var u=await MeUser();if(u.TwoFactorEnabled)return BadRequest(new{mesaj="Zaten etkin."});if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code.Replace(" ","")))return BadRequest(new{mesaj="Doğrulama kodu hatalı."});var result=await users.SetTwoFactorEnabledAsync(u,true);if(!result.Succeeded)return Errors(result);var codes=await users.GenerateNewTwoFactorRecoveryCodesAsync(u,10);await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);return Ok(new{codes});}
+ public async Task<IActionResult> Enable(CodeRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(u.TwoFactorEnabled)return BadRequest(new{mesaj="Zaten etkin."});if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code.Replace(" ","")))return BadRequest(new{mesaj="Doğrulama kodu hatalı."});var result=await users.SetTwoFactorEnabledAsync(u,true);if(!result.Succeeded)return Errors(result);var codes=await users.GenerateNewTwoFactorRecoveryCodesAsync(u,10);await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);return Ok(new{codes});}
 }

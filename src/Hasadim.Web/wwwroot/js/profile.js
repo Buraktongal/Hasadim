@@ -10,7 +10,7 @@ function metadata(p) {
     $('#avatar').hidden = !p.photoUrl;
     if (p.photoUrl) $('#avatar').src = p.photoUrl;
     $('#name').textContent = p.displayName;
-    $('#summary').textContent = 'Profil tamamlanma: %' + p.completion + ' · ' + p.activeListingCount + ' aktif ilan';
+    $('#summary').textContent = 'Profil tamamlanma: %' + p.completion;
     $('#publicLink').href = '/html/satici.html?id=' + p.id;
     $('#publicLink').hidden = false;
     $('#profileForm').elements.namedItem('version').value = p.version;

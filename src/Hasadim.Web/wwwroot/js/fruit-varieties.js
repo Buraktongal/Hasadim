@@ -158,7 +158,7 @@ window.setupFruitVarietySelectors = function (
         // Yeni ilanda kullanıcı önce meyve seçsin.
         if (!Array.from(fruitSelect.options).some(option => option.value === '')) {
             fruitSelect.insertBefore(
-                new Option('Meyve türü seçin', ''),
+                new Option('Meyve türü seç', ''),
                 fruitSelect.firstChild
             );
         }
@@ -171,7 +171,7 @@ window.setupFruitVarietySelectors = function (
 
         varietySelect.replaceChildren(
             new Option(
-                fruit ? 'Çeşit seçin' : 'Önce meyve türü seçin',
+                fruit ? 'Çeşit seç' : 'Önce meyve türü seç',
                 ''
             )
         );

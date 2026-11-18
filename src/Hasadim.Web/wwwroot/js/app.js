@@ -543,6 +543,10 @@ $('#refreshAdmin').onclick = () => Promise.all([
                 ? 'all' : initialView;
             await changeView(permittedView, { query: (params.get('q') || '').slice(0, 150), filters: window.MarketCatalog.readUrl() });
             void window.MarketCatalog.refresh(api, $('#filters').elements.namedItem('meyveTuru').value);
+            if (params.get('action') === 'new-listing' && !user) {
+                window.location.href = '/html/giris.html?returnUrl=' + encodeURIComponent('/?action=new-listing');
+                return;
+            }
             if (params.get('action') === 'new-listing' && user) {
                 const url = new URL(location.href); url.searchParams.delete('action'); history.replaceState(null, '', url.pathname + url.search);
                 await openEditor();

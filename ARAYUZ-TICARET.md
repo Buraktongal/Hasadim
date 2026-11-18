@@ -49,3 +49,10 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 - **İlan düzenleme düzeltmesi:** Yayındaki ilana fotoğraf eklemek sunucuda reddediliyordu (yalnızca taslağa izin veriliyordu); artık taslak, düzeltme bekleyen ve süresi dolmamış yayındaki ilanlara eklenebilir.
 - **Fotoğraf yönetimi:** Düzenlemede "İlandaki fotoğraflar" bölümü (`js/listing-photos.js`): kapak yap, kaldır (en az bir fotoğraf kalır). Yeni API: `DELETE /api/meyve-ilanlari/{id}/photos/{photoId}`, `POST /api/meyve-ilanlari/{id}/photos/{photoId}/cover`. Kaldırılan dosya diskten de silinir.
 - **Önce / sonra:** Düzenleme önizlemesinde değişen alanlar tablo olarak gösterilir (Alan · Önce · Sonra). Fiyatta eski fiyat üstü çizili, yeni fiyat ve yüzde düşüş/artış rozeti görünür.
+
+## 5. tur düzenlemeleri
+- **Profil:** Yan menüde yalnızca "Profil bilgilerim" ve "Hesap güvenliği" kaldı (İlanlarım/Favorilerim/Mesajlarım üst menüde ve footer'da). Profil özetinden aktif ilan sayısı çıkarıldı.
+- **İki adımlı doğrulama şimdilik kapalı:** Hesap güvenliği sayfasında bölüm gizli; sunucuda `Features:TwoFactorSetup` (varsayılan `false`) açılmadan kurulum yapılamaz. Daha önce açmış kullanıcılar bölümü görür ve kapatabilir; girişte kodları çalışmaya devam eder. İleride açmak için `appsettings.json` → `"Features": { "TwoFactorSetup": true }`.
+- **Footer:** Yeni düzen (Hasadım hakkında · Kategoriler · Hesabım · Yardım ve güvenlik), yasal metinler "Hazırlanıyor" satırı, tüm ana sayfalarda (pazar, ilan, profil, güvenlik, satıcı). Giriş yapmadan "Ücretsiz ilan ver" girişe yönlendirir.
+- **Kapat (×) düğmeleri** tam ortalandı.
+- **Yazım:** Üst küçük başlıklar metinde normal yazılıp CSS ile büyütülüyor; tutarsız büyük harfler, "Farketmez" → "Fark etmez", apostroflar (’), "seçin" → "seç" (sen dili), "Değişikliklerini kaydettiğinde", sayfa başlığı düzeltildi.

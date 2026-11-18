@@ -35,6 +35,10 @@ window.HasadimSecurity = (() => {
     async function load() {
         try {
             const s = await api('2fa/status');
+            // Şimdilik iki adımlı doğrulama kurulumu kapalı. Bölüm yalnızca
+            // daha önce açmış kullanıcılara (kapatabilmeleri için) gösterilir.
+            const panel = q('#twoFactorPanel');
+            if (panel) panel.hidden = !s.enabled && !s.setupAvailable;
             show(s.enabled ? 'on' : 'off', s.recoveryCodesLeft);
         } catch (e) { status(e.message, true); }
     }

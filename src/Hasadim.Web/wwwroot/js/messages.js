@@ -165,7 +165,7 @@ window.HasadimMessages = (() => {
     }
     function questions(x, ask) {
         const section = el('section', undefined, 'listing-questions');
-        section.append(el('p', 'ÜRÜN HAKKINDA MERAK ETTİKLERİN', 'eyebrow'), el('h3', 'Satıcıya soru sor'),
+        section.append(el('p', 'Ürün hakkında merak ettiklerin', 'eyebrow'), el('h3', 'Satıcıya soru sor'),
             el('p', 'Sorun yalnızca satıcıya özel mesaj olarak ulaşır. Yanıtları Mesajlarım bölümünden takip edebilirsin.', 'muted'));
         const choices = el('div', undefined, 'question-choices');
         for (const [label, text] of [['Ürün mevcut mu?', 'Merhaba, ilandaki ürün hâlâ mevcut mu?'], ['Teslimat nasıl?', 'Merhaba, teslimat ve nakliye koşullarınız nelerdir?'], ['Hasat durumu', 'Merhaba, ürünün hasat durumu ve teslim alınabileceği tarih nedir?'], ['Fiyat ve miktar', 'Merhaba, minimum alım miktarınız nedir? Miktara göre fiyat değişiyor mu?']]) {

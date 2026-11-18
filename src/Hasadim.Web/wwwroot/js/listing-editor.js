@@ -16,7 +16,7 @@ window.ListingEditor = (() => {
         const fingerprint = JSON.stringify([...data].map(([key, value]) => [key, typeof value === 'string' ? value : [value.name, value.size, value.lastModified]]));
         if (signature === fingerprint) return true;
         const preview = document.querySelector('#listingPreview');
-        preview.replaceChildren(node('p', editing ? 'DEĞİŞİKLİKLERİ KONTROL ET' : 'YAYIN ÖNCESİ KONTROL', 'eyebrow'), node('h3', data.get('baslik')));
+        preview.replaceChildren(node('p', editing ? 'Değişiklikleri kontrol et' : 'Yayın öncesi kontrol', 'eyebrow'), node('h3', data.get('baslik')));
         const facts = node('dl', undefined, 'preview-facts');
         const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
         for (const [label, value] of [

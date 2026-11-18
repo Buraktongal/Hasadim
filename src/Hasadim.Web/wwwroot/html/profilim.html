@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/hesap.css">
     <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
     <script src="/js/fruit-icons.js" defer></script>
     <script src="/js/market-catalog.js" defer></script>
     <script src="/js/confirm-dialog.js" defer></script>
@@ -30,17 +31,14 @@
                 <a id="publicLink" class="account-public" hidden>Herkese açık profilimi gör ↗</a>
             </section>
             <nav class="account-nav" aria-label="Hesabım menüsü">
-                <p class="account-nav-title">HESABIM</p>
+                <p class="account-nav-title">Hesabım</p>
                 <a href="/html/profilim.html" aria-current="page">Profil bilgilerim</a>
                 <a href="/html/hesabim.html">Hesap güvenliği</a>
-                <a href="/?view=mine">İlanlarım</a>
-                <a href="/?view=favorites">Favorilerim</a>
-                <a href="/?view=messages">Mesajlarım</a>
             </nav>
         </aside>
         <div class="account-content">
             <header class="account-head">
-                <p class="eyebrow">HESABIM</p>
+                <p class="eyebrow">Hesabım</p>
                 <h1>Profil bilgilerim</h1>
                 <p>Alıcıların ve satıcıların gördüğü bilgilerini buradan yönet.</p>
             </header>
@@ -54,7 +52,7 @@
             </section>
             <section id="profileEditor" class="account-panel" hidden aria-labelledby="editorHeading">
                 <h2 id="editorHeading" tabindex="-1">Bilgilerimi düzenle</h2>
-                <p class="muted">Değişikliklerin kaydettiğinde profilinde görünür.</p>
+                <p class="muted">Değişikliklerini kaydettiğinde profilinde görünür.</p>
                 <form id="profileForm">
                     <input name="version" type="hidden">
                     <label>Görünen ad<input name="displayName" minlength="2" maxlength="100" required autocomplete="name"></label>
@@ -65,8 +63,8 @@
                     <label id="businessField" hidden>Firma adı<input name="businessName" maxlength="150"></label>
                     <small>Hesap türü ve firma adı kullanıcı beyanıdır.</small>
                     <div class="two">
-                        <label>İl<select name="city" required disabled><option value="">İl seçin</option></select></label>
-                        <label>İlçe<select name="district" required disabled><option value="">Önce il seçin</option></select></label>
+                        <label>İl<select name="city" required disabled><option value="">İl seç</option></select></label>
+                        <label>İlçe<select name="district" required disabled><option value="">Önce il seç</option></select></label>
                     </div>
                     <label>Hakkımda<textarea name="about" rows="5" maxlength="2000"></textarea></label>
                     <label>Telefon<input name="phone" type="tel" minlength="10" maxlength="25" pattern="[+0-9 ()\-]{10,25}" autocomplete="tel"></label>
@@ -91,5 +89,6 @@
         </div>
     </div>
 </main>
+<div id="siteFooter"></div>
 </body>
 </html>
