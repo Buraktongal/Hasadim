@@ -99,9 +99,9 @@ window.ListingWizard = (() => {
             tile.type = 'button';
             tile.className = 'category-tile' + (o.value === select.value ? ' selected' : '');
             tile.setAttribute('aria-pressed', String(o.value === select.value));
-            const icon = document.createElement('span');
-            icon.className = 'tile-icon';
-            icon.textContent = window.MarketCatalog?.icon(o.value) || '🌱';
+            let icon;
+            if (window.FruitIcons) icon = window.FruitIcons.node(o.value, 40, 'tile-icon');
+            else { icon = document.createElement('span'); icon.className = 'tile-icon'; icon.textContent = window.MarketCatalog?.icon(o.value) || '🌱'; }
             const name = document.createElement('span');
             name.textContent = o.value;
             tile.append(icon, name);

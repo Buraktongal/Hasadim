@@ -153,6 +153,27 @@ function updateMarketAddress() {
     window.MarketCatalog.writeUrl(url, $('#filters'), !['messages', 'admin'].includes(view));
     history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
+// Pazar yerinde sayfa konumu seçili filtreleri izler: Ana sayfa › Meyve ilanları › Elma › Starking › Isparta
+function marketCrumbs() {
+    const form = $('#filters');
+    const value = name => form.elements.namedItem(name)?.value?.trim() || '';
+    const base = '/html/index.html';
+    const items = [{ label: 'Ana sayfa', href: '/' }, { label: 'Meyve ilanları', href: base }];
+    const fruit = value('meyveTuru'), variety = value('cesit'), city = value('il'), district = value('ilce'), query = value('q');
+    const params = new URLSearchParams();
+    for (const [key, label] of [['meyveTuru', fruit], ['cesit', variety], ['il', city], ['ilce', district]]) {
+        if (!label) continue;
+        params.set(key, label);
+        items.push({ label, href: base + '?' + params });
+    }
+    if (query) items.push({ label: '“' + query + '” araması' });
+    const last = items[items.length - 1];
+    delete last.href;
+    // Kategori veya arama sayfasında tanıtım şeridi gizlenir; sonuçlar yukarı çıkar.
+    const hero = $('#hero');
+    if (hero) hero.hidden = items.length > 2;
+    window.setBreadcrumbs?.(items);
+}
 function empty(parent,title,text){const n=el('div',undefined,'empty');n.append(el('strong',title),el('p',text));parent.append(n);}
 async function loadListings(){
  window.MarketTools.filterSummary($('#filters'), () => { page=1; return loadListings(); });
@@ -164,7 +185,7 @@ async function loadListings(){
  $('#listStatus').textContent='İlanlar yükleniyor…';$('#prevPage').disabled=true;$('#nextPage').disabled=true;
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
- $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value;window.MarketCatalog.highlight(selectedFruit);if(view==='all')$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':'Tüm meyve ilanları';
+ $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value;window.MarketCatalog.highlight(selectedFruit);if(view==='all'){$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':'Tüm meyve ilanları';marketCrumbs();}
  if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
  $('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#prevPage').disabled=page<=1;$('#nextPage').disabled=page*data.pageSize>=data.total;
@@ -172,7 +193,7 @@ async function loadListings(){
 }
 function picture(x, cls) {
     if (x.photoUrl) { const img = el('img', undefined, cls); img.src = x.photoUrl; img.alt = x.baslik; img.loading = 'lazy'; return img; }
-    const n = el('div', fruits[x.meyveTuru] || '🌱', 'fruit-placeholder'); n.setAttribute('aria-label', x.meyveTuru + ' — fotoğraf eklenmemiş'); return n;
+    const n = el('div', window.FruitIcons ? undefined : (fruits[x.meyveTuru] || '🌱'), 'fruit-placeholder'); if (window.FruitIcons) n.append(window.FruitIcons.node(x.meyveTuru, 48)); n.setAttribute('aria-label', x.meyveTuru + ' — fotoğraf eklenmemiş'); return n;
 }
 function card(x) {
     // Liste görünümünde satır, galeri görünümünde kart olarak çizilir (CSS).
@@ -302,7 +323,7 @@ async function renderDetail(id)
 
         const photos = x.photos || [];
         if (photos.length) mediaCol.append(createGallery(photos, x.baslik));
-        else { const ph = el('div', fruits[x.meyveTuru] || '🌱', 'fruit-placeholder detail-placeholder'); ph.setAttribute('aria-label', 'Fotoğraf eklenmemiş'); mediaCol.append(ph); }
+        else { const ph = el('div', window.FruitIcons ? undefined : (fruits[x.meyveTuru] || '🌱'), 'fruit-placeholder detail-placeholder'); if (window.FruitIcons) ph.append(window.FruitIcons.node(x.meyveTuru, 120)); ph.setAttribute('aria-label', 'Fotoğraf eklenmemiş'); mediaCol.append(ph); }
 
         // Fiyat ve ilan bilgileri tablosu
         infoCol.append(window.MarketPresentation.price(x));

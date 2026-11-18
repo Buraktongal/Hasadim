@@ -84,6 +84,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
 (async()=>{
  vm.runInContext(fs.readFileSync(path.join(root,'js/return-path.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-editor.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(root,'js/fruit-icons.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-wizard.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/market-catalog.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/market-tools.js'),'utf8'),context);

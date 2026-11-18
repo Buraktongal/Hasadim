@@ -1,1 +1,77 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hasadım’a katıl | Hasadım</title><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/auth-experience.css"><script src="/js/return-path.js" defer></script><script src="/js/auth-experience.js" defer></script><script src="/js/account.js" defer></script><script src="/js/registration-phone.js" defer></script><script src="/js/registration.js" defer></script><script src="/js/navigation.js" defer></script></head><body data-page="register"><header class="auth-topbar"><a class="brand" href="/">hasadım.</a><a href="/">Pazar yerine dön ↗</a></header><nav id="breadcrumbs" class="breadcrumbs" aria-label="Sayfa konumu"></nav><div class="auth-page"><aside class="auth-story"><a class="brand" href="/">hasadım.</a><h1>Emekle yetişir.<br>Güvenle buluşur.</h1><p>Hasadını doğru alıcıyla buluştur. Ürünleri keşfet, satıcıyla konuş, koşulları birlikte netleştir.</p><ul class="auth-benefits"><li><strong>Ürününü görünür kıl</strong><span>Fotoğraflar, hasat tarihi ve kilogram fiyatıyla ilanını hazırla.</span></li><li><strong>Doğrudan iletişim kur</strong><span>İlan üzerinden soru sor, görüşmelerini tek yerde takip et.</span></li><li><strong>Kaldığın yerden devam et</strong><span>Favorilerin, ilanların ve mesajların hesabında bir arada.</span></li></ul></aside><main class="auth-main"><div class="auth-box"><p class="eyebrow">HASADIM HESABI</p><h1>Hasadım’a katıl</h1><p class="muted">Bilgilerini gir. E-postana gelen 6 haneli kodu doğruladığında hesabın açılır.</p><form id="registerForm"><label>Ad soyad / Firma adı<input name="displayName" required minlength="2" maxlength="100" autocomplete="name"></label><label>E-posta<input name="email" type="email" required maxlength="256" autocomplete="email"></label><label>Telefon numarası<input name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="555 555 55 55" pattern="5[0-9]{2} [0-9]{3} [0-9]{2} [0-9]{2}" required aria-describedby="phoneHint" title="5 ile başlayan 10 haneli numaranı gir. Örnek: 555 555 55 55"></label><small id="phoneHint">Başında 0 olmadan yaz. Boşluklar otomatik eklenir. İlanlarında bu numara kullanılır. SMS doğrulaması henüz kullanıma açılmadı.</small><label>Şifre<input name="password" type="password" required maxlength="128" minlength="12" autocomplete="new-password"></label><ul class="password-rules" aria-label="Şifre gereksinimleri"><li data-password-rule="length">En az 12 karakter</li><li data-password-rule="upper">Büyük harf</li><li data-password-rule="lower">Küçük harf</li><li data-password-rule="digit">Rakam</li></ul><button class="primary full" type="submit">Doğrulama kodu gönder</button></form><form id="registrationCodeForm" hidden><p class="eyebrow">SON ADIM</p><h2>E-postanı doğrula</h2><p class="auth-step-note">Kod 2 dakika geçerlidir. E-postayı göremiyorsan spam klasörünü de kontrol et.</p><p id="registrationEmail"></p><label>6 haneli kod<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><p id="registrationTimer" role="timer" aria-live="off"></p><button id="completeRegistration" class="primary full" type="submit">Doğrula ve hesabımı oluştur</button><button id="restartRegistration" type="button">Bilgileri düzenle / yeni kod iste</button></form><p id="accountStatus" role="status" class="form-error"></p><div class="auth-links"><a data-auth-link href="/html/giris.html">Zaten hesabım var</a></div><p><a href="/">← Pazar yerine dön</a></p></div></main></div></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Hasadım’a katıl | Hasadım</title>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css">
+    <link rel="stylesheet" href="/css/auth-experience.css">
+    <script src="/js/return-path.js" defer></script>
+    <script src="/js/auth-experience.js" defer></script>
+    <script src="/js/account.js" defer></script>
+    <script src="/js/registration-phone.js" defer></script>
+    <script src="/js/registration.js" defer></script>
+</head>
+<body data-page="register" class="auth-body">
+    <header class="auth-header">
+        <a class="auth-logo" href="/" aria-label="Hasadım ana sayfa"><img src="/images/hasadim-logo.png" alt="Hasadım" width="150" height="50"></a>
+        <a class="auth-back" href="/" data-return-link>← Ana sayfaya dön</a>
+    </header>
+    <div class="auth-shell">
+        <main class="auth-card">
+            <ol class="auth-steps" aria-label="Kayıt adımları">
+                <li class="is-current" data-register-step="1"><span>1</span>Hesap bilgileri</li>
+                <li data-register-step="2"><span>2</span>E-posta doğrulama</li>
+            </ol>
+            <form id="registerForm">
+                <p class="eyebrow">ÜCRETSİZ HESAP</p>
+                <h1>Hasadım’a katıl</h1>
+                <p class="auth-lead">Bilgilerini gir; e-postana gelen 6 haneli kodla hesabını hemen aç.</p>
+                <fieldset class="auth-group">
+                    <legend>İletişim bilgileri</legend>
+                    <label>Ad soyad veya firma adı<input name="displayName" required minlength="2" maxlength="100" autocomplete="name" placeholder="Örn. Ayşe Yılmaz / Yılmaz Tarım"></label>
+                    <label>E-posta<input name="email" type="email" required maxlength="256" autocomplete="email" placeholder="ornek@eposta.com"></label>
+                    <label>Cep telefonu<input name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="555 555 55 55" pattern="5[0-9]{2} [0-9]{3} [0-9]{2} [0-9]{2}" required aria-describedby="phoneHint" title="5 ile başlayan 10 haneli numaranı gir. Örnek: 555 555 55 55"></label>
+                    <small id="phoneHint">Başında 0 olmadan yaz. İlanlarında iletişim için bu numara kullanılır.</small>
+                </fieldset>
+                <fieldset class="auth-group">
+                    <legend>Şifre belirle</legend>
+                    <label>Şifre<input name="password" type="password" required maxlength="128" minlength="12" autocomplete="new-password"></label>
+                    <ul class="password-rules" aria-label="Şifre gereksinimleri"><li data-password-rule="length">En az 12 karakter</li><li data-password-rule="upper">Büyük harf</li><li data-password-rule="lower">Küçük harf</li><li data-password-rule="digit">Rakam</li></ul>
+                    <label>Şifre tekrar<input name="passwordConfirm" type="password" required maxlength="128" minlength="12" autocomplete="new-password" data-match="password"></label>
+                    <small class="match-hint" data-match-hint="passwordConfirm" aria-live="polite"></small>
+                </fieldset>
+                <button class="primary full" type="submit">Devam et ve kod gönder</button>
+            </form>
+            <form id="registrationCodeForm" hidden>
+                <p class="eyebrow">SON ADIM</p>
+                <h1>E-postanı doğrula</h1>
+                <p id="registrationEmail" class="auth-lead"></p>
+                <label>6 haneli kod<input name="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>
+                <p id="registrationTimer" role="timer" aria-live="off"></p>
+                <p class="auth-step-note">Kod 2 dakika geçerlidir. E-postayı göremiyorsan spam klasörünü kontrol et.</p>
+                <button id="completeRegistration" class="primary full" type="submit">Doğrula ve hesabımı oluştur</button>
+                <button id="restartRegistration" class="textbtn full" type="button">← Bilgileri düzenle / yeni kod iste</button>
+            </form>
+            <section id="registrationDone" class="auth-done" hidden>
+                <p class="eyebrow">HESABIN HAZIR</p>
+                <h1>Hoş geldin!</h1>
+                <p class="auth-lead">E-postan doğrulandı ve hesabın oluşturuldu. Giriş sayfasına yönlendiriliyorsun…</p>
+                <a id="registrationLogin" class="primary full" href="/html/giris.html" data-auth-link>Giriş yap</a>
+            </section>
+            <p id="accountStatus" role="status" class="form-error"></p>
+            <p class="auth-switch">Zaten hesabın var mı? <a data-auth-link href="/html/giris.html">Giriş yap</a></p>
+        </main>
+        <aside class="auth-side" aria-label="Hasadım hakkında">
+            <p class="auth-side-eyebrow">HASADIM · TOPTAN MEYVE PAZARI</p>
+            <h2>Meyvenin tonla alınıp satıldığı ilan pazarı</h2>
+            <ul class="auth-benefits">
+                <li><strong>Ücretsiz ilan ver</strong><span>Ürününü fotoğraf, miktar ve kg fiyatıyla 30 gün yayınla.</span></li>
+                <li><strong>Doğrudan iletişim</strong><span>Alıcı ve satıcı aracı olmadan mesajlaşır.</span></li>
+                <li><strong>Hepsi tek hesapta</strong><span>İlanların, favorilerin ve mesajların bir arada.</span></li>
+            </ul>
+        </aside>
+    </div>
+</body>
+</html>

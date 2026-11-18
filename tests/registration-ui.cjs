@@ -7,6 +7,7 @@ const html = fs.readFileSync(path.join(root, 'html/kayit.html'), 'utf8');
 assert.match(html, /name="phone"/);
 assert(!html.includes('role="search"'));
 assert(html.includes('placeholder="555 555 55 55"'));
+assert.match(html, /name="passwordConfirm"[^>]*data-match="password"/, 'Kayıt şifresi iki kez istenir');
 assert.match(html, /id="registrationCodeForm" hidden/);
 class Field { constructor(value = '') { this.value = value; this.disabled = false; this.textContent = ''; } focus() {} addEventListener(type,fn) { (this.listeners??={})[type]=fn; } setCustomValidity(text) { this.validationMessage=text; } setSelectionRange(start,end) { this.selectionStart=start;this.selectionEnd=end; } }
 class Form {
@@ -16,7 +17,7 @@ class Form {
     reportValidity() { return true; }
     reset() { for (const field of Object.values(this.fields)) field.value = ''; }
 }
-const form = new Form({ email: new Field('test@example.test'), password: new Field('TestPassword123'), phone: new Field('05011111111'), displayName: new Field('Test') });
+const form = new Form({ email: new Field('test@example.test'), password: new Field('TestPassword123'), passwordConfirm: new Field('TestPassword123'), phone: new Field('05011111111'), displayName: new Field('Test') });
 const codeForm = new Form({ code: new Field() }); codeForm.hidden = true;
 const confirm = new Field(), restart = new Field(), timer = new Field();
 const nodes = { '#registerForm': form, '#registrationCodeForm': codeForm, '#completeRegistration': confirm, '#restartRegistration': restart, '#registrationTimer': timer, '#registrationEmail': new Field() };
@@ -53,6 +54,9 @@ const context = vm.createContext({
     phone.value='555 55';await form.submit(event);assert.equal(sent,0);assert.equal(message,undefined,'Incomplete phone does not call the API');
     phone.value='05011111111';phone.listeners.input({inputType:'insertFromPaste'});
     console.log('PASS: phone mask, paste, length limit, mobile prefix and incomplete submission');
+    form.fields.passwordConfirm.value = 'TestPassword124'; failMail = false;
+    await form.submit(event); assert.equal(sent, 0, 'Farklı şifre tekrarı API çağırmaz'); assert.match(message, /eşleşmiyor/);
+    form.fields.passwordConfirm.value = 'TestPassword123'; failMail = true;
     await form.submit(event);
     assert.equal(form.hidden, false); assert.equal(codeForm.hidden, true); assert.equal(sent, 0);
     failMail = false;
@@ -64,9 +68,10 @@ const context = vm.createContext({
     now += 120000; interval(); assert.equal(confirm.disabled, true);
     codeForm.fields.code.value = '123456'; await codeForm.submit(event); assert.equal(completed, 0);
     restart.onclick(); assert.equal(form.hidden, false); assert.equal(codeForm.hidden, true);
-    form.fields.password.value = 'TestPassword123'; await form.submit(event);
+    assert.equal(form.fields.passwordConfirm.value, '', 'Şifre tekrarı da temizlenir');
+    form.fields.password.value = 'TestPassword123'; form.fields.passwordConfirm.value = 'TestPassword123'; await form.submit(event);
     codeForm.fields.code.value = '123456'; await codeForm.submit(event);
     assert.equal(completed, 1); assert.equal(codeForm.hidden, true); assert.equal(form.hidden, true);
     assert.match(message, /Hesap oluşturuldu/);
-    console.log('PASS: registration delivery failure, code step, 2-minute timer, wrong code, retry and completion');
+    console.log('PASS: password confirmation, registration delivery failure, code step, 2-minute timer, wrong code, retry and completion');
 })().catch(e => { console.error(e); process.exitCode = 1; });

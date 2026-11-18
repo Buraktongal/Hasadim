@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 namespace Hasadim.Api.Controllers;
 public class LoginRequest{[Required,EmailAddress,StringLength(256)]public string Email{get;set;}="";[Required,StringLength(128)]public string Password{get;set;}="";}
-public class RegisterRequest:LoginRequest{[Required,StringLength(100,MinimumLength=2)]public string DisplayName{get;set;}="";[Required,RegularExpression(@"^05[0-9]{9}$",ErrorMessage="Telefon numaranı 05 ile başlayan 11 rakam olarak gir.")]public string Phone{get;set;}="";}
+public class RegisterRequest:LoginRequest{[Required,StringLength(100,MinimumLength=2)]public string DisplayName{get;set;}="";[Required,RegularExpression(@"^05[0-9]{9}$",ErrorMessage="Telefon numaranı 05 ile başlayan 11 rakam olarak gir.")]public string Phone{get;set;}="";[Required(ErrorMessage="Şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class CompleteRegistrationRequest{public Guid ChallengeId{get;set;}[Required,RegularExpression(@"^[0-9]{6}$",ErrorMessage="6 haneli kodu gir.")]public string Code{get;set;}="";}
 public class CodeRequest{[Required,StringLength(100)]public string Code{get;set;}="";public bool Recovery{get;set;}}
 public class PasswordRequest{[Required,StringLength(128)]public string Password{get;set;}="";}
-public class ChangePasswordRequest:PasswordRequest{[Required,StringLength(128,MinimumLength=12)]public string NewPassword{get;set;}="";}
+public class ChangePasswordRequest:PasswordRequest{[Required,StringLength(128,MinimumLength=12)]public string NewPassword{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(NewPassword),ErrorMessage="Yeni şifreler eşleşmiyor.")]public string NewPasswordConfirm{get;set;}="";}
 public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string Email{get;set;}="";}
-public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";}
+public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
 public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations):ControllerBase

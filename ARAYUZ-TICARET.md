@@ -28,3 +28,12 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 ## Doğrulama
 - Node arayüz testlerinin hepsi geçti (`tests/*.cjs`).
 - C# tarafı bu ortamda derlenemedi (.NET SDK yok). `dotnet build Hasadim.slnx` ve `dotnet run --project tests/Hasadim.Tests` ile kontrol edilmeli; yeni 3 kontrol eklendi (ters miktar aralığı, tanımsız sıralama, tanımsız ambalaj).
+
+## 2. tur düzenlemeleri
+- **Yazı tipi:** Siteye gömülü Nunito (yuvarlak hatlı, Türkçe karakterli; `fonts/nunito-latin.woff`, OFL lisansı `fonts/Nunito-OFL.txt`). Ortak tema `css/tema.css` tüm sayfalarda yüklenir; köşe yuvarlaklıkları büyütüldü.
+- **Meyve simgeleri:** Emojiler yerine çizilmiş SVG simgeler (`js/fruit-icons.js`): kategori çubuğu, kategori listesi, ilan verme kutucukları ve fotoğrafsız ilan yer tutucuları.
+- **Giriş / kayıt / şifre sayfaları:** Sayfa konumu çubuğu ve tekrarlanan "Pazar yerine dön" bağlantıları kaldırıldı; tek üst çubuk (logo + geri dön). Kullanıcı bir ilandan geldiyse "İlana geri dön" gösterilir.
+- **Kayıt sayfası:** Adım göstergesi (Hesap bilgileri → E-posta doğrulama), gruplanmış alanlar, canlı şifre kuralları, **şifre tekrar** alanı. Kayıt bitince giriş sayfasına e-posta dolu olarak yönlendirilir.
+- **Şifre tekrarı:** Kayıt, şifre yenileme ve hesap güvenliği (şifre değiştir) formlarında. Sunucu da doğrular (`PasswordConfirm`, `NewPasswordConfirm` — `[Compare]`).
+- **Yönlendirmeler:** Giriş yapmış kullanıcı giriş/kayıt sayfasını açarsa geldiği sayfaya döner; şifre yenileme, e-posta doğrulama, şifre değiştirme ve tüm oturumları kapatma sonrası giriş sayfasına bilgi notuyla geçilir.
+- **Sayfa konumu:** Pazar yerinde seçili filtreleri izler (Ana sayfa › Meyve ilanları › Elma › Isparta), içerikle hizalı ve sade. Kategori/arama sayfasında tanıtım şeridi gizlenir.

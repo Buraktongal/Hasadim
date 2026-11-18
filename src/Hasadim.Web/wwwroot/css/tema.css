@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+/* Hasadım ortak tema: yumuşak yazı tipi ve yuvarlak köşeler.
+   Her sayfada styles.css'ten sonra yüklenir.
+   Nunito, SIL Open Font License ile dağıtılır (fonts/Nunito-OFL.txt). */
+
+@font-face {
+    font-family: "Nunito";
+    src: url("/fonts/nunito-latin.woff") format("woff");
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    --font-soft: "Nunito", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    --radius-s: 8px;
+    --radius-m: 12px;
+    --radius-l: 16px;
+}
+
+body, button, input, select, textarea {
+    font-family: var(--font-soft);
+}
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Başlıklar: sıkı harf aralığı yerine yumuşak, okunaklı ağırlık */
+h1, h2, h3 { letter-spacing: -.01em; font-weight: 800; }
+.eyebrow { letter-spacing: .12em; }
+
+/* Ortak kontroller */
+.primary, .secondary, .danger, .plain { border-radius: var(--radius-m); }
+input, select, textarea { border-radius: var(--radius-s); }
+dialog { border-radius: var(--radius-l); }
+
+/* Çizilmiş meyve simgeleri */
+.fruit-svg { display: inline-block; vertical-align: middle; flex: none; }
+.fruit-letter {
+    display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%;
+    background: #e7efe2; color: #1d4a33; font-weight: 800; font-size: .8em;
+}

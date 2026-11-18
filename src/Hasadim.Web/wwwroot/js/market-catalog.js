@@ -23,6 +23,8 @@ window.MarketCatalog = (() => {
     };
     const $ = selector => document.querySelector(selector);
     const icon = fruit => icons[fruit] || '🌱';
+    // Çizilmiş simge; fruit-icons.js yüklenmemişse emoji kullanılır.
+    const iconNode = (fruit, size = 18) => window.FruitIcons ? window.FruitIcons.node(fruit, size, 'category-icon') : node('span', icon(fruit), 'category-icon');
     const isMarketPage = () => document.body?.dataset?.page === 'market';
     const option = (text, value) => {
         const o = node('option', text);
@@ -46,7 +48,7 @@ window.MarketCatalog = (() => {
         for (const fruit of barFruits) {
             const link = node('a', undefined, 'category-link');
             link.href = categoryHref(fruit);
-            link.append(node('span', icon(fruit), 'category-icon'), node('span', fruit));
+            link.append(iconNode(fruit), node('span', fruit));
             if (fruit === selected) link.setAttribute('aria-current', 'page');
             link.onclick = event => {
                 if (!isMarketPage() || !window.MarketCatalog.onCategory) return;
@@ -69,7 +71,7 @@ window.MarketCatalog = (() => {
             const item = node('li');
             const b = node('button', undefined, 'category-item' + (value === (selected || '') ? ' selected' : ''));
             b.type = 'button';
-            if (value) b.append(node('span', icon(value), 'category-icon'));
+            if (value) b.append(iconNode(value));
             b.append(node('span', label, 'category-name'), node('span', new Intl.NumberFormat('tr-TR').format(count), 'category-count'));
             b.setAttribute('aria-pressed', String(value === (selected || '')));
             b.onclick = () => window.MarketCatalog.onCategory?.(value);
@@ -213,5 +215,5 @@ window.MarketCatalog = (() => {
         renderBar(selected);
     }
 
-    return { icon, icons, bind, refresh, highlight, readUrl, writeUrl, apply, fillVarieties, syncSort, setLayout, onCategory: null };
+    return { icon, iconNode, icons, bind, refresh, highlight, readUrl, writeUrl, apply, fillVarieties, syncSort, setLayout, onCategory: null };
 })();

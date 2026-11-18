@@ -1,1 +1,50 @@
-<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tekrar hoş geldin | Hasadım</title><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/auth-experience.css"><script src="/js/return-path.js" defer></script><script src="/js/auth-experience.js" defer></script><script src="/js/account.js" defer></script><script src="/js/navigation.js" defer></script></head><body data-page="login"><header class="auth-topbar"><a class="brand" href="/">hasadım.</a><a href="/">Pazar yerine dön ↗</a></header><nav id="breadcrumbs" class="breadcrumbs" aria-label="Sayfa konumu"></nav><div class="auth-page"><aside class="auth-story"><a class="brand" href="/">hasadım.</a><h1>Emekle yetişir.<br>Güvenle buluşur.</h1><p>Hasadını doğru alıcıyla buluştur. Ürünleri keşfet, satıcıyla konuş, koşulları birlikte netleştir.</p><ul class="auth-benefits"><li><strong>Ürününü görünür kıl</strong><span>Fotoğraflar, hasat tarihi ve kilogram fiyatıyla ilanını hazırla.</span></li><li><strong>Doğrudan iletişim kur</strong><span>İlan üzerinden soru sor, görüşmelerini tek yerde takip et.</span></li><li><strong>Kaldığın yerden devam et</strong><span>Favorilerin, ilanların ve mesajların hesabında bir arada.</span></li></ul></aside><main class="auth-main"><div class="auth-box"><p class="eyebrow">HASADIM HESABI</p><h1>Tekrar hoş geldin</h1><p class="muted">Hesabına güvenli şekilde giriş yap.</p><form id="loginForm"><label>E-posta<input name="email" type="email" required maxlength="256" autocomplete="email"></label><label>Şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary full" type="submit">Giriş yap</button></form><form id="twoFactorForm" hidden><label>Doğrulama kodu<input name="code" required maxlength="100" autocomplete="one-time-code"></label><label class="check"><input name="recovery" type="checkbox"> Kurtarma kodu kullanıyorum</label><button class="primary full" type="submit">Doğrula</button></form><p id="accountStatus" role="status" class="form-error"></p><div class="auth-links"><a data-auth-link href="/html/kayit.html">Yeni hesap oluştur</a><a href="/html/sifremi-unuttum.html">Şifremi unuttum</a></div><p><a href="/">← Pazar yerine dön</a></p></div></main></div></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Giriş yap | Hasadım</title>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css">
+    <link rel="stylesheet" href="/css/auth-experience.css">
+    <script src="/js/return-path.js" defer></script>
+    <script src="/js/auth-experience.js" defer></script>
+    <script src="/js/account.js" defer></script>
+</head>
+<body data-page="login" class="auth-body">
+    <header class="auth-header">
+        <a class="auth-logo" href="/" aria-label="Hasadım ana sayfa"><img src="/images/hasadim-logo.png" alt="Hasadım" width="150" height="50"></a>
+        <a class="auth-back" href="/" data-return-link>← Ana sayfaya dön</a>
+    </header>
+    <div class="auth-shell">
+        <main class="auth-card">
+            <p class="eyebrow">HESABINA GİR</p>
+            <h1>Tekrar hoş geldin</h1>
+            <p class="auth-lead">İlanlarını, mesajlarını ve favorilerini yönetmek için giriş yap.</p>
+            <p id="authNotice" class="auth-notice" role="status" hidden></p>
+            <form id="loginForm">
+                <label>E-posta<input name="email" type="email" required maxlength="256" autocomplete="email"></label>
+                <label>Şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+                <div class="auth-row"><a class="auth-small-link" href="/html/sifremi-unuttum.html">Şifremi unuttum</a></div>
+                <button class="primary full" type="submit">Giriş yap</button>
+            </form>
+            <form id="twoFactorForm" hidden>
+                <label>Doğrulama kodu<input name="code" required maxlength="100" autocomplete="one-time-code" inputmode="numeric"></label>
+                <label class="check"><input name="recovery" type="checkbox"> Kurtarma kodu kullanıyorum</label>
+                <button class="primary full" type="submit">Doğrula ve giriş yap</button>
+            </form>
+            <p id="accountStatus" role="status" class="form-error"></p>
+            <p class="auth-switch">Hasadım'da yeni misin? <a data-auth-link href="/html/kayit.html">Ücretsiz hesap oluştur</a></p>
+        </main>
+        <aside class="auth-side" aria-label="Hasadım hakkında">
+            <p class="auth-side-eyebrow">HASADIM · TOPTAN MEYVE PAZARI</p>
+            <h2>Meyvenin tonla alınıp satıldığı ilan pazarı</h2>
+            <ul class="auth-benefits">
+                <li><strong>Ücretsiz ilan ver</strong><span>Ürününü fotoğraf, miktar ve kg fiyatıyla 30 gün yayınla.</span></li>
+                <li><strong>Doğrudan iletişim</strong><span>Alıcı ve satıcı aracı olmadan mesajlaşır.</span></li>
+                <li><strong>Hepsi tek hesapta</strong><span>İlanların, favorilerin ve mesajların bir arada.</span></li>
+            </ul>
+        </aside>
+    </div>
+</body>
+</html>
