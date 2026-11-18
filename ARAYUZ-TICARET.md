@@ -37,3 +37,9 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 - **Şifre tekrarı:** Kayıt, şifre yenileme ve hesap güvenliği (şifre değiştir) formlarında. Sunucu da doğrular (`PasswordConfirm`, `NewPasswordConfirm` — `[Compare]`).
 - **Yönlendirmeler:** Giriş yapmış kullanıcı giriş/kayıt sayfasını açarsa geldiği sayfaya döner; şifre yenileme, e-posta doğrulama, şifre değiştirme ve tüm oturumları kapatma sonrası giriş sayfasına bilgi notuyla geçilir.
 - **Sayfa konumu:** Pazar yerinde seçili filtreleri izler (Ana sayfa › Meyve ilanları › Elma › Isparta), içerikle hizalı ve sade. Kategori/arama sayfasında tanıtım şeridi gizlenir.
+
+## 3. tur düzenlemeleri
+- **Hesabım sayfaları (Profilim, Hesap güvenliği) ve Satıcı sayfası** pazar yeriyle aynı üst menüyü kullanır (`js/site-header.js`). Sayfaların kendi bağlantı satırı kaldırıldı; hesap sayfalarında tek bir yan menü var (Profil bilgilerim, Hesap güvenliği, İlanlarım, Favorilerim, Mesajlarım). Stiller: `css/hesap.css`.
+- **İki adımlı doğrulama** yeniden yazıldı (`js/security.js`): durum rozeti (Kapalı/Kuruluyor/Açık), "Aç" düğmesiyle başlayan 3 adım (şifre → uygulamaya ekle + 6 haneli kod → kurtarma kodları), anahtar 4'lü gruplar hâlinde ve kopyalanabilir, telefondan "Doğrulayıcı uygulamada aç" bağlantısı, kurtarma kodlarını kopyala/indir, açıkken şifreyle kapatma. Yeni API: `GET /api/account/2fa/status`, `POST /api/account/2fa/disable`.
+- **Yayındaki ilanda** "Yayın tarihi / Yayın bitişi" satırları gösterilmez (detay tablosu ve sahip durum kutusu).
+- **Telefon numarası açık yazılmaz:** ilan detayında ve satıcı sayfasında "WhatsApp ile yaz" (hazır mesajla `wa.me` bağlantısı) ve "Telefonu göster" (basınca numara ve arama bağlantısı) düğmeleri.

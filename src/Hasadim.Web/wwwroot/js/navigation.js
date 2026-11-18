@@ -2,7 +2,9 @@
 window.setBreadcrumbs=items=>{const root=document.querySelector('#breadcrumbs');if(!root)return;root.replaceChildren();items.forEach((item,i)=>{if(i){const sep=document.createElement('span');sep.textContent='›';sep.setAttribute('aria-hidden','true');root.append(sep);}const n=document.createElement(item.href?'a':'span');n.textContent=item.label;if(item.href)n.href=item.href;else n.setAttribute('aria-current','page');root.append(n);});};
 const names={'profilim.html':'Profilim','satici.html':'Satıcı profili','ilan.html':'İlan detayı','hesabim.html':'Hesap güvenliği','giris.html':'Giriş yap','kayit.html':'Kayıt ol','sifremi-unuttum.html':'Şifremi unuttum','sifre-yenile.html':'Şifre yenile','eposta-dogrula.html':'E-posta doğrulama'};
 const filename=location.pathname.split('/').pop(),query=new URLSearchParams(location.search).get('q');const searchInput=document.querySelector('#globalQuery');if(searchInput)searchInput.value=query||'';
-setBreadcrumbs([{label:'Ana sayfa',href:'/'},{label:names[filename]||(query?'Arama: '+query:'Pazar yeri')}]);
+// Ortak üst menü sonradan yüklendiği için sayfa konumu onu bekler.
+const accountPages={'profilim.html':1,'hesabim.html':1};
+(window.layoutReady||Promise.resolve()).then(()=>{if(document.querySelector('#breadcrumbs')?.children.length)return;setBreadcrumbs(accountPages[filename]?[{label:'Ana sayfa',href:'/'},{label:'Hesabım',href:'/html/profilim.html'},{label:names[filename]}]:[{label:'Ana sayfa',href:'/'},{label:names[filename]||(query?'Arama: '+query:'Pazar yeri')}]);}).catch(()=>{});
 // Kaydırma sırasında üst menüyü küçült.
 (() => {
     const header = document.querySelector('.topbar');

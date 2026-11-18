@@ -26,8 +26,9 @@
         }
         if (x.status === 3)
             box.append(el('p', 'İlan daha önce onaylanmış. Yönetim 30 günlük yayını başlatabilir.'));
-        if (x.publishedAt) box.append(el('p', 'Yayın tarihi: ' + displayDate(x.publishedAt)));
-        if (x.expiresAt) box.append(el('p', 'Yayın bitişi: ' + displayDate(x.expiresAt)));
+        // Yayındaki ilanda başlangıç/bitiş tarihleri gösterilmez; yalnızca
+        // yayın dışı (ör. süresi dolmuş) ilanda bitiş tarihi bilgi olarak kalır.
+        if (x.status !== 4 && x.status !== 5 && x.expiresAt) box.append(el('p', 'Son yayın bitişi: ' + displayDate(x.expiresAt)));
         if (x.status === 5)
             box.append(el('p', 'Yayın süresi doldu. İlanın Geçmiş ilanlar bölümünde saklanıyor.'));
         parent.append(box);

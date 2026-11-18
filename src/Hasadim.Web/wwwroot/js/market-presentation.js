@@ -77,13 +77,60 @@ window.MarketPresentation = (() => {
         root.append(header, badges, stats, node('p', p.about || 'Satıcı henüz tanıtım bilgisi eklememiş.', 'seller-about'));
         root.append(node('small', 'E-posta doğrulaması, ürün kalitesi veya ticari kimlik onayı değildir.', 'muted'));
         if (full && p.phone) {
-            const call = node('a', 'Satıcıyı ara · ' + p.phone, 'secondary seller-call');
-            call.href = 'tel:' + p.phone.replace(/[^+0-9]/g, ''); root.append(call);
+            root.append(contact(p.phone, { message: 'Merhaba, Hasadım\'daki satıcı profilinizi gördüm.' }));
         } else if (full) root.append(node('p', 'Telefon gizli veya görüntülemek için giriş yapmalısın.', 'muted'));
         if (!full) {
             const link = node('a', 'Profili ve tüm ilanları gör →', 'secondary seller-call');
             link.href = '/html/satici.html?id=' + encodeURIComponent(p.id); root.append(link);
         }
+    }
+    // Basit çizgi simgeler (marka logosu değil).
+    function glyph(kind) {
+        if (typeof document.createElementNS !== 'function') return null;
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '20'); svg.setAttribute('height', '20');
+        svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('class', 'contact-glyph');
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor');
+        path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('d', kind === 'chat'
+            ? 'M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 11h.01M12 11h.01M16 11h.01'
+            : 'M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z');
+        svg.append(path);
+        return svg;
+    }
+    // Telefon numarası sayfada açık yazılmaz. WhatsApp sohbeti hazır mesajla
+    // açılır; numara yalnızca "Telefonu göster" düğmesine basınca görünür.
+    function contact(phone, { message = '' } = {}) {
+        const root = node('div', undefined, 'contact-buttons');
+        const digits = String(phone || '').replace(/[^0-9]/g, '');
+        const national = digits.replace(/^90(?=\d{10}$)/, '').replace(/^0(?=\d{10}$)/, '');
+        const pretty = national.length === 10
+            ? '0' + national.slice(0, 3) + ' ' + national.slice(3, 6) + ' ' + national.slice(6, 8) + ' ' + national.slice(8)
+            : String(phone);
+        if (national.length === 10 && national.startsWith('5')) {
+            const wa = node('a', undefined, 'whatsapp-button');
+            wa.href = 'https://wa.me/90' + national + (message ? '?text=' + encodeURIComponent(message) : '');
+            wa.target = '_blank'; wa.rel = 'noopener noreferrer';
+            const icon = glyph('chat'); if (icon) wa.append(icon);
+            wa.append(node('span', 'WhatsApp ile yaz'));
+            root.append(wa);
+        }
+        const show = node('button', undefined, 'secondary phone-reveal');
+        show.type = 'button';
+        const phoneIcon = glyph('phone'); if (phoneIcon) show.append(phoneIcon);
+        show.append(node('span', 'Telefonu göster'));
+        show.onclick = () => {
+            const call = node('a', undefined, 'secondary phone-link');
+            call.href = 'tel:' + (national.length === 10 ? '+90' + national : digits);
+            const icon = glyph('phone'); if (icon) call.append(icon);
+            call.append(node('span', pretty));
+            call.setAttribute('aria-label', 'Satıcıyı ara: ' + pretty);
+            show.replaceWith ? show.replaceWith(call) : root.append(call);
+        };
+        root.append(show);
+        return root;
     }
     function estimate(x) {
         const root = node('section', undefined, 'quantity-estimate');
@@ -109,5 +156,5 @@ window.MarketPresentation = (() => {
         root.append(heading, label, result, node('small', 'İlan fiyatına göre hesaplanır. Sipariş oluşturmaz; teslimat, ek masraflar ve satış koşullarını satıcıyla netleştir.', 'muted'));
         return root;
     }
-    return { facts, seller, estimate, stats, price, recordView };
+    return { facts, seller, estimate, stats, price, recordView, contact };
 })();

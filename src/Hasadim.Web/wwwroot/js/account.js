@@ -120,25 +120,7 @@ bind("confirmForm", async () => {
     status("E-postan doğrulandı. Giriş sayfasına yönlendiriliyorsun…");
     goToLogin("E-postan doğrulandı. Giriş yapabilirsin.", email, 2000);
 });
-bind("setupForm", async (d, f) => {
-    const r = await api("2fa/setup", d);
-    await token();
-    f.reset();
-    $("#authenticatorKey").textContent = r.email + "\n" + r.key;
-    $("#setupKey").hidden = false;
-    status("Anahtarı doğrulayıcı uygulamana ekle.");
-});
-bind("enableForm", async d => {
-    const r = await api("2fa/enable", d);
-    $("#setupKey").hidden = true;
-    $("#authenticatorKey").textContent = "";
-    $("#setupForm").hidden = true;
-    $("#recoveryBox").hidden = false;
-    $("#recoveryCodes").textContent = r.codes.join("\n");
-    $("#twoFactorStatus").textContent = "İki adımlı doğrulama etkin.";
-    await token();
-    status("Kurtarma kodlarını güvenli bir yerde sakla.");
-});
+// İki adımlı doğrulama akışı security.js içindedir.
 bind("changeForm", async d => {
     await api("change-password", d);
     goToLogin("Şifren değiştirildi. Yeni şifrenle tekrar giriş yap.");
@@ -168,8 +150,7 @@ bind("logoutAllForm", async d => {
         if (page === "security") {
             const u = await api("me");
             if (!u) { location.replace("/html/giris.html?returnUrl=" + encodeURIComponent("/html/hesabim.html")); return; }
-            $("#twoFactorStatus").textContent = u.twoFactorEnabled ? "İki adımlı doğrulama etkin." : "İki adımlı doğrulama henüz açık değil.";
-            $("#setupForm").hidden = u.twoFactorEnabled;
+            window.HasadimSecurity?.load();
         }
     } catch (e) { status(e.message, true); }
 })();

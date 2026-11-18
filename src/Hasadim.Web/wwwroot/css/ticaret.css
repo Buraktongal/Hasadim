@@ -451,3 +451,15 @@ main { max-width: 1240px; padding: 16px 20px 56px; }
     max-width: 48ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .category-bar .fruit-svg { width: 20px; height: 20px; }
+
+/* İletişim düğmeleri (ilan detayı ve satıcı sayfası) */
+.contact-buttons { display: grid; gap: 8px; }
+.contact-buttons > a, .contact-buttons > button {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    min-height: 46px; padding: 0 14px; border-radius: 12px; font-weight: 800; font-size: 15px; text-decoration: none; box-sizing: border-box;
+}
+.whatsapp-button { background: #1f9d55; color: #fff; }
+.whatsapp-button:hover { background: #188546; }
+
+.detail-side .contact-actions .whatsapp-button { background: #1f9d55; color: #fff; }
+.detail-side .contact-actions .phone-link, .detail-side .contact-actions .phone-reveal { background: #fff; color: var(--t-green); border: 1.5px solid #cfdccb; }

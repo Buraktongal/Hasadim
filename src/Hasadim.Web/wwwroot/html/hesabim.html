@@ -1,4 +1,121 @@
-<!doctype html><html lang="tr"><head>
-    <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Hesap güvenliği | Hasadım</title>
-<link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css"><link rel="stylesheet" href="/css/auth-experience.css"><script src="/js/return-path.js" defer></script><script src="/js/auth-experience.js" defer></script><script src="/js/account.js" defer></script><script src="/js/navigation.js" defer></script></head><body data-page="security"><header class="topbar"><a href="/" class="brand">hasadım.</a><a href="/">← Pazar yerine dön</a><a href="/html/profilim.html">Profilimi düzenle</a><form action="/" method="get" role="search" class="global-search"><label class="sr-only" for="globalQuery">Ürün veya ilan ara</label><input id="globalQuery" name="q" type="search" placeholder="Elma, armut, ürün veya ilan ara…" maxlength="150"><button type="submit" class="primary">Ara</button></form></header><nav id="breadcrumbs" class="breadcrumbs" aria-label="Sayfa konumu"></nav><main class="security-wrap"><h1>Hesap güvenliği</h1><p id="accountStatus" role="status"></p><section class="security-block"><h2>İki adımlı doğrulama</h2><p class="muted">Girişte şifrene ek olarak doğrulayıcı uygulamandaki kodu kullan.</p><p id="twoFactorStatus"></p><form id="setupForm"><label>Mevcut şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="primary" type="submit">Kurulumu başlat</button></form><div id="setupKey" hidden><p>Doğrulayıcı uygulamanda hesap ekle → kurulum anahtarını elle gir. Tür: zamana dayalı (TOTP).</p><p id="authenticatorKey" class="secret"></p><form id="enableForm"><label>Uygulamada görünen 6 haneli kod<input name="code" inputmode="numeric" required pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"></label><button class="primary" type="submit">Etkinleştir</button></form></div><div id="recoveryBox" hidden><h3>Kurtarma kodlarını sakla</h3><p>Her kod bir kez kullanılabilir. Bu kodlar yalnızca şimdi gösterilir. Telefonuna erişemezsen girişte kullan.</p><pre id="recoveryCodes" class="secret"></pre></div></section><section class="security-block"><h2>Şifreni değiştir</h2><form id="changeForm"><label>Mevcut şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><label>Yeni şifre<input name="newPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label><label>Yeni şifre tekrar<input name="newPasswordConfirm" type="password" required minlength="12" maxlength="128" autocomplete="new-password" data-match="newPassword"></label><small class="match-hint" data-match-hint="newPasswordConfirm" aria-live="polite"></small><button class="primary" type="submit">Şifreyi değiştir ve çıkış yap</button></form></section><section class="security-block"><h2>Tüm cihazlardan çıkış</h2><p>Bu cihaz dahil bütün oturumların sonraki isteklerinde giriş yapması gerekir.</p><form id="logoutAllForm"><label>Şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button class="danger" type="submit">Tüm oturumları kapat</button></form></section></main></body></html>
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Hesap güvenliği — Hasadım</title>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css">
+    <link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/ticaret.css">
+    <link rel="stylesheet" href="/css/auth-experience.css">
+    <link rel="stylesheet" href="/css/hesap.css">
+    <script src="/js/layout.js" defer></script>
+    <script src="/js/fruit-icons.js" defer></script>
+    <script src="/js/market-catalog.js" defer></script>
+    <script src="/js/site-header.js" defer></script>
+    <script src="/js/return-path.js" defer></script>
+    <script src="/js/auth-experience.js" defer></script>
+    <script src="/js/account.js" defer></script>
+    <script src="/js/security.js" defer></script>
+    <script src="/js/navigation.js" defer></script>
+</head>
+<body data-page="security">
+<div id="siteLayout"></div>
+<main class="account-page">
+    <div class="account-layout">
+        <aside class="account-sidebar">
+            <nav class="account-nav" aria-label="Hesabım menüsü">
+                <p class="account-nav-title">HESABIM</p>
+                <a href="/html/profilim.html">Profil bilgilerim</a>
+                <a href="/html/hesabim.html" aria-current="page">Hesap güvenliği</a>
+                <a href="/?view=mine">İlanlarım</a>
+                <a href="/?view=favorites">Favorilerim</a>
+                <a href="/?view=messages">Mesajlarım</a>
+            </nav>
+        </aside>
+        <div class="account-content">
+            <header class="account-head">
+                <p class="eyebrow">HESABIM</p>
+                <h1>Hesap güvenliği</h1>
+                <p>Şifreni, iki adımlı doğrulamayı ve açık oturumlarını yönet.</p>
+            </header>
+            <p id="accountStatus" role="status"></p>
+
+            <section class="account-panel" id="twoFactorPanel" aria-labelledby="twoFactorTitle">
+                <div class="panel-head">
+                    <div>
+                        <h2 id="twoFactorTitle">İki adımlı doğrulama</h2>
+                        <p class="muted">Girişte şifrene ek olarak telefonundaki doğrulayıcı uygulamanın ürettiği 6 haneli kod istenir.</p>
+                    </div>
+                    <span id="twoFactorBadge" class="state-pill">Kontrol ediliyor…</span>
+                </div>
+
+                <!-- Kapalıyken -->
+                <div id="twoFactorOff" hidden>
+                    <button id="startTwoFactor" class="primary" type="button">İki adımlı doğrulamayı aç</button>
+                </div>
+
+                <!-- Kurulum: 1) şifre 2) uygulama 3) kod 4) kurtarma kodları -->
+                <div id="twoFactorSetup" class="setup-flow" hidden>
+                    <ol class="setup-steps" aria-label="Kurulum adımları">
+                        <li data-setup-step="1">Şifreni onayla</li>
+                        <li data-setup-step="2">Uygulamaya ekle</li>
+                        <li data-setup-step="3">Kurtarma kodları</li>
+                    </ol>
+                    <form id="setupForm" class="setup-card">
+                        <label>Mevcut şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+                        <div class="setup-actions"><button class="secondary" type="button" data-cancel-setup>Vazgeç</button><button class="primary" type="submit">Devam et</button></div>
+                    </form>
+                    <div id="setupKey" class="setup-card" hidden>
+                        <p><strong>1.</strong> Telefonuna Google Authenticator, Microsoft Authenticator gibi bir doğrulayıcı uygulama kur.</p>
+                        <p><strong>2.</strong> Uygulamada <em>hesap ekle → kurulum anahtarı gir</em> seç ve aşağıdaki anahtarı yaz (tür: zamana dayalı).</p>
+                        <div class="secret-row"><code id="authenticatorKey" class="secret"></code><button id="copyKey" class="secondary" type="button">Kopyala</button></div>
+                        <p class="muted">Telefondan açıyorsan: <a id="authenticatorLink" href="#">Doğrulayıcı uygulamada aç</a></p>
+                        <form id="enableForm">
+                            <label>3. Uygulamada görünen 6 haneli kodu yaz<input name="code" class="code-input" inputmode="numeric" required pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"></label>
+                            <div class="setup-actions"><button class="secondary" type="button" data-cancel-setup>Vazgeç</button><button class="primary" type="submit">Doğrula ve aç</button></div>
+                        </form>
+                    </div>
+                    <div id="recoveryBox" class="setup-card" hidden>
+                        <h3>Kurtarma kodlarını sakla</h3>
+                        <p>Telefonuna ulaşamazsan girişte bu kodlardan birini kullanabilirsin. Her kod bir kez çalışır ve <strong>yalnızca şimdi</strong> gösterilir.</p>
+                        <pre id="recoveryCodes" class="secret recovery-grid"></pre>
+                        <div class="setup-actions"><button id="copyCodes" class="secondary" type="button">Kopyala</button><a id="downloadCodes" class="secondary" download="hasadim-kurtarma-kodlari.txt" href="#">İndir (.txt)</a><button id="finishSetup" class="primary" type="button">Kaydettim, bitir</button></div>
+                    </div>
+                </div>
+
+                <!-- Açıkken -->
+                <div id="twoFactorOn" hidden>
+                    <p id="recoveryLeft" class="muted"></p>
+                    <form id="disableForm" class="setup-card inline-card">
+                        <label>İki adımlı doğrulamayı kapatmak için şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+                        <button class="danger" type="submit">Kapat</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="account-panel" aria-labelledby="passwordTitle">
+                <h2 id="passwordTitle">Şifreni değiştir</h2>
+                <p class="muted">Şifren değişince tüm cihazlardan çıkış yapılır ve yeni şifrenle tekrar girersin.</p>
+                <form id="changeForm" class="stack-form">
+                    <label>Mevcut şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+                    <label>Yeni şifre<input name="newPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
+                    <label>Yeni şifre tekrar<input name="newPasswordConfirm" type="password" required minlength="12" maxlength="128" autocomplete="new-password" data-match="newPassword"></label>
+                    <small class="match-hint" data-match-hint="newPasswordConfirm" aria-live="polite"></small>
+                    <button class="primary" type="submit">Şifreyi değiştir</button>
+                </form>
+            </section>
+
+            <section class="account-panel" aria-labelledby="sessionsTitle">
+                <h2 id="sessionsTitle">Tüm cihazlardan çıkış</h2>
+                <p class="muted">Bu cihaz dahil açık olan bütün oturumlar kapanır.</p>
+                <form id="logoutAllForm" class="stack-form">
+                    <label>Şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+                    <button class="danger" type="submit">Tüm oturumları kapat</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+</body>
+</html>

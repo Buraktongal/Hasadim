@@ -86,6 +86,21 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  public async Task<IActionResult> Confirm(ConfirmRequest r){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is null)return BadRequest(new{mesaj="Bağlantı geçersiz."});var result=await users.ConfirmEmailAsync(u,r.Token);return result.Succeeded?Ok():BadRequest(new{mesaj="Bağlantı geçersiz veya süresi dolmuş."});}
  [HttpPost("reset-password")]
  public async Task<IActionResult> Reset(ResetRequest r){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is null)return BadRequest(new{mesaj="Bağlantı geçersiz."});var result=await users.ResetPasswordAsync(u,r.Token,r.Password);return result.Succeeded?Ok():Errors(result);}
+ // İki adımlı doğrulama durumu ve kalan kurtarma kodu sayısı.
+ [Authorize,HttpGet("2fa/status")]
+ public async Task<IActionResult> TwoFactorStatus(){var u=await MeUser();return Ok(new{enabled=u.TwoFactorEnabled,recoveryCodesLeft=u.TwoFactorEnabled?await users.CountRecoveryCodesAsync(u):0});}
+ // Kapatma şifre ister; anahtar sıfırlanır ve diğer oturumlar kapanır.
+ [Authorize,HttpPost("2fa/disable")]
+ public async Task<IActionResult> Disable(PasswordRequest r)
+ {
+  var u=await MeUser();
+  if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});
+  if(!u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten kapalı."});
+  var result=await users.SetTwoFactorEnabledAsync(u,false);if(!result.Succeeded)return Errors(result);
+  result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);
+  await signIn.RefreshSignInAsync(u);
+  return Ok(new{mesaj="İki adımlı doğrulama kapatıldı."});
+ }
  [Authorize,HttpPost("2fa/setup")]
  public async Task<IActionResult> Setup(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});if(u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten açık."});var result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);await signIn.RefreshSignInAsync(u);return Ok(new{key=await users.GetAuthenticatorKeyAsync(u),email=u.Email});}
  [Authorize,HttpPost("2fa/enable")]

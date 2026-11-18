@@ -47,8 +47,11 @@ const workflow = context.window.ListingWorkflow;
     const published = new Node('div');
     workflow.appendStatus(published, { ...item, status: 4,
         publishedAt: '2026-10-15T09:00:00', expiresAt: '2026-11-14T09:00:00' });
-    assert(published.textContent.includes('Yayın tarihi:'));
-    assert(published.textContent.includes('Yayın bitişi:'));
+    assert(!published.textContent.includes('Yayın tarihi'), 'Yayındaki ilanda başlangıç tarihi gösterilmez');
+    assert(!published.textContent.includes('Yayın bitişi'), 'Yayındaki ilanda bitiş tarihi gösterilmez');
+    const expiredBox = new Node('div');
+    workflow.appendStatus(expiredBox, { ...item, status: 5, publishedAt: '2026-10-15T09:00:00', expiresAt: '2026-11-14T09:00:00' });
+    assert(expiredBox.textContent.includes('Yayın süresi doldu'));
     assert(!/\d{2}:\d{2}/.test(published.textContent));
     assert(workflow.editable({isMine:true,status:4,active:true,expiresAt:'2099-01-01T00:00:00'}));
     assert(!workflow.editable({isMine:true,status:4,active:true,expiresAt:'2000-01-01T00:00:00'}));

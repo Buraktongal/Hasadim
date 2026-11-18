@@ -328,7 +328,7 @@ async function renderDetail(id)
         // Fiyat ve ilan bilgileri tablosu
         infoCol.append(window.MarketPresentation.price(x));
         const grid = el('div', undefined, 'detail-grid info-table');
-        for (const [k, v] of Object.entries({ 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Meyve türü': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' kg', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName, 'Yayın bitişi': date(x.expiresAt) })) {
+        for (const [k, v] of Object.entries({ 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Meyve türü': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' kg', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName })) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
         }
@@ -353,11 +353,10 @@ async function renderDetail(id)
                 } catch (error) { toast(error.message); }
             }));
         } else if (user && publiclyVisible) {
-            if (x.telefon) {
-                const tel = el('a', 'Telefon: ' + x.telefon, 'secondary phone-link');
-                tel.href = 'tel:' + x.telefon.replace(/[^+0-9]/g, '');
-                actions.append(tel);
-            }
+            // Numara açıkça yazılmaz: WhatsApp ve "Telefonu göster" düğmeleri.
+            if (x.telefon) actions.append(window.MarketPresentation.contact(x.telefon, {
+                message: 'Merhaba, Hasadım\'daki "' + x.baslik + '" ilanınız (İlan No: ' + x.listingNumber + ') hakkında yazıyorum.'
+            }));
             actions.append(button('Satıcıya mesaj gönder', 'primary',
                 () => openCompose(x.id, x.ownerId, x.baslik)));
             actions.append(button('İlanı bildir', 'textbtn', () => {
