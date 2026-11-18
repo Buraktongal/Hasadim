@@ -44,6 +44,10 @@
     for (const b of document.querySelectorAll('[data-account-action="create-listing"]')) b.onclick = newListing;
     if ($('#accountBtn')) $('#accountBtn').onclick = () => { location.href = user ? '/html/profilim.html' : login(location.pathname + location.search); };
     if ($('#logoutBtn')) $('#logoutBtn').onclick = async () => {
+        closeMenu();
+        const message = 'Hesabından çıkış yapmak istediğine emin misin?';
+        const ok = window.HasadimConfirm ? await window.HasadimConfirm(message, { title: 'Çıkış yap', okText: 'Çıkış yap' }) : confirm(message);
+        if (!ok) return;
         try { await api('/api/account/logout', 'POST'); } finally { location.href = '/'; }
     };
     if ($('#dismissMessageAlert')) $('#dismissMessageAlert').onclick = () => { $('#messageAlert').hidden = true; };

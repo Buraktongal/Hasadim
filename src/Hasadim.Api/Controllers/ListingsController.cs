@@ -244,19 +244,9 @@ public class ListingsController(
         [FromForm] List<IFormFile> files,
         CancellationToken ct)
     {
-        await service.CheckOwner(id, ct);
-
         // Uygun olmayan ilanda dosyaları diske yazmadan reddet.
-        var listing = await service.Detail(id, ct);
-
-        if (listing.Status != ListingStatus.Draft &&
-            listing.Status != ListingStatus.ChangesRequested)
-        {
-            throw new AppException(
-                409,
-                "Bu durumdaki ilanın fotoğrafları değiştirilemez."
-            );
-        }
+        // Yayındaki (süresi dolmamış) ilanlara da fotoğraf eklenebilir.
+        await service.CheckEditable(id, ct);
 
         var names = await SaveFiles(files, ct);
 
@@ -280,6 +270,41 @@ public class ListingsController(
         {
             id,
             mesaj = "Fotoğraflar eklendi."
+        });
+    }
+
+    [Authorize]
+    [HttpDelete("{id:guid}/photos/{photoId:guid}")]
+    public async Task<IActionResult> RemovePhoto(
+        Guid id,
+        Guid photoId,
+        CancellationToken ct)
+    {
+        var url = await service.RemovePhoto(id, photoId, ct);
+
+        // Kayıt silindikten sonra dosya da kaldırılır.
+        Cleanup([ExtractFileName(url)]);
+
+        return Ok(new
+        {
+            id,
+            mesaj = "Fotoğraf kaldırıldı."
+        });
+    }
+
+    [Authorize]
+    [HttpPost("{id:guid}/photos/{photoId:guid}/cover")]
+    public async Task<IActionResult> SetCover(
+        Guid id,
+        Guid photoId,
+        CancellationToken ct)
+    {
+        await service.SetCover(id, photoId, ct);
+
+        return Ok(new
+        {
+            id,
+            mesaj = "Kapak fotoğrafı güncellendi."
         });
     }
 

@@ -273,6 +273,12 @@ public interface IMarketplaceRepository
 {
     Task<long> RecordView(Guid id, Guid? user, CancellationToken ct);
 
+    // Fotoğraf kaldırır; en az bir fotoğraf kalmalıdır. Silinen dosya adresini döndürür.
+    Task<string> RemovePhoto(Guid id, Guid photoId, CancellationToken ct);
+
+    // Seçilen fotoğrafı ilk sıraya alır ve kapak yapar.
+    Task SetCover(Guid id, Guid photoId, CancellationToken ct);
+
     // Yayındaki ilanların meyve türüne göre sayıları.
     Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct);
     Task<Paged<ListingView>> Search(

@@ -43,3 +43,15 @@ dialog { border-radius: var(--radius-l); }
     display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; border-radius: 50%;
     background: #e7efe2; color: #1d4a33; font-weight: 800; font-size: .8em;
 }
+
+/* Onay penceresi (çıkış, silme) */
+.confirm-dialog {
+    width: min(400px, 92vw); padding: 24px; border: 0; border-radius: 18px;
+    box-shadow: 0 24px 70px #0f2a1d40; color: #1f2a22;
+}
+.confirm-dialog::backdrop { background: #102c24a6; backdrop-filter: blur(2px); }
+.confirm-dialog h2 { margin: 0 0 8px; font-size: 20px; }
+.confirm-dialog p { margin: 0 0 20px; color: #4d5b49; line-height: 1.5; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.confirm-actions button { min-width: 110px; min-height: 42px; border-radius: 12px; font-weight: 800; }
+.confirm-actions .primary { background: #d9661f; color: #fff; }

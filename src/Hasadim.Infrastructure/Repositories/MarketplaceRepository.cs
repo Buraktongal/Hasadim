@@ -349,6 +349,60 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
 
         return affected == 1;
     }
+    // Fotoğraf işlemleri öncesi ilanı kilitler ve düzenlenebilir olduğunu doğrular.
+    private static async Task LockEditable(Microsoft.Data.SqlClient.SqlConnection c, System.Data.IDbTransaction tx, Guid id, CancellationToken ct)
+    {
+        var status = await c.QuerySingleOrDefaultAsync<int?>(new CommandDefinition("""
+            SELECT CASE WHEN Hidden=1 OR (Status=4 AND (Active=0 OR ExpiresAt IS NULL OR ExpiresAt<=SYSUTCDATETIME())) THEN -1 ELSE Status END
+            FROM dbo.Listings WITH (UPDLOCK, HOLDLOCK)
+            WHERE Id = @id AND IsDeleted = 0;
+            """, new { id }, tx, cancellationToken: ct));
+        if (status is null) throw new AppException(404, "İlan bulunamadı.");
+        if (status != (int)ListingStatus.Draft && status != (int)ListingStatus.ChangesRequested && status != (int)ListingStatus.Published)
+            throw new AppException(409, "Bu durumdaki ilanın fotoğrafları değiştirilemez.");
+    }
+
+    // Kapak her zaman sıradaki ilk fotoğraftır; ilan satırını da güncelleyerek sürümünü yeniler.
+    private const string RefreshCoverSql = """
+        UPDATE dbo.Listings
+        SET PhotoUrl = (SELECT TOP (1) p.Url FROM dbo.ListingPhotos p WHERE p.ListingId = @id ORDER BY p.SortOrder, p.Id)
+        WHERE Id = @id AND IsDeleted = 0;
+        """;
+
+    public async Task<string> RemovePhoto(Guid id, Guid photoId, CancellationToken ct)
+    {
+        await using var c = await factory.Open(ct);
+        using var tx = c.BeginTransaction();
+        await LockEditable(c, tx, id, ct);
+        var count = await c.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COUNT(*) FROM dbo.ListingPhotos WHERE ListingId = @id;", new { id }, tx, cancellationToken: ct));
+        var url = await c.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(
+            "SELECT Url FROM dbo.ListingPhotos WHERE ListingId = @id AND Id = @photoId;", new { id, photoId }, tx, cancellationToken: ct));
+        if (url is null) throw new AppException(404, "Fotoğraf bulunamadı.");
+        if (count <= 1) throw new AppException(400, "İlanda en az bir fotoğraf kalmalı. Önce yeni fotoğraf ekle.");
+        await c.ExecuteAsync(new CommandDefinition(
+            "DELETE dbo.ListingPhotos WHERE ListingId = @id AND Id = @photoId;", new { id, photoId }, tx, cancellationToken: ct));
+        await c.ExecuteAsync(new CommandDefinition(RefreshCoverSql, new { id }, tx, cancellationToken: ct));
+        tx.Commit();
+        return url;
+    }
+
+    public async Task SetCover(Guid id, Guid photoId, CancellationToken ct)
+    {
+        await using var c = await factory.Open(ct);
+        using var tx = c.BeginTransaction();
+        await LockEditable(c, tx, id, ct);
+        var exists = await c.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COUNT(*) FROM dbo.ListingPhotos WHERE ListingId = @id AND Id = @photoId;", new { id, photoId }, tx, cancellationToken: ct));
+        if (exists == 0) throw new AppException(404, "Fotoğraf bulunamadı.");
+        await c.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.ListingPhotos SET SortOrder = SortOrder + 1 WHERE ListingId = @id;
+            UPDATE dbo.ListingPhotos SET SortOrder = 0 WHERE ListingId = @id AND Id = @photoId;
+            """, new { id, photoId }, tx, cancellationToken: ct));
+        await c.ExecuteAsync(new CommandDefinition(RefreshCoverSql, new { id }, tx, cancellationToken: ct));
+        tx.Commit();
+    }
+
     public async Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct)
     {
         await using var c = await factory.Open(ct);

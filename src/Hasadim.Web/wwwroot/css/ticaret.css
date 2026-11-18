@@ -463,3 +463,32 @@ main { max-width: 1240px; padding: 16px 20px 56px; }
 
 .detail-side .contact-actions .whatsapp-button { background: #1f9d55; color: #fff; }
 .detail-side .contact-actions .phone-link, .detail-side .contact-actions .phone-reveal { background: #fff; color: var(--t-green); border: 1.5px solid #cfdccb; }
+
+/* ---------- İlan düzenleme: mevcut fotoğraflar ---------- */
+.existing-photos { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--t-line); border-radius: var(--t-radius); background: #fafbf9; }
+.existing-photos h4 { margin: 0; font-size: 14px; }
+.existing-photos .muted { margin: 0 0 6px; }
+.existing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.existing-photo { position: relative; margin: 0; border: 1px solid var(--t-line); border-radius: 10px; overflow: hidden; background: #fff; }
+.existing-photo.is-cover { border: 2px solid var(--t-accent); }
+.existing-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.existing-photo figcaption { display: flex; justify-content: space-between; gap: 4px; padding: 4px 6px; }
+.existing-photo figcaption .textbtn { padding: 4px 2px; font-size: 12px; }
+.existing-photo .danger-text { color: #b3261e; }
+.cover-badge { position: absolute; top: 6px; left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--t-accent); color: #fff; font-size: 11px; font-weight: 800; }
+
+/* ---------- İlan düzenleme: önce / sonra ---------- */
+.change-summary { margin: 10px 0 14px; padding: 12px 14px; border-radius: var(--t-radius); background: #fff; border: 1px solid #f1c3a2; }
+.change-summary h4 { margin: 0 0 8px; font-size: 14px; color: var(--t-accent-dark); }
+.change-summary table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.change-summary th, .change-summary td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #eef1ec; vertical-align: top; }
+.change-summary thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--t-muted); }
+.change-summary tbody th { width: 28%; color: var(--t-muted); font-weight: 700; }
+.change-summary td.before { color: #8b9686; text-decoration: line-through; }
+.change-summary td.after strong { color: var(--t-ink); }
+.change-summary .change-note { margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--t-green-soft); color: var(--t-green); }
+.change-summary tr.is-down .after strong { color: #1f7a45; }
+.change-summary tr.is-down .change-note { background: #e1f3e7; color: #1f7a45; }
+.change-summary tr.is-up .after strong { color: #b3261e; }
+.change-summary tr.is-up .change-note { background: #fdecea; color: #b3261e; }
+.existing-photos .photo-status { margin: 0; padding: 6px 10px; border-radius: 8px; background: var(--t-green-soft); color: var(--t-green); font-weight: 700; font-size: 13px; }

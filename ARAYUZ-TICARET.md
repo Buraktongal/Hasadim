@@ -43,3 +43,9 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 - **İki adımlı doğrulama** yeniden yazıldı (`js/security.js`): durum rozeti (Kapalı/Kuruluyor/Açık), "Aç" düğmesiyle başlayan 3 adım (şifre → uygulamaya ekle + 6 haneli kod → kurtarma kodları), anahtar 4'lü gruplar hâlinde ve kopyalanabilir, telefondan "Doğrulayıcı uygulamada aç" bağlantısı, kurtarma kodlarını kopyala/indir, açıkken şifreyle kapatma. Yeni API: `GET /api/account/2fa/status`, `POST /api/account/2fa/disable`.
 - **Yayındaki ilanda** "Yayın tarihi / Yayın bitişi" satırları gösterilmez (detay tablosu ve sahip durum kutusu).
 - **Telefon numarası açık yazılmaz:** ilan detayında ve satıcı sayfasında "WhatsApp ile yaz" (hazır mesajla `wa.me` bağlantısı) ve "Telefonu göster" (basınca numara ve arama bağlantısı) düğmeleri.
+
+## 4. tur düzenlemeleri
+- **Çıkış onayı:** "Çıkış yap" artık sitenin kendi onay penceresini açar (`js/confirm-dialog.js`). İlan silme ve fotoğraf kaldırma da aynı pencereyi kullanır.
+- **İlan düzenleme düzeltmesi:** Yayındaki ilana fotoğraf eklemek sunucuda reddediliyordu (yalnızca taslağa izin veriliyordu); artık taslak, düzeltme bekleyen ve süresi dolmamış yayındaki ilanlara eklenebilir.
+- **Fotoğraf yönetimi:** Düzenlemede "İlandaki fotoğraflar" bölümü (`js/listing-photos.js`): kapak yap, kaldır (en az bir fotoğraf kalır). Yeni API: `DELETE /api/meyve-ilanlari/{id}/photos/{photoId}`, `POST /api/meyve-ilanlari/{id}/photos/{photoId}/cover`. Kaldırılan dosya diskten de silinir.
+- **Önce / sonra:** Düzenleme önizlemesinde değişen alanlar tablo olarak gösterilir (Alan · Önce · Sonra). Fiyatta eski fiyat üstü çizili, yeni fiyat ve yüzde düşüş/artış rozeti görünür.

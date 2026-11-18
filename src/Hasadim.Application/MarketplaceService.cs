@@ -382,6 +382,33 @@ public class MarketplaceService(
         _ = await Own(id, ct);
     }
 
+    // Fotoğraf işlemleri için: sahibi olmalı ve ilan düzenlenebilir durumda olmalı
+    // (taslak, düzeltme bekleyen veya süresi dolmamış yayındaki ilan).
+    public async Task CheckEditable(
+        Guid id,
+        CancellationToken ct)
+    {
+        EnsureEditable(await Own(id, ct));
+    }
+
+    public async Task<string> RemovePhoto(
+        Guid id,
+        Guid photoId,
+        CancellationToken ct)
+    {
+        EnsureEditable(await Own(id, ct));
+        return await repo.RemovePhoto(id, photoId, ct);
+    }
+
+    public async Task SetCover(
+        Guid id,
+        Guid photoId,
+        CancellationToken ct)
+    {
+        EnsureEditable(await Own(id, ct));
+        await repo.SetCover(id, photoId, ct);
+    }
+
     public async Task Delete(
         Guid id,
         CancellationToken ct)

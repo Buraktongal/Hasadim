@@ -48,7 +48,9 @@ async function session() {
 function openAuth(){closeAccountMenu();window.location.href=user?'/html/profilim.html':'/html/giris.html?returnUrl='+encodeURIComponent(window.HasadimReturn.resolve(location.pathname+location.search));}
 async function submit(form,task){const b=form.querySelector('[type=submit]')||form.querySelector('button');if(b.disabled)return;b.disabled=true;form.querySelector('.form-error').textContent='';try{await task();}catch(e){form.querySelector('.form-error').textContent=e.message;}finally{b.disabled=false;}}
 $('#accountBtn').onclick=openAuth;
-$('#logoutBtn').onclick=async()=>{closeAccountMenu();try{await api('/api/account/logout','POST');if(isDetailPage()){window.location.href='/';return;}await session();await changeView('all');toast('Çıkış yapıldı.');}catch(e){toast(e.message);}};
+// Çıkış önce onay ister.
+async function confirmAction(message, options) { return window.HasadimConfirm ? window.HasadimConfirm(message, options) : confirm(message); }
+$('#logoutBtn').onclick=async()=>{closeAccountMenu();if(!await confirmAction('Hesabından çıkış yapmak istediğine emin misin?',{title:'Çıkış yap',okText:'Çıkış yap'}))return;try{await api('/api/account/logout','POST');if(isDetailPage()){window.location.href='/';return;}await session();await changeView('all');toast('Çıkış yapıldı.');}catch(e){toast(e.message);}};
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>close(b.dataset.close);
 for(const name of Object.keys(fruits)){for(const id of ['fruitFilter','editorFruit']){const o=el('option',name);o.value=name;$('#'+id).append(o);}}
 // Ortak hesap menüsü: seçim, dışarı tıklama ve Escape ile kapanır.
@@ -346,7 +348,7 @@ async function renderDetail(id)
                 actions.append(button('İlanı düzenle', 'primary', () => openEditor(x)));
             }
             actions.append(button('İlanı sil', 'danger', async () => {
-                if (!confirm('İlan silinsin mi? Mesaj geçmişi korunacak.')) return;
+                if (!await confirmAction('İlan yayından kaldırılıp silinecek. Mesaj geçmişin korunur.', { title: 'İlan silinsin mi?', okText: 'İlanı sil', danger: true })) return;
                 try {
                     await api('/api/meyve-ilanlari/' + id, 'DELETE');
                     window.location.href = '/?view=mine';
@@ -448,6 +450,13 @@ async function openEditor(x) {
     form.elements.namedItem('photo').required = photoCount === 0;
 
     $('#photoPreviews').replaceChildren();
+
+    // Düzenlemede önce/sonra karşılaştırması için ilk değerler saklanır.
+    if (x) form.dataset.original = JSON.stringify({ baslik: x.baslik, meyveTuru: x.meyveTuru, cesit: x.cesit, miktarKg: x.miktarKg,
+        kilogramFiyati: x.kilogramFiyati, minAlimKg: x.minAlimKg, ambalaj: x.ambalaj, teslimat: x.teslimat, il: x.il, ilce: x.ilce,
+        hasatTarihi: x.hasatTarihi ? x.hasatTarihi.slice(0, 10) : '', aciklama: x.aciklama, photoCount: photoCount });
+    else delete form.dataset.original;
+    window.ListingPhotos?.render(x, { api, toast, onChange: fresh => { if (isDetailPage()) void renderDetail(fresh.id); } });
 
     try {
         window.formatListingPhone?.();

@@ -42,7 +42,13 @@ Check(repo.Items[first].ExpiresAt - repo.Items[first].PublishedAt == TimeSpan.Fr
 Check(repo.Items[first].ReviewedBy is null && repo.Items[first].ReviewedAt is null, "Otomatik yayın yönetici incelemesi olarak kaydedilmez");
 user.Id = null;
 Check((await service.Detail(first, ct)).Status == ListingStatus.Published, "Otomatik yayın herkese görünür");
+user.Id = Guid.NewGuid();
+await Status(403, () => service.RemovePhoto(first, Guid.NewGuid(), ct), "Başka kullanıcı ilan fotoğrafı silemez");
+await Status(403, () => service.SetCover(first, Guid.NewGuid(), ct), "Başka kullanıcı kapak fotoğrafı değiştiremez");
 user.Id = owner;
+await service.CheckEditable(first, ct);
+Check(true, "Yayındaki ilan fotoğraf işlemleri için düzenlenebilir");
+await Status(400, () => service.RemovePhoto(first, Guid.NewGuid(), ct), "Son fotoğraf silinemez");
 var invalid = Request(); invalid.MiktarKg = 0;
 await Status(400, () => service.Create(invalid, ct, ["photo.jpg"]), "Geçersiz ilan otomatik yayımlanmaz");
 var originalExpiry = repo.Items[first].ExpiresAt;
@@ -199,6 +205,14 @@ class MemoryRepo : IMarketplaceRepository
     public Task Delete(Guid id, CancellationToken ct) => Task.CompletedTask;
     public Task AddPhotos(Guid id, IReadOnlyList<string> photos, CancellationToken ct) => Task.CompletedTask;
     public Task SetPhoto(Guid id, string url, CancellationToken ct) => Task.CompletedTask;
+    public Task<string> RemovePhoto(Guid id, Guid photoId, CancellationToken ct)
+    {
+        var list = Photos[id].ToList();
+        if (list.Count <= 1) throw new AppException(400, "İlanda en az bir fotoğraf kalmalı.");
+        var url = list[0]; list.RemoveAt(0); Photos[id] = list;
+        return Task.FromResult(url);
+    }
+    public Task SetCover(Guid id, Guid photoId, CancellationToken ct) => Task.CompletedTask;
     public Task Favorite(Guid id, Guid u, bool add, CancellationToken ct) => Task.CompletedTask;
     public Task<IReadOnlyList<MessageView>> Messages(Guid u, int p, CancellationToken ct) => Task.FromResult<IReadOnlyList<MessageView>>([]);
     public Task<bool> HasConversation(Guid l, Guid b, Guid o, CancellationToken ct) => Task.FromResult(false);
