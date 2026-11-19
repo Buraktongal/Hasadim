@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using System.Threading.RateLimiting;
-var hostArgs = args.Where(x => x != "--migrate" && x != "--bootstrap-admin").ToArray();
+var hostArgs = args.Where(x => x != "--migrate" && x != "--bootstrap-admin" && x != "--seed-demo").ToArray();
 var builder = WebApplication.CreateBuilder(hostArgs);
 const bool confirm = true;
 builder.Services.AddHasadim(confirm);
@@ -52,6 +52,18 @@ if (app.Environment.IsDevelopment() || args.Contains("--bootstrap-admin"))
     }
 }
 if (args.Contains("--bootstrap-admin")) { Console.WriteLine("Yönetici hesabı hazır."); return; }
+// Geliştirme ortamı için demo verisi: tüm kullanıcı ve ilanları siler, 6 hesap ve 100 ilan oluşturur.
+if (args.Contains("--seed-demo"))
+{
+    if (!app.Environment.IsDevelopment()) throw new InvalidOperationException("Demo verisi yalnızca Development ortamında yüklenebilir.");
+    using var scope = app.Services.CreateScope();
+    await Hasadim.Api.Development.DemoSeeder.Run(scope.ServiceProvider, app.Environment.ContentRootPath, CancellationToken.None);
+    Console.WriteLine("Demo verisi yüklendi: 100 ilan.");
+    Console.WriteLine("Hesaplar (e-posta / şifre):");
+    foreach (var a in Hasadim.Api.Development.DemoSeeder.Accounts)
+        Console.WriteLine($"  {(a.IsAdmin ? "Yönetici" : "Kullanıcı"),-9} {a.Email,-24} {a.Password}");
+    return;
+}
 app.UseForwardedHeaders();
 app.UseExceptionHandler(handler => handler.Run(async c =>
 {
