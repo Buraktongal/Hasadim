@@ -112,7 +112,7 @@
     }
 
     // ---- Bildirimler ----
-    const kindIcons = { message: '✉', 'offer-received': '₺', 'offer-accepted': '✓', 'offer-rejected': '×', 'offer-withdrawn': '↩', 'price-drop': '↓', 'saved-search': '☆' };
+    const kindIcons = { message: '✉', 'offer-received': '₺', 'offer-accepted': '✓', 'offer-rejected': '×', 'offer-withdrawn': '↩', 'price-drop': '↓', 'saved-search': '☆', security: '🛡' };
     async function notifications() {
         const root = $('#notificationList');
         let pageNo = 1;

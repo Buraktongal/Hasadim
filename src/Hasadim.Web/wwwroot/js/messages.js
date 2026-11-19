@@ -14,6 +14,24 @@ window.HasadimMessages = (() => {
         const d = new Date(/Z$|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
         return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     };
+    const initial = name => (String(name || '?').trim()[0] || '?').toLocaleUpperCase('tr-TR');
+    const avatar = name => { const a = el('span', initial(name), 'chat-avatar'); a.setAttribute('aria-hidden', 'true'); return a; };
+    // Konuşma listesinde kısa zaman: bugün saat, bu hafta gün adı, daha eski tarih.
+    const shortTime = value => {
+        const d = new Date(/Z$|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
+        if (Number.isNaN(d.getTime())) return '';
+        const now = new Date();
+        if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        if (now - d < 6 * 864e5) return d.toLocaleDateString('tr-TR', { weekday: 'short' });
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    };
+    const dayLabel = value => {
+        const d = new Date(/Z$|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
+        const now = new Date(), y = new Date(now); y.setDate(now.getDate() - 1);
+        if (d.toDateString() === now.toDateString()) return 'Bugün';
+        if (d.toDateString() === y.toDateString()) return 'Dün';
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+    };
     function create({ root, more, api, currentUser, isActive = () => false, onRead = () => {} }) {
         let owner, items = [], page = 1, selected = '', search = '', request = 0, loading = false, hasMore = false;
         const drafts = new Map();
@@ -57,7 +75,12 @@ window.HasadimMessages = (() => {
             root.replaceChildren(); root.className = 'message-center' + (showConversation ? ' show-conversation' : '');
             const conversations = groups();
             if (!conversations.length) {
-                root.append(el('div', 'Henüz konuşman yok. Bir ilanı açıp “Satıcıya soru sor” ile başlayabilirsin.', 'inbox-empty'));
+                const empty = el('div', undefined, 'inbox-empty');
+                const icon = el('span', '💬', 'inbox-empty-icon'); icon.setAttribute('aria-hidden', 'true');
+                const go = el('a', 'İlanlara göz at', 'primary'); go.href = '/';
+                empty.append(icon, el('strong', 'Henüz mesajın yok'),
+                    el('p', 'Bir ilanı açıp “Satıcıya soru sor” ile yazışma başlatabilirsin. Gelen mesajlar burada görünür.'), go);
+                root.append(empty);
                 return;
             }
             if (!conversations.some(g => g.id === selected)) selected = conversations[0].id;
@@ -65,6 +88,7 @@ window.HasadimMessages = (() => {
             sidebar.setAttribute('aria-label', 'Konuşmalar');
             const filter = el('input'); filter.type = 'search'; filter.value = search;
             filter.placeholder = 'Kişi veya ilan ara'; filter.setAttribute('aria-label', 'Yüklenen konuşmalarda ara');
+            const unreadTotal = items.filter(m => m.recipientId === owner && !m.readAt).length;
             const list = el('div', undefined, 'conversation-list');
             const fillList = () => {
                 list.replaceChildren();
@@ -75,40 +99,72 @@ window.HasadimMessages = (() => {
                         selected = g.id; root.classList.add('show-conversation'); render();
                     });
                     item.setAttribute('aria-pressed', String(g.id === selected));
-                    item.append(el('strong', g.person), el('span', g.title, 'conversation-product'),
-                        (p => (p.setAttribute('translate', 'no'), p))(el('p', (last.senderId === owner ? 'Sen: ' : '') + last.body, 'conversation-preview')), el('small', timestamp(last.createdAt)));
+                    const unread = g.messages.filter(m => m.recipientId === owner && !m.readAt).length;
+                    if (unread) item.classList.add('has-unread');
+                    const top = el('span', undefined, 'conversation-top');
+                    top.append(el('strong', g.person), el('small', shortTime(last.createdAt)));
+                    const bottom = el('span', undefined, 'conversation-bottom');
+                    const preview = el('p', (last.senderId === owner ? 'Sen: ' : '') + last.body, 'conversation-preview');
+                    preview.setAttribute('translate', 'no');
+                    bottom.append(preview);
+                    if (unread) bottom.append(el('span', String(unread), 'conversation-unread'));
+                    const text = el('span', undefined, 'conversation-text');
+                    const product = el('span', g.title, 'conversation-product'); product.setAttribute('translate', 'no');
+                    text.append(top, product, bottom);
+                    item.append(avatar(g.person), text);
                     list.append(item);
                 }
                 if (!filtered.length) list.append(el('p', 'Yüklenen konuşmalarda sonuç yok.', 'muted'));
             };
             filter.oninput = () => { search = filter.value; fillList(); };
-            fillList(); sidebar.append(el('h3', 'Konuşmalar'), filter, list);
+            fillList();
+            const sideHead = el('div', undefined, 'conversation-sidebar-head');
+            const titleRow = el('h3', 'Mesajlar');
+            if (unreadTotal) titleRow.append(el('span', unreadTotal + ' yeni', 'inbox-unread'));
+            const refresh = button('↻', 'icon-button inbox-refresh', () => load());
+            refresh.setAttribute('aria-label', 'Mesajları yenile'); refresh.title = 'Yenile';
+            sideHead.append(titleRow, refresh);
+            sidebar.append(sideHead, filter, list);
             const g = conversations.find(x => x.id === selected);
             const panel = el('section', undefined, 'conversation-panel');
             panel.setAttribute('aria-label', g.person + ' ile ' + g.title + ' konuşması');
             const header = el('header', undefined, 'conversation-heading');
-            const back = button('← Konuşmalar', 'textbtn conversation-back', () => root.classList.remove('show-conversation'));
-            const listing = el('a', g.title + ' ↗', 'conversation-listing');
+            const back = button('‹', 'conversation-back', () => root.classList.remove('show-conversation'));
+            back.setAttribute('aria-label', 'Konuşmalara dön');
+            const listing = el('a', '📦 ' + g.title, 'conversation-listing');
+            listing.setAttribute('translate', 'no');
             listing.href = '/html/ilan.html?id=' + encodeURIComponent(g.listingId) + '&from=messages';
             const person = el('a', g.person, 'conversation-person');
             person.href = '/html/satici.html?id=' + encodeURIComponent(g.personId);
-            header.append(back, person, listing);
+            const who = el('div', undefined, 'conversation-who');
+            who.append(person, listing);
+            header.append(back, avatar(g.person), who);
             const history = el('div', undefined, 'conversation-history');
             if (hasMore) history.append(el('p', 'Eski konuşmalar ve önceki mesajlar için aşağıdaki yükleme düğmesini kullan.', 'history-note'));
+            let day = '';
             for (const m of g.messages) {
+                const label = dayLabel(m.createdAt);
+                if (label !== day) { day = label; history.append(el('p', label, 'chat-day')); }
                 const bubble = el('article', undefined, 'message-bubble ' + (m.senderId === owner ? 'outgoing' : 'incoming'));
+                bubble.setAttribute('aria-label', (m.senderId === owner ? 'Sen' : g.person) + ', ' + timestamp(m.createdAt));
                 const text = el('p', m.body); text.setAttribute('translate', 'no');
-                bubble.append(el('small', m.senderId === owner ? 'Sen' : g.person), text, el('time', timestamp(m.createdAt)));
+                const meta = el('time', new Date(/Z$|[+-]\d\d:\d\d$/.test(m.createdAt) ? m.createdAt : m.createdAt + 'Z').toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }));
+                if (m.senderId === owner) meta.append(el('span', m.readAt ? ' ✓✓' : ' ✓', m.readAt ? 'read-tick is-read' : 'read-tick'));
+                bubble.append(text, meta);
                 history.append(bubble);
             }
             const form = el('form', undefined, 'conversation-reply');
-            const label = el('label', 'Yanıtın');
-            const body = el('textarea'); body.name = 'body'; body.required = true; body.maxLength = 2000; body.rows = 3;
-            body.value = drafts.get(g.id) || ''; body.placeholder = 'Bu ilan hakkında mesajını yaz…';
-            body.oninput = () => drafts.set(g.id, body.value);
+            const label = el('label');
+            const body = el('textarea'); body.name = 'body'; body.required = true; body.maxLength = 2000; body.rows = 1;
+            body.setAttribute('aria-label', 'Mesajın');
+            body.value = drafts.get(g.id) || ''; body.placeholder = 'Mesaj yaz…';
+            // Yazdıkça kutu büyür (en fazla 6 satır); Enter gönderir, Shift+Enter yeni satır.
+            const grow = () => { if (!body.style) return; body.style.height = 'auto'; body.style.height = Math.min(body.scrollHeight, 160) + 'px'; };
+            body.oninput = () => { drafts.set(g.id, body.value); grow(); };
+            body.onkeydown = event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); form.requestSubmit(); } };
             label.append(body);
             const error = el('p', feedback.get(g.id) || '', 'form-error'); error.setAttribute('role', 'status');
-            const send = el('button', 'Gönder', 'primary'); send.type = 'submit';
+            const send = el('button', '➤', 'primary chat-send'); send.type = 'submit'; send.setAttribute('aria-label', 'Gönder');
             send.disabled = body.disabled = sending.has(g.id);
             form.append(label, error, send);
             form.onsubmit = async event => {
@@ -135,6 +191,7 @@ window.HasadimMessages = (() => {
                 }
             };
             panel.append(header, history, form); root.append(sidebar, panel);
+            if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => { if (body.value) grow(); });
             history.scrollTop = nearBottom ? history.scrollHeight : previousScroll;
             if (focusReply) { body.focus(); if (caret != null) body.setSelectionRange(caret, end); }
             if (focusSearch) filter.focus();

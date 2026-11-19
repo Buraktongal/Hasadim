@@ -96,3 +96,13 @@ python tools/koyu-tema-uret.py
 - örnek teklifler, kayıtlı aramalar ve bildirimler.
 
 Hesaplar ve şifreler aynı kaldı.
+
+## Hesap güvenliği
+- **Güvenlik durumu** puanı ve kontrol listesi: e-posta, telefon, şifre, iki adımlı doğrulama.
+- **Açık oturumlar:** Hesabın açık olduğu cihazlar listelenir ("Chrome · Windows", "Safari · iPhone"). Tek bir oturum veya bu cihaz dışındaki tüm oturumlar kapatılabilir; kapatılan cihaz bir sonraki işleminde çıkış yapmış olur.
+- **Giriş yöntemleri:** E-posta/şifre, telefon (SMS), Google ve Apple. Google/Apple bağlantısı kaldırılabilir; hesaba girmenin son yolu kaldırılamaz.
+- **Son giriş hareketleri:** Son 15 başarılı giriş ve başarısız deneme.
+- **Yeni cihaz uyarısı:** Daha önce görülmemiş bir cihazdan giriş yapılınca bildirim gelir.
+- Güvenlik ipuçları (kapora dolandırıcılığı, kod paylaşmama vb.).
+- Veritabanı güncellemesi: `014_AccountSecurity.sql`.
+- Yeni API uçları: `GET /api/account/security`, `DELETE /api/account/sessions/{id}`, `POST /api/account/sessions/end-others`, `DELETE /api/account/logins/{provider}`.

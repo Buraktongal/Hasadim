@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Hasadim.Api.Security;
 using Hasadim.Infrastructure.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,8 +21,59 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms,AccountDeletion deletion):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms,AccountDeletion deletion,SessionStore sessions):ControllerBase
 {
+ // ---- Hesap güvenliği: durum, açık oturumlar, bağlı hesaplar, giriş hareketleri ----
+ async Task<Guid?> CurrentSession()=>SessionCookie.Id((await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme)).Properties);
+
+ [Authorize,HttpGet("security")]
+ public async Task<IActionResult> Security(CancellationToken ct)
+ {
+  var u=await MeUser();
+  var current=await CurrentSession();
+  var logins=(await users.GetLoginsAsync(u)).Select(l=>new{provider=l.LoginProvider,name=l.ProviderDisplayName??l.LoginProvider}).ToList();
+  var open=(await sessions.Open(u.Id,ct)).Select(x=>new{x.Id,x.Method,x.Device,x.CreatedAt,x.LastSeenAt,current=x.Id==current}).ToList();
+  return Ok(new{
+   email=u.Email,emailConfirmed=u.EmailConfirmed,
+   phone=string.IsNullOrEmpty(u.PhoneNumber)?null:Hasadim.Application.PhoneNumbers.Mask(u.PhoneNumber),phoneConfirmed=u.PhoneNumberConfirmed,
+   hasPassword=await users.HasPasswordAsync(u),twoFactorEnabled=u.TwoFactorEnabled,twoFactorAvailable=TwoFactorSetupAvailable,
+   logins,sessions=open,history=await sessions.History(u.Id,ct)});
+ }
+
+ // Tek bir oturumu kapatır; o cihaz bir sonraki istekte çıkış yapmış olur.
+ [Authorize,HttpDelete("sessions/{id:guid}")]
+ public async Task<IActionResult> EndSession(Guid id,CancellationToken ct)
+ {
+  var u=await MeUser();
+  if(id==await CurrentSession())return BadRequest(new{mesaj="Bu cihazdan çıkmak için Çıkış yap'ı kullan."});
+  return await sessions.EndForUser(u.Id,id,ct)?Ok(new{mesaj="Oturum kapatıldı."}):NotFound(new{mesaj="Oturum bulunamadı veya zaten kapanmış."});
+ }
+
+ // Bu cihaz dışındaki tüm oturumları kapatır (şifre gerektirmez; şifresiz hesaplar da kullanabilir).
+ [Authorize,HttpPost("sessions/end-others")]
+ public async Task<IActionResult> EndOtherSessions(CancellationToken ct)
+ {
+  var u=await MeUser();
+  var count=await sessions.EndAll(u.Id,await CurrentSession(),ct);
+  return Ok(new{mesaj=count==0?"Başka açık oturum yok.":count+" oturum kapatıldı."});
+ }
+
+ // Google/Apple bağlantısını kaldırır. Hesaba girmenin başka bir yolu kalmalı.
+ [Authorize,HttpDelete("logins/{provider}")]
+ public async Task<IActionResult> RemoveLogin(string provider)
+ {
+  var u=await MeUser();
+  var all=await users.GetLoginsAsync(u);
+  var login=all.FirstOrDefault(l=>string.Equals(l.LoginProvider,provider,StringComparison.OrdinalIgnoreCase));
+  if(login is null)return NotFound(new{mesaj="Bu bağlantı bulunamadı."});
+  var otherWay=await users.HasPasswordAsync(u)||u.PhoneNumberConfirmed||all.Count>1;
+  if(!otherWay)return BadRequest(new{mesaj="Bu, hesabına girmenin tek yolu. Önce telefonunu doğrula veya şifre belirle."});
+  var result=await users.RemoveLoginAsync(u,login.LoginProvider,login.ProviderKey);
+  if(!result.Succeeded)return Errors(result);
+  await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);
+  return Ok(new{mesaj=login.ProviderDisplayName+" bağlantısı kaldırıldı."});
+ }
+
  // Hesabı kalıcı olarak siler (App Store / Google Play hesap silme şartı).
  // Şifresi olan hesapta şifre, tüm hesaplarda "HESABIMI SİL" onayı istenir.
  [Authorize,HttpPost("delete")]
@@ -177,9 +229,9 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   if(u is null){LogLogin(r.Email,"kullanıcı bulunamadı");return Unauthorized(new{mesaj=failed});}
   var result=await signIn.PasswordSignInAsync(u,r.Password,false,true);
   if(result.RequiresTwoFactor)return Ok(new{requiresTwoFactor=true});
-  if(result.IsLockedOut){LogLogin(r.Email,"hesap kilitli");return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene veya şifreni yenile."});}
+  if(result.IsLockedOut){LogLogin(r.Email,"hesap kilitli");await sessions.Failed(u.Id,Request.Headers.UserAgent.ToString(),"Hesap geçici olarak kilitlendi",HttpContext.RequestAborted);return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene veya şifreni yenile."});}
   if(result.IsNotAllowed){LogLogin(r.Email,"e-posta doğrulanmamış");return Unauthorized(new{mesaj="Giriş için önce e-posta adresini doğrulamalısın."});}
-  if(!result.Succeeded){LogLogin(r.Email,"şifre hatalı");return Unauthorized(new{mesaj=failed});}
+  if(!result.Succeeded){LogLogin(r.Email,"şifre hatalı");await sessions.Failed(u.Id,Request.Headers.UserAgent.ToString(),"Hatalı şifre",HttpContext.RequestAborted);return Unauthorized(new{mesaj=failed});}
   return Ok(new{requiresTwoFactor=false});
  }
  [HttpPost("two-factor-login")]
@@ -191,9 +243,9 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  [Authorize,HttpPost("logout")]
  public async Task<IActionResult> Logout(){await signIn.SignOutAsync();return Ok();}
  [Authorize,HttpPost("logout-all")]
- public async Task<IActionResult> LogoutAll(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});var res=await users.UpdateSecurityStampAsync(u);if(!res.Succeeded)return Errors(res);await signIn.SignOutAsync();return Ok();}
+ public async Task<IActionResult> LogoutAll(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});var res=await users.UpdateSecurityStampAsync(u);if(!res.Succeeded)return Errors(res);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
  [Authorize,HttpPost("change-password")]
- public async Task<IActionResult> Change(ChangePasswordRequest r){var u=await MeUser();var result=await users.ChangePasswordAsync(u,r.Password,r.NewPassword);if(!result.Succeeded)return Errors(result);await signIn.SignOutAsync();return Ok();}
+ public async Task<IActionResult> Change(ChangePasswordRequest r){var u=await MeUser();var result=await users.ChangePasswordAsync(u,r.Password,r.NewPassword);if(!result.Succeeded)return Errors(result);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
  [HttpPost("forgot-password")]
  public async Task<IActionResult> Forgot(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&u.EmailConfirmed&&mail.Enabled){var t=await users.GeneratePasswordResetTokenAsync(u);await mail.Send(u.Email!,"Hasadım şifre yenileme",mail.Link("sifre-yenile.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa şifre yenileme bağlantısı gönderildi."});}
  [HttpPost("resend-confirmation")]

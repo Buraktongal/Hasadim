@@ -479,3 +479,38 @@ body[data-view="messages"] #siteLayout .topbar.market-header { border-bottom: 1p
 .menu-sub-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
 .menu-sub-form input { width: 100%; box-sizing: border-box; }
 .menu-sub-form .form-error:empty { display: none; }
+
+/* ---------- Hesap güvenliği ---------- */
+.security-score { display: flex; align-items: center; gap: 18px; margin-bottom: 14px; }
+.security-score h2 { margin: 0 0 4px; }
+.security-score p { margin: 0; }
+.score-ring {
+    --score: 0; flex: none; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(#d9661f calc(var(--score) * 1%), var(--t-line) 0);
+}
+.score-ring.is-mid { background: conic-gradient(#c99a1a calc(var(--score) * 1%), var(--t-line) 0); }
+.score-ring.is-good { background: conic-gradient(#2b8a4f calc(var(--score) * 1%), var(--t-line) 0); }
+.score-ring strong { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: var(--t-panel); font-size: 19px; }
+.security-checklist, .session-list, .method-list, .login-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.security-checklist li, .session-item, .method-item, .login-history li {
+    display: grid; grid-template-columns: 36px minmax(0, 1fr) auto auto; align-items: center; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--t-line); border-radius: 12px;
+}
+.check-mark { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; }
+.is-ok > .check-mark { background: #e1eedb; color: #1d6a3a; }
+.is-missing > .check-mark { background: #fff1e2; color: #b9520f; }
+.is-soon > .check-mark { background: var(--t-green-soft); color: var(--t-muted); }
+.is-failed > .check-mark { background: #fdecea; color: #b3261e; }
+.check-text, .session-info { display: grid; gap: 2px; min-width: 0; }
+.check-text small, .session-info small { color: var(--t-muted); overflow-wrap: anywhere; }
+.session-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--t-green-soft); font-size: 18px; font-weight: 800; color: var(--t-green); }
+.session-item.is-current { border-color: var(--t-green-2); background: var(--t-green-soft); }
+.current-badge { margin-left: 8px; vertical-align: middle; background: var(--t-green); color: #fff; }
+.login-history time { font-size: 12.5px; white-space: nowrap; }
+.login-history li.is-failed { border-color: #f2c9c4; }
+.security-tips ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.method-item .textbtn[disabled] { opacity: .45; cursor: not-allowed; }
+@media (max-width: 700px) {
+    .security-checklist li, .session-item, .method-item, .login-history li { grid-template-columns: 36px minmax(0, 1fr); }
+    .security-checklist li > a, .session-item > button, .method-item > :nth-child(n+3), .login-history time { grid-column: 2; justify-self: start; }
+}

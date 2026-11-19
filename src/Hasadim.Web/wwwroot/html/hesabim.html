@@ -27,6 +27,7 @@
     <script src="/js/auth-experience.js" defer></script>
     <script src="/js/account.js" defer></script>
     <script src="/js/security.js" defer></script>
+    <script src="/js/security-center.js" defer></script>
     <script src="/js/account-nav.js" defer></script>
     <script src="/js/navigation.js" defer></script>
     <script src="/js/i18n.js" defer></script>
@@ -42,9 +43,43 @@
             <header class="account-head">
                 <p class="eyebrow">Hesabım</p>
                 <h1>Hesap güvenliği</h1>
-                <p>Açık oturumlarını ve giriş güvenliğini yönet. Şifre değiştirme Ayarlar bölümünde.</p>
+                <p>Hesabının ne kadar korunduğunu gör; açık oturumları, giriş yöntemlerini ve son girişleri yönet.</p>
             </header>
             <p id="accountStatus" role="status"></p>
+
+            <section class="account-panel security-summary" aria-labelledby="summaryTitle">
+                <div class="security-score">
+                    <div class="score-ring" id="scoreRing" aria-hidden="true"><strong id="scoreValue">–</strong></div>
+                    <div>
+                        <h2 id="summaryTitle">Güvenlik durumu</h2>
+                        <p id="scoreText" class="muted">Kontrol ediliyor…</p>
+                    </div>
+                </div>
+                <ul id="securityChecklist" class="security-checklist"></ul>
+            </section>
+
+            <section class="account-panel" aria-labelledby="sessionsListTitle">
+                <div class="panel-head">
+                    <div>
+                        <h2 id="sessionsListTitle">Açık oturumlar</h2>
+                        <p class="muted">Son 30 dakikada kullanılan cihazlar. Tanımadığın bir oturumu hemen kapat.</p>
+                    </div>
+                    <button id="endOthers" class="secondary" type="button" hidden>Diğer oturumları kapat</button>
+                </div>
+                <ul id="sessionList" class="session-list"></ul>
+            </section>
+
+            <section class="account-panel" aria-labelledby="loginMethodsTitle">
+                <h2 id="loginMethodsTitle">Giriş yöntemleri</h2>
+                <p class="muted">Hesabına bu yollarla girebilirsin. En az bir yöntem açık kalmalı.</p>
+                <ul id="loginMethods" class="method-list"></ul>
+            </section>
+
+            <section class="account-panel" aria-labelledby="historyTitle">
+                <h2 id="historyTitle">Son giriş hareketleri</h2>
+                <p class="muted">Son 15 giriş ve başarısız deneme. Tanımadığın bir hareket varsa şifreni değiştir.</p>
+                <ol id="loginHistory" class="login-history"></ol>
+            </section>
 
             <section class="account-panel" id="twoFactorPanel" aria-labelledby="twoFactorTitle" hidden>
                 <div class="panel-head">
@@ -99,18 +134,23 @@
                 </div>
             </section>
 
-            <section class="account-panel tip-panel" aria-labelledby="passwordTitle">
-                <p><strong id="passwordTitle">Şifre değiştirme Ayarlar'a taşındı.</strong> Sol üstteki Menü → Ayarlar → Şifre değiştir yolunu kullanabilirsin.</p>
-                <a class="secondary" href="/html/ayarlar.html#sifre">Şifremi değiştir</a>
-            </section>
-
-            <section class="account-panel" aria-labelledby="sessionsTitle">
+            <section class="account-panel" id="logoutAllPanel" aria-labelledby="sessionsTitle">
                 <h2 id="sessionsTitle">Tüm cihazlardan çıkış</h2>
                 <p class="muted">Bu cihaz dahil açık olan bütün oturumlar kapanır.</p>
                 <form id="logoutAllForm" class="stack-form">
                     <label>Şifren<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
                     <button class="danger" type="submit">Tüm oturumları kapat</button>
                 </form>
+            </section>
+
+            <section class="account-panel security-tips" aria-labelledby="tipsTitle">
+                <h2 id="tipsTitle">Güvenlik ipuçları</h2>
+                <ul>
+                    <li><strong>Hasadım şifreni veya SMS kodunu asla sormaz.</strong> Kodu telefonda ya da mesajla isteyen kişiyle paylaşma.</li>
+                    <li><strong>Kapora dolandırıcılığına dikkat.</strong> Ürünü veya araziyi görmeden, tanımadığın kişiye ön ödeme yapma.</li>
+                    <li><strong>Yazışmaları Hasadım'da tut.</strong> Şüpheli bir mesajı ilan detayındaki “İlanı bildir” ile bize ilet, gerekirse üyeyi engelle.</li>
+                    <li><strong>Güçlü ve tek şifre kullan.</strong> Başka sitelerde kullandığın şifreyi burada kullanma.</li>
+                </ul>
             </section>
         </div>
     </div>

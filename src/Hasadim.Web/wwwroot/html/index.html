@@ -211,20 +211,9 @@
                  aria-labelledby="messagesTitle"
                  hidden>
 
-            <div class="section-heading">
-                <h2 id="messagesTitle">Mesajlarım</h2>
-
-                <button id="refreshMessages"
-                        type="button"
-                        class="secondary">
-                    Yenile
-                </button>
-            </div>
-
-            <p class="muted">
-                İlanlarla ilgili yazışmaların burada.
-                Yeni mesajlar otomatik olarak güncellenir.
-            </p>
+            <!-- Başlık ekran okuyucular için; görünür başlık mesaj kutusunun içinde. -->
+            <h2 id="messagesTitle" class="sr-only">Mesajlarım</h2>
+            <button id="refreshMessages" type="button" class="sr-only" tabindex="-1">Yenile</button>
 
             <div id="messagesList"></div>
 

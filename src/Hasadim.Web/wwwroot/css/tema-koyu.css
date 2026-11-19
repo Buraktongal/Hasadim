@@ -407,6 +407,55 @@ html[data-theme="dark"] .question-choices button {
 html[data-theme="dark"] .listing-description-title {
     color: #c3e8d8;
 }
+html[data-theme="dark"] .message-center {
+    border-color: var(--t-line, #41493b);
+    background: var(--t-panel, #161616);
+}
+html[data-theme="dark"] .conversation-sidebar {
+    background: var(--t-panel, #161616);
+}
+html[data-theme="dark"] .conversation-item.selected {
+    background: var(--t-green-soft, #1d241a);
+}
+html[data-theme="dark"] .conversation-product {
+    color: var(--t-green-2, #abddc2);
+}
+html[data-theme="dark"] .conversation-item.has-unread .conversation-top strong,
+html[data-theme="dark"] .conversation-item.has-unread .conversation-preview {
+    color: var(--t-ink, #c3e8d8);
+}
+html[data-theme="dark"] .conversation-item.has-unread .conversation-top small {
+    color: var(--t-accent-dark, #deae8e);
+}
+html[data-theme="dark"] .chat-avatar {
+    background: var(--t-green-soft, #1d241a);
+    color: var(--t-green, #bde5d0);
+}
+html[data-theme="dark"] .conversation-listing {
+    color: var(--t-muted, #bccdaf);
+}
+html[data-theme="dark"] .conversation-listing:hover {
+    color: var(--t-green-2, #abddc2);
+}
+html[data-theme="dark"] .conversation-history {
+    background: var(--t-bg, #1d201a);
+}
+html[data-theme="dark"] .chat-day {
+    background: var(--t-panel, #161616);
+}
+html[data-theme="dark"] .message-bubble.outgoing {
+    background: #202f1e;
+    color: #c3e8d8;
+}
+html[data-theme="dark"] .message-bubble.incoming {
+    background: var(--t-panel, #161616);
+}
+html[data-theme="dark"] .conversation-back {
+    color: var(--t-green, #bde5d0);
+}
+html[data-theme="dark"] .inbox-empty strong {
+    color: var(--t-ink, #c3e8d8);
+}
 
 /* ---- market-experience.css ---- */
 html[data-theme="dark"] .quick-fruit {
@@ -1048,6 +1097,24 @@ html[data-theme="dark"] .menu-switch input[type="checkbox"] {
 }
 html[data-theme="dark"] .menu-switch input[type="checkbox"]::after {
     background: #161616;
+}
+html[data-theme="dark"] .is-ok > .check-mark {
+    background: #232e1f;
+    color: #aae6c1;
+}
+html[data-theme="dark"] .is-missing > .check-mark {
+    background: #301f0e;
+    color: #deae8e;
+}
+html[data-theme="dark"] .is-failed > .check-mark {
+    background: #2a1210;
+    color: #dd8f8a;
+}
+html[data-theme="dark"] .session-icon {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .login-history li.is-failed {
+    border-color: #573430;
 }
 
 /* ---- elle ince ayar ---- */

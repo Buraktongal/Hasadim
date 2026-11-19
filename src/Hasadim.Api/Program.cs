@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Hasadim.Application;
 using Hasadim.Api.Security;
 using Hasadim.DependencyInjection;
@@ -21,6 +23,38 @@ builder.Services.ConfigureApplicationCookie(o =>
     o.ExpireTimeSpan = TimeSpan.FromMinutes(30); o.SlidingExpiration = true;
     o.Events.OnRedirectToLogin = c => { c.Response.StatusCode = 401; return Task.CompletedTask; };
     o.Events.OnRedirectToAccessDenied = c => { c.Response.StatusCode = 403; return Task.CompletedTask; };
+    // Oturum takibi: her girişte bir oturum kaydı açılır (kimliği çerez özelliklerinde saklanır).
+    // Kullanıcı Hesap güvenliği sayfasından bir oturumu kapatınca o cihazın çerezi bir sonraki istekte reddedilir.
+    o.Events.OnSigningIn = async c =>
+    {
+        if (c.Properties.Items.ContainsKey(SessionCookie.Key)) return; // oturum yenilemesi, yeni giriş değil
+        if (!Guid.TryParse(c.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)) return;
+        var store = c.HttpContext.RequestServices.GetRequiredService<SessionStore>();
+        var id = await store.Start(userId, c.Principal!.FindFirstValue("amr"), c.HttpContext.Request.Headers.UserAgent.ToString(), CancellationToken.None);
+        c.Properties.Items[SessionCookie.Key] = id.ToString();
+    };
+    var stampCheck = o.Events.OnValidatePrincipal;
+    o.Events.OnValidatePrincipal = async c =>
+    {
+        if (stampCheck is not null) await stampCheck(c);
+        if (c.Principal is null || SessionCookie.Id(c.Properties) is not Guid sid) return;
+        var store = c.HttpContext.RequestServices.GetRequiredService<SessionStore>();
+        if (!await store.Touch(sid, c.HttpContext.RequestAborted))
+        {
+            c.RejectPrincipal();
+            await c.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        }
+    };
+    o.Events.OnSigningOut = async c =>
+    {
+        try
+        {
+            var current = await c.HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+            if (SessionCookie.Id(current.Properties) is Guid sid)
+                await c.HttpContext.RequestServices.GetRequiredService<SessionStore>().End(sid, CancellationToken.None);
+        }
+        catch (Exception) { /* Çıkış her durumda tamamlanır. */ }
+    };
 });
 builder.Services.Configure<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(IdentityConstants.TwoFactorUserIdScheme, o => { o.Cookie.HttpOnly = true; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.Cookie.SameSite = SameSiteMode.Strict; o.ExpireTimeSpan = TimeSpan.FromMinutes(5); });
 builder.Services.AddAntiforgery(o => { o.HeaderName = "X-CSRF-TOKEN"; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.Cookie.SameSite = SameSiteMode.Strict; });

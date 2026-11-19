@@ -14,7 +14,7 @@ public static class ServiceRegistration
   services.AddScoped<IMarketplaceRepository,MarketplaceRepository>();services.AddScoped<MarketplaceService>();
   services.AddScoped<MessageNotifications>();
   services.AddScoped<IEngagementRepository,EngagementRepository>();services.AddScoped<EngagementService>();
-  services.AddScoped<AccountDeletion>();
+  services.AddScoped<AccountDeletion>();services.AddScoped<SessionStore>();
   services.AddScoped<PhoneChallengeStore>();services.AddSingleton<ExternalTokenValidator>();
   services.AddScoped<IUserStore<AppUser>,DapperUserStore>();services.AddScoped<IRoleStore<IdentityRole<Guid>>,DapperRoleStore>();
   services.AddIdentity<AppUser,IdentityRole<Guid>>(o=>{
