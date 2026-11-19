@@ -29,6 +29,7 @@ const pageScripts = [
     '/js/saved-search.js',
     '/js/notification-bell.js',
     '/js/menu-settings.js',
+    '/js/sticky-side.js',
     '/js/app.js'
 ];
 
