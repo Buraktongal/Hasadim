@@ -26,7 +26,7 @@
 
     const menu = $('#accountMenu');
     const closeMenu = () => { if (menu) menu.open = false; };
-    document.addEventListener('click', e => { if (menu?.open && (!menu.contains(e.target) || e.target.closest('.account-menu-panel a'))) closeMenu(); });
+    document.addEventListener('click', e => { if (menu?.open && e.target.isConnected && (!menu.contains(e.target) || e.target.closest('.account-menu-panel a:not([data-menu-settings])'))) closeMenu(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && menu?.open) { closeMenu(); menu.querySelector('summary')?.focus(); } });
 
     // Menüdeki görünüm düğmeleri pazar yerinin ilgili sekmesini açar.

@@ -43,6 +43,7 @@ function loadPageScript(source) {
         await loadPageScript('/js/offer-dialog.js');
         await loadPageScript('/js/saved-search.js');
         await loadPageScript('/js/notification-bell.js');
+        await loadPageScript('/js/menu-settings.js');
         await loadPageScript('/js/app.js');
     } catch (error) {
         console.error(error);

@@ -1034,6 +1034,21 @@ html[data-theme="dark"] .deal-option input:checked + span {
 html[data-theme="dark"] .crop-calendar thead th.this-month {
     background: #2e1b0d;
 }
+html[data-theme="dark"] #siteLayout .account-menu-panel > .menu-sub {
+    background: var(--t-panel, #161616);
+}
+html[data-theme="dark"] #siteLayout .menu-sub-back {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .menu-sub-row.is-danger strong {
+    color: #dd8f8a;
+}
+html[data-theme="dark"] .menu-switch input[type="checkbox"] {
+    background: #30352e;
+}
+html[data-theme="dark"] .menu-switch input[type="checkbox"]::after {
+    background: #161616;
+}
 
 /* ---- elle ince ayar ---- */
 html[data-theme="dark"] body { background: var(--t-bg); color: var(--t-ink); }

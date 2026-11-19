@@ -87,7 +87,8 @@ for (const item of document.querySelectorAll('[data-view]')) {
 document.addEventListener('click', event => {
     const menu = $('#accountMenu');
     if (!menu?.open) return;
-    if (!menu.contains(event.target) || event.target.closest('.account-menu-panel a')) {
+    if (!event.target.isConnected) return;
+    if (!menu.contains(event.target) || event.target.closest('.account-menu-panel a:not([data-menu-settings])')) {
         closeAccountMenu();
     }
 });
