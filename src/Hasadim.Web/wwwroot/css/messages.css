@@ -109,3 +109,11 @@
 }
 .conversation-reply textarea { font-size: 15px; }
 .conversation-reply .chat-send { width: 44px; height: 44px; border-radius: 50%; justify-self: auto; }
+/* Gönder düğmesi yazma kutusuyla aynı hizada. */
+.conversation-reply { align-items: center; }
+.conversation-reply label { display: block; margin: 0; padding: 0; }
+.conversation-reply textarea { display: block; margin: 0; }
+.conversation-reply .chat-send { align-self: end; margin: 0 0 0.5px; flex: none; }
+@media (max-width: 700px) {
+    .message-center { grid-template-columns: minmax(0, 1fr); }
+}
