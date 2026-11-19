@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 namespace Hasadim.Infrastructure.Identity;
 public class DapperUserStore(SqlConnectionFactory factory,IDataProtectionProvider protection):
- IUserPasswordStore<AppUser>,IUserEmailStore<AppUser>,IUserSecurityStampStore<AppUser>,IUserLockoutStore<AppUser>,IUserRoleStore<AppUser>,IUserTwoFactorStore<AppUser>,IUserAuthenticatorKeyStore<AppUser>,IUserTwoFactorRecoveryCodeStore<AppUser>
+ IUserPasswordStore<AppUser>,IUserEmailStore<AppUser>,IUserSecurityStampStore<AppUser>,IUserLockoutStore<AppUser>,IUserRoleStore<AppUser>,IUserTwoFactorStore<AppUser>,IUserAuthenticatorKeyStore<AppUser>,IUserTwoFactorRecoveryCodeStore<AppUser>,IUserLoginStore<AppUser>,IUserPhoneNumberStore<AppUser>
 {
  public void Dispose(){}
  static IdentityResult Fail(string code,string text)=>IdentityResult.Failed(new IdentityError{Code=code,Description=text});
@@ -23,7 +23,7 @@ public class DapperUserStore(SqlConnectionFactory factory,IDataProtectionProvide
  {
   await using var c=await factory.Open(ct);var old=u.ConcurrencyStamp;var next=Guid.NewGuid().ToString("N");var p=new DynamicParameters(u);p.Add("OldStamp",old);p.Add("NextStamp",next);
   p.Add("ProtectedKey",u.AuthenticatorKey is null?null:protection.CreateProtector("Hasadim.Authenticator.v1").Protect(u.AuthenticatorKey));
-  try{var count=await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.Users SET UserName=@UserName,NormalizedUserName=@NormalizedUserName,Email=@Email,NormalizedEmail=@NormalizedEmail,EmailConfirmed=@EmailConfirmed,PasswordHash=@PasswordHash,SecurityStamp=@SecurityStamp,ConcurrencyStamp=@NextStamp,DisplayName=@DisplayName,LockoutEnabled=@LockoutEnabled,LockoutEnd=@LockoutEnd,AccessFailedCount=@AccessFailedCount,TwoFactorEnabled=@TwoFactorEnabled,AuthenticatorKey=@ProtectedKey WHERE Id=@Id AND ConcurrencyStamp=@OldStamp",p,cancellationToken:ct));
+  try{var count=await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.Users SET UserName=@UserName,NormalizedUserName=@NormalizedUserName,Email=@Email,NormalizedEmail=@NormalizedEmail,EmailConfirmed=@EmailConfirmed,PasswordHash=@PasswordHash,SecurityStamp=@SecurityStamp,ConcurrencyStamp=@NextStamp,DisplayName=@DisplayName,LockoutEnabled=@LockoutEnabled,LockoutEnd=@LockoutEnd,AccessFailedCount=@AccessFailedCount,TwoFactorEnabled=@TwoFactorEnabled,AuthenticatorKey=@ProtectedKey,PhoneNumber=@PhoneNumber,PhoneNumberConfirmed=@PhoneNumberConfirmed WHERE Id=@Id AND ConcurrencyStamp=@OldStamp",p,cancellationToken:ct));
    if(count==0)return Fail("ConcurrencyFailure","Hesap başka bir işlemle değişti. Tekrar deneyin.");u.ConcurrencyStamp=next;return IdentityResult.Success;}
   catch(SqlException e)when(e.Number is 2601 or 2627){return Fail("DuplicateUser","Hesap bilgileri kullanılamıyor.");}
  }
@@ -80,4 +80,36 @@ public class DapperUserStore(SqlConnectionFactory factory,IDataProtectionProvide
  public async Task ReplaceCodesAsync(AppUser u,IEnumerable<string> codes,CancellationToken ct){await using var c=await factory.Open(ct);using var tx=c.BeginTransaction();await c.ExecuteAsync(new CommandDefinition("DELETE dbo.RecoveryCodes WHERE UserId=@Id",new{u.Id},tx,cancellationToken:ct));foreach(var code in codes)await c.ExecuteAsync(new CommandDefinition("INSERT dbo.RecoveryCodes(UserId,CodeHash) VALUES(@Id,@hash)",new{u.Id,hash=Hash(code)},tx,cancellationToken:ct));tx.Commit();}
  public async Task<bool> RedeemCodeAsync(AppUser u,string code,CancellationToken ct){await using var c=await factory.Open(ct);return await c.ExecuteAsync(new CommandDefinition("DELETE dbo.RecoveryCodes WHERE UserId=@Id AND CodeHash=@hash",new{u.Id,hash=Hash(code)},cancellationToken:ct))==1;}
  public async Task<int> CountCodesAsync(AppUser u,CancellationToken ct){await using var c=await factory.Open(ct);return await c.ExecuteScalarAsync<int>(new CommandDefinition("SELECT COUNT(*) FROM dbo.RecoveryCodes WHERE UserId=@Id",new{u.Id},cancellationToken:ct));}
+
+ // ---- Google / Apple girişleri (IUserLoginStore) ----
+ public async Task AddLoginAsync(AppUser u,UserLoginInfo login,CancellationToken ct)
+ {
+  await using var c=await factory.Open(ct);
+  await c.ExecuteAsync(new CommandDefinition("INSERT dbo.UserLogins(LoginProvider,ProviderKey,ProviderDisplayName,UserId) VALUES(@LoginProvider,@ProviderKey,@ProviderDisplayName,@Id)",
+   new{login.LoginProvider,login.ProviderKey,login.ProviderDisplayName,u.Id},cancellationToken:ct));
+ }
+ public async Task RemoveLoginAsync(AppUser u,string loginProvider,string providerKey,CancellationToken ct)
+ {
+  await using var c=await factory.Open(ct);
+  await c.ExecuteAsync(new CommandDefinition("DELETE dbo.UserLogins WHERE UserId=@Id AND LoginProvider=@loginProvider AND ProviderKey=@providerKey",new{u.Id,loginProvider,providerKey},cancellationToken:ct));
+ }
+ public async Task<IList<UserLoginInfo>> GetLoginsAsync(AppUser u,CancellationToken ct)
+ {
+  await using var c=await factory.Open(ct);
+  var rows=await c.QueryAsync<(string LoginProvider,string ProviderKey,string? ProviderDisplayName)>(new CommandDefinition("SELECT LoginProvider,ProviderKey,ProviderDisplayName FROM dbo.UserLogins WHERE UserId=@Id",new{u.Id},cancellationToken:ct));
+  return rows.Select(r=>new UserLoginInfo(r.LoginProvider,r.ProviderKey,r.ProviderDisplayName)).ToList();
+ }
+ public async Task<AppUser?> FindByLoginAsync(string loginProvider,string providerKey,CancellationToken ct)
+ {
+  Guid? id;
+  await using(var c=await factory.Open(ct))
+   id=await c.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("SELECT UserId FROM dbo.UserLogins WHERE LoginProvider=@loginProvider AND ProviderKey=@providerKey",new{loginProvider,providerKey},cancellationToken:ct));
+  return id is null?null:await Find(UserLookup.Id,id.Value,ct);
+ }
+
+ // ---- Telefon (IUserPhoneNumberStore); değişiklikler UpdateAsync ile kaydedilir ----
+ public Task SetPhoneNumberAsync(AppUser u,string? phoneNumber,CancellationToken ct){ct.ThrowIfCancellationRequested();u.PhoneNumber=phoneNumber;return Task.CompletedTask;}
+ public Task<string?> GetPhoneNumberAsync(AppUser u,CancellationToken ct)=>Task.FromResult(u.PhoneNumber);
+ public Task<bool> GetPhoneNumberConfirmedAsync(AppUser u,CancellationToken ct)=>Task.FromResult(u.PhoneNumberConfirmed);
+ public Task SetPhoneNumberConfirmedAsync(AppUser u,bool confirmed,CancellationToken ct){ct.ThrowIfCancellationRequested();u.PhoneNumberConfirmed=confirmed;return Task.CompletedTask;}
 }

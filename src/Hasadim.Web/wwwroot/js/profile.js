@@ -50,14 +50,42 @@ function metadata(p) {
                             status(result.mesaj);
                         });
                     };
-                } else {
+                } else if (!p.phone) {
                     action.disabled = true;
                     action.setAttribute('aria-describedby', 'phoneVerificationHelp');
-                    const help = node('small', p.phone
-                        ? 'SMS ile doğrulama henüz kullanıma açılmadı.'
-                        : 'Önce Bilgilerimi düzenle bölümünden telefon numaranı ekle. SMS ile doğrulama henüz kullanıma açılmadı.');
+                    const help = node('small', 'Önce Bilgilerimi düzenle bölümünden telefon numaranı ekle.');
                     help.id = 'phoneVerificationHelp';
                     help.className = 'verification-help';
+                    content.append(help);
+                } else {
+                    // SMS ile doğrulama: kod gönder → 6 haneli kodu gir.
+                    const help = node('small', 'Doğrulanmış numarayla telefonla giriş yapabilirsin.');
+                    help.id = 'phoneVerificationHelp';
+                    help.className = 'verification-help';
+                    action.setAttribute('aria-describedby', 'phoneVerificationHelp');
+                    action.onclick = () => {
+                        if (action.disabled) return;
+                        return busy(action, async () => {
+                            const started = await api('/api/account/me/phone/start', 'POST');
+                            status(started.mesaj);
+                            const box = node('div');
+                            box.className = 'phone-verify';
+                            const input = node('input');
+                            input.inputMode = 'numeric'; input.maxLength = 6; input.autocomplete = 'one-time-code';
+                            input.setAttribute('aria-label', 'SMS ile gelen 6 haneli kod'); input.placeholder = '6 haneli kod';
+                            const confirmButton = node('button', 'Doğrula');
+                            confirmButton.type = 'button'; confirmButton.className = 'primary';
+                            confirmButton.onclick = () => busy(confirmButton, async () => {
+                                if (!/^[0-9]{6}$/.test(input.value)) throw Error('6 haneli kodu gir.');
+                                const done = await api('/api/account/me/phone/confirm', 'POST', { challengeId: started.challengeId, code: input.value });
+                                status(done.mesaj);
+                                metadata(await api('/api/profiles/me'));
+                            });
+                            box.append(input, confirmButton);
+                            content.append(box);
+                            input.focus();
+                        });
+                    };
                     content.append(help);
                 }
                 content.append(action);

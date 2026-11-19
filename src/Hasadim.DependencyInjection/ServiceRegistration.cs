@@ -13,6 +13,7 @@ public static class ServiceRegistration
   services.AddScoped<IProfileRepository,ProfileRepository>();services.AddScoped<ProfileService>();
   services.AddScoped<IMarketplaceRepository,MarketplaceRepository>();services.AddScoped<MarketplaceService>();
   services.AddScoped<MessageNotifications>();
+  services.AddScoped<PhoneChallengeStore>();services.AddSingleton<ExternalTokenValidator>();
   services.AddScoped<IUserStore<AppUser>,DapperUserStore>();services.AddScoped<IRoleStore<IdentityRole<Guid>>,DapperRoleStore>();
   services.AddIdentity<AppUser,IdentityRole<Guid>>(o=>{
    o.User.RequireUniqueEmail=true;o.Password.RequiredLength=12;o.Password.RequireNonAlphanumeric=false;

@@ -10,6 +10,9 @@ namespace Hasadim.Api.Controllers;
 public class LoginRequest{[Required,EmailAddress,StringLength(256)]public string Email{get;set;}="";[Required,StringLength(128)]public string Password{get;set;}="";}
 public class RegisterRequest:LoginRequest{[Required,StringLength(100,MinimumLength=2)]public string DisplayName{get;set;}="";[Required,RegularExpression(@"^05[0-9]{9}$",ErrorMessage="Telefon numaranı 05 ile başlayan 11 rakam olarak gir.")]public string Phone{get;set;}="";[Required(ErrorMessage="Şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class CompleteRegistrationRequest{public Guid ChallengeId{get;set;}[Required,RegularExpression(@"^[0-9]{6}$",ErrorMessage="6 haneli kodu gir.")]public string Code{get;set;}="";}
+public class ExternalLoginRequest{[Required,RegularExpression("^(google|apple)$")]public string Provider{get;set;}="";[Required,StringLength(8192)]public string IdToken{get;set;}="";[StringLength(256)]public string? Nonce{get;set;}[StringLength(100)]public string? DisplayName{get;set;}}
+public class PhoneStartRequest{[Required,StringLength(25)]public string Phone{get;set;}="";}
+public class PhoneConfirmRequest{public Guid ChallengeId{get;set;}[Required,RegularExpression(@"^[0-9]{6}$",ErrorMessage="6 haneli kodu gir.")]public string Code{get;set;}="";}
 public class CodeRequest{[Required,StringLength(100)]public string Code{get;set;}="";public bool Recovery{get;set;}}
 public class PasswordRequest{[Required,StringLength(128)]public string Password{get;set;}="";}
 public class ChangePasswordRequest:PasswordRequest{[Required,StringLength(128,MinimumLength=12)]public string NewPassword{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(NewPassword),ErrorMessage="Yeni şifreler eşleşmiyor.")]public string NewPasswordConfirm{get;set;}="";}
@@ -17,7 +20,7 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms):ControllerBase
 {
  // Geliştirmede başarısız girişin nedeni API konsoluna yazılır (şifre yazılmaz).
  void LogLogin(string email,string reason){if(env.IsDevelopment())logger.LogWarning("Giriş başarısız: {Email} — {Reason}",email,reason);}
@@ -50,6 +53,104 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   await registrations.Complete(r.ChallengeId,r.Code,ct);
   return Ok(new{mesaj="E-postan doğrulandı ve hesabın oluşturuldu. Giriş yapabilirsin."});
  }
+ // Giriş ekranında hangi seçeneklerin gösterileceği (gizli bilgi içermez).
+ [HttpGet("providers")]
+ public IActionResult Providers()=>Ok(new{
+  google=new{enabled=external.Enabled("Google")&&external.WebClientId("Google") is not null,clientId=external.WebClientId("Google")},
+  apple=new{enabled=external.Enabled("Apple")&&external.WebClientId("Apple") is not null&&!string.IsNullOrWhiteSpace(config["Auth:Apple:RedirectUri"]),clientId=external.WebClientId("Apple"),redirectUri=config["Auth:Apple:RedirectUri"]},
+  phone=new{enabled=sms.Enabled}});
+
+ // Ortak oturum açma kontrolleri (kilit, e-posta doğrulaması, 2FA).
+ async Task<IActionResult?> CannotSignIn(AppUser u)
+ {
+  if(await users.IsLockedOutAsync(u))return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene."});
+  if(!await signIn.CanSignInAsync(u))return Unauthorized(new{mesaj="Giriş için önce e-posta adresini doğrulamalısın."});
+  if(u.TwoFactorEnabled)return Unauthorized(new{mesaj="Bu hesapta iki adımlı doğrulama açık. E-posta ve şifrenle giriş yap."});
+  return null;
+ }
+
+ // Google veya Apple ile giriş / kayıt. Aynı uç mobil uygulama için de kullanılır.
+ [HttpPost("external")]
+ public async Task<IActionResult> External(ExternalLoginRequest r,CancellationToken ct)
+ {
+  if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yap."});
+  var id=await external.Validate(r.Provider,r.IdToken,r.Nonce,ct);
+  var u=await users.FindByLoginAsync(id.Provider,id.Subject);
+  var created=false;
+  if(u is null)
+  {
+   if(string.IsNullOrWhiteSpace(id.Email)||!id.EmailVerified)return BadRequest(new{mesaj=id.Provider+" hesabında doğrulanmış bir e-posta bulunamadı."});
+   u=await users.FindByEmailAsync(id.Email);
+   if(u is null)
+   {
+    var name=(r.DisplayName??id.Name??id.Email.Split('@')[0]).Trim();
+    if(name.Length<2)name="Hasadım kullanıcısı";if(name.Length>100)name=name[..100];
+    u=new AppUser{UserName=id.Email,Email=id.Email,EmailConfirmed=true,DisplayName=name};
+    var result=await users.CreateAsync(u);if(!result.Succeeded)return Errors(result);
+    created=true;
+   }
+   // Doğrulanmamış (yarım kalmış) bir hesaba bağlanmaz; önceden ele geçirme riskini önler.
+   else if(!u.EmailConfirmed)return BadRequest(new{mesaj="Bu e-postayla doğrulanmamış bir hesap var. Önce e-posta ve şifreyle giriş yapıp e-postanı doğrula."});
+   var link=await users.AddLoginAsync(u,new UserLoginInfo(id.Provider,id.Subject,id.Provider));
+   if(!link.Succeeded)return Errors(link);
+  }
+  if(await CannotSignIn(u) is { } blocked)return blocked;
+  await signIn.SignInAsync(u,false,id.Provider);
+  return Ok(new{created,mesaj=created?"Hesabın oluşturuldu. İlan vermek için profilinden telefonunu ekle.":"Giriş yapıldı."});
+ }
+
+ // Telefonla giriş 1/2: doğrulanmış numaraya SMS kodu gönderilir.
+ [HttpPost("phone/start")]
+ public async Task<IActionResult> PhoneStart(PhoneStartRequest r,CancellationToken ct)
+ {
+  if(!sms.Enabled)return StatusCode(503,new{mesaj="Telefonla giriş şu anda kullanılamıyor."});
+  var phone=Hasadim.Application.PhoneNumbers.Normalize(r.Phone);
+  if(phone is null)return BadRequest(new{mesaj="5 ile başlayan 10 haneli cep telefonu numaranı gir."});
+  var userId=await phones.FindConfirmedUser(phone,ct);
+  var ticket=await phones.Start("login",phone,userId,ct);
+  // Numara bir hesaba ait değilse SMS gönderilmez; yanıt yine aynıdır (numara taraması önlenir).
+  if(userId is not null)await sms.Send(phone,$"Hasadım giriş kodun: {ticket.Code}. Kod 3 dakika geçerlidir, kimseyle paylaşma.",ct);
+  return Ok(new{challengeId=ticket.Id,expiresAt=ticket.ExpiresAt,mesaj="Numara doğrulanmış bir hesaba aitse 6 haneli kod SMS ile gönderildi."});
+ }
+
+ // Telefonla giriş 2/2: kod doğrulanır ve oturum açılır.
+ [HttpPost("phone/confirm")]
+ public async Task<IActionResult> PhoneConfirm(PhoneConfirmRequest r,CancellationToken ct)
+ {
+  var (userId,_)=await phones.Verify(r.ChallengeId,r.Code,"login",ct);
+  var u=await users.FindByIdAsync(userId.ToString());
+  if(u is null)return BadRequest(new{mesaj="Kod hatalı veya süresi dolmuş. Yeni kod iste."});
+  if(await CannotSignIn(u) is { } blocked)return blocked;
+  await signIn.SignInAsync(u,false,"phone");
+  return Ok(new{mesaj="Giriş yapıldı."});
+ }
+
+ // Profildeki telefonu doğrulama 1/2.
+ [Authorize,HttpPost("me/phone/start")]
+ public async Task<IActionResult> MyPhoneStart(CancellationToken ct)
+ {
+  if(!sms.Enabled)return StatusCode(503,new{mesaj="SMS ile doğrulama şu anda kullanılamıyor."});
+  var u=await MeUser();
+  var phone=Hasadim.Application.PhoneNumbers.Normalize(await phones.ProfilePhone(u.Id,ct));
+  if(phone is null)return BadRequest(new{mesaj="Önce profiline geçerli bir cep telefonu ekle."});
+  var owner=await phones.FindConfirmedUser(phone,ct);
+  if(owner is not null&&owner!=u.Id)return Conflict(new{mesaj="Bu numara başka bir hesapta doğrulanmış."});
+  var ticket=await phones.Start("verify",phone,u.Id,ct);
+  await sms.Send(phone,$"Hasadım telefon doğrulama kodun: {ticket.Code}. Kod 3 dakika geçerlidir.",ct);
+  return Ok(new{challengeId=ticket.Id,expiresAt=ticket.ExpiresAt,mesaj=Hasadim.Application.PhoneNumbers.Mask(phone)+" numarasına 6 haneli kod gönderildi."});
+ }
+
+ // Profildeki telefonu doğrulama 2/2.
+ [Authorize,HttpPost("me/phone/confirm")]
+ public async Task<IActionResult> MyPhoneConfirm(PhoneConfirmRequest r,CancellationToken ct)
+ {
+  var u=await MeUser();
+  var (userId,phone)=await phones.Verify(r.ChallengeId,r.Code,"verify",ct);
+  if(userId!=u.Id)return BadRequest(new{mesaj="Kod hatalı veya süresi dolmuş. Yeni kod iste."});
+  await phones.ConfirmPhone(u.Id,phone,ct);
+  return Ok(new{mesaj="Telefonun doğrulandı. Artık telefon numaranla da giriş yapabilirsin."});
+ }
+
  [HttpPost("login")]
  public async Task<IActionResult> Login(LoginRequest r)
  {

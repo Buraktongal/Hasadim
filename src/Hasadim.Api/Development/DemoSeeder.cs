@@ -151,6 +151,8 @@ public static class DemoSeeder
         DELETE dbo.ListingStatistics;
         DELETE dbo.ListingPhotos;
         DELETE dbo.Listings;
+        DELETE dbo.PhoneChallenges;
+        DELETE dbo.UserLogins;
         DELETE dbo.RecoveryCodes;
         DELETE dbo.UserRoles;
         DELETE dbo.UserProfiles;
@@ -206,7 +208,7 @@ public static class DemoSeeder
                 SET AccountType = @AccountType, Activity = @Activity, BusinessName = @BusinessName,
                     City = @City, District = @District, About = @About, Phone = @Phone, ShowPhone = 1
                 WHERE UserId = @Id;
-                UPDATE dbo.Users SET CreatedAt = @CreatedAt WHERE Id = @Id;
+                UPDATE dbo.Users SET CreatedAt = @CreatedAt, PhoneNumber = @Phone, PhoneNumberConfirmed = 1 WHERE Id = @Id;
                 """, new
             {
                 u.Id, a.AccountType, a.Activity, a.BusinessName, a.City, a.District, a.About, a.Phone,

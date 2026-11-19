@@ -107,3 +107,6 @@
 .seller-page .contact-buttons { grid-template-columns: 1fr 1fr; max-width: 480px; margin-top: 12px; }
 .seller-page .seller-box h1 { font-size: 30px; }
 @media (max-width: 520px) { .seller-page .contact-buttons { grid-template-columns: 1fr; } }
+.phone-verify { display: flex; gap: 8px; flex-basis: 100%; order: 2; margin-top: 6px; }
+.phone-verify input { width: 150px; min-height: 40px; padding: 0 10px; border: 1.5px solid #d3dccf; border-radius: 10px; font: inherit; letter-spacing: .3em; text-align: center; font-weight: 800; }
+.profile-contact > button:not(:disabled) { padding: 6px 12px; border-radius: 999px; border: 1.5px solid #d9661f; background: #fff6ef; color: #b9520f; font-weight: 800; font-size: 13px; }

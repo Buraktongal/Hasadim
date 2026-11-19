@@ -12,6 +12,7 @@
     <script src="/js/account.js" defer></script>
     <script src="/js/registration-phone.js" defer></script>
     <script src="/js/registration.js" defer></script>
+    <script src="/js/auth-providers.js" defer></script>
 </head>
 <body data-page="register" class="auth-body">
     <header class="auth-header">
@@ -28,6 +29,11 @@
                 <p class="eyebrow">Ücretsiz hesap</p>
                 <h1>Hasadım’a katıl</h1>
                 <p class="auth-lead">Bilgilerini gir; e-postana gelen 6 haneli kodla hesabını hemen aç.</p>
+                <div id="authProviders" class="auth-providers" aria-label="Hızlı kayıt">
+                    <div class="provider-slot" data-provider="google"></div>
+                    <div class="provider-slot" data-provider="apple"></div>
+                </div>
+                <p class="auth-divider"><span>veya e-postayla kayıt ol</span></p>
                 <fieldset class="auth-group">
                     <legend>İletişim bilgileri</legend>
                     <label>Ad soyad veya firma adı<input name="displayName" required minlength="2" maxlength="100" autocomplete="name" placeholder="Örn. Ayşe Yılmaz / Yılmaz Tarım"></label>

@@ -6,8 +6,9 @@ if(!Uri.TryCreate(apiUrl,UriKind.Absolute,out var apiUri)||apiUri.Scheme!="https
 builder.Services.AddHttpClient("api",c=>{c.BaseAddress=apiUri;c.Timeout=TimeSpan.FromSeconds(60);}).ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{UseCookies=false,AllowAutoRedirect=false});
 var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();app.UseHttpsRedirection();
 app.Use(async(c,next)=>{
- c.Response.Headers["X-Content-Type-Options"]="nosniff";c.Response.Headers["Referrer-Policy"]="no-referrer";
- c.Response.Headers["Content-Security-Policy"]="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+ c.Response.Headers["X-Content-Type-Options"]="nosniff";c.Response.Headers["Referrer-Policy"]="strict-origin-when-cross-origin";
+ // Google ve Apple ile giriş için yalnızca resmi betik/çerçeve adreslerine izin verilir.
+ c.Response.Headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://appleid.cdn-apple.com; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' blob: https://appleid.cdn-apple.com; connect-src 'self' https://accounts.google.com/gsi/ https://appleid.apple.com; frame-src https://accounts.google.com/gsi/ https://appleid.apple.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com";
  c.Response.Headers["Cache-Control"]="no-store";await next();
 });
 app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c,IHttpClientFactory clients)=>{

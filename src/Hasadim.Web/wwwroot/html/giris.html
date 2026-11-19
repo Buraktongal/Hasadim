@@ -10,6 +10,8 @@
     <script src="/js/return-path.js" defer></script>
     <script src="/js/auth-experience.js" defer></script>
     <script src="/js/account.js" defer></script>
+    <script src="/js/registration-phone.js" defer></script>
+    <script src="/js/auth-providers.js" defer></script>
 </head>
 <body data-page="login" class="auth-body">
     <header class="auth-header">
@@ -22,11 +24,28 @@
             <h1>Tekrar hoş geldin</h1>
             <p class="auth-lead">İlanlarını, mesajlarını ve favorilerini yönetmek için giriş yap.</p>
             <p id="authNotice" class="auth-notice" role="status" hidden></p>
+            <div id="authProviders" class="auth-providers" aria-label="Diğer giriş yöntemleri">
+                <div class="provider-slot" data-provider="google"></div>
+                <div class="provider-slot" data-provider="apple"></div>
+                <button id="phoneLoginToggle" class="provider-button" type="button" aria-controls="phoneLoginForm" aria-expanded="false">Telefon numarasıyla giriş</button>
+            </div>
+            <p class="auth-divider"><span>veya</span></p>
             <form id="loginForm">
                 <label>E-posta<input name="email" type="email" required maxlength="256" autocomplete="email"></label>
                 <label>Şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
                 <div class="auth-row"><a class="auth-small-link" href="/html/sifremi-unuttum.html">Şifremi unuttum</a></div>
                 <button class="primary full" type="submit">Giriş yap</button>
+            </form>
+            <form id="phoneLoginForm" hidden>
+                <label>Cep telefonu<input name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="555 555 55 55" pattern="5[0-9]{2} [0-9]{3} [0-9]{2} [0-9]{2}" required title="5 ile başlayan 10 haneli numaranı gir."></label>
+                <small>Profilinde doğrulanmış telefon numaranla giriş yapabilirsin.</small>
+                <button class="primary full" type="submit">SMS kodu gönder</button>
+            </form>
+            <form id="phoneCodeForm" hidden>
+                <label>SMS ile gelen 6 haneli kod<input name="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label>
+                <p id="phoneTimer" class="auth-step-note" role="timer" aria-live="off"></p>
+                <button class="primary full" type="submit">Doğrula ve giriş yap</button>
+                <button id="phoneRestart" class="textbtn full" type="button">← Numarayı değiştir / yeni kod iste</button>
             </form>
             <form id="twoFactorForm" hidden>
                 <label>Doğrulama kodu<input name="code" required maxlength="100" autocomplete="one-time-code" inputmode="numeric"></label>

@@ -152,3 +152,21 @@
     .auth-card h1 { font-size: 24px; }
     .auth-side { display: none; }
 }
+
+/* Google / Apple / telefon seçenekleri */
+.auth-providers { display: grid; gap: 10px; margin: 0 0 6px; }
+.provider-slot { min-height: 44px; display: flex; justify-content: center; }
+.provider-slot:empty { display: none; }
+.provider-slot > div, .provider-slot iframe { max-width: 100%; }
+#appleid-signin { width: 100%; height: 44px; cursor: pointer; }
+.provider-button {
+    width: 100%; min-height: 44px; padding: 0 16px; border-radius: 999px;
+    background: #fff; border: 1.5px solid #d3dccf; color: #1f2a22; font: inherit; font-size: 15px; font-weight: 700;
+}
+.provider-button:hover:not(:disabled) { border-color: #9fb69a; background: #f7faf5; }
+.provider-button.is-unavailable, .provider-button:disabled { color: #8b9686; background: #f5f7f3; cursor: not-allowed; font-weight: 600; font-size: 14px; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 14px 0 16px; color: #7d8a79; font-size: 13px; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: #e0e6dc; }
+#phoneLoginForm, #phoneCodeForm { display: grid; gap: 14px; }
+#phoneLoginForm[hidden], #phoneCodeForm[hidden] { display: none; }
+#phoneTimer { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }

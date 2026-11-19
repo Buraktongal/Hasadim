@@ -9,12 +9,15 @@ public class ProfileRepository(SqlConnectionFactory factory):IProfileRepository
  public async Task<bool> Update(Guid id,ProfileRequest r,CancellationToken ct)
  {
   await using var c=await factory.Open(ct);using var tx=c.BeginTransaction();
-  var p=new{id,displayName=r.DisplayName.Trim(),r.AccountType,r.Activity,business=r.AccountType=="Business"?(r.BusinessName??"").Trim():"",city=r.City.Trim(),district=r.District.Trim(),about=(r.About??"").Trim(),phone=(r.Phone??"").Trim(),r.ShowPhone,r.Version,stamp=Guid.NewGuid().ToString("N")};
+  var p=new{id,displayName=r.DisplayName.Trim(),r.AccountType,r.Activity,business=r.AccountType=="Business"?(r.BusinessName??"").Trim():"",city=r.City.Trim(),district=r.District.Trim(),about=(r.About??"").Trim(),phone=PhoneNumbers.Normalize(r.Phone)??(r.Phone??"").Trim(),normalized=PhoneNumbers.Normalize(r.Phone),r.ShowPhone,r.Version,stamp=Guid.NewGuid().ToString("N")};
   // Consistent lock order with Identity: Users, then profile.
   await c.ExecuteAsync(new CommandDefinition("SELECT Id FROM dbo.Users WITH(UPDLOCK) WHERE Id=@id",new{id},tx,cancellationToken:ct));
   var changed=await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.UserProfiles SET AccountType=@AccountType,Activity=@Activity,BusinessName=@business,City=@city,District=@district,About=@about,Phone=@phone,ShowPhone=@ShowPhone WHERE UserId=@id AND Version=@Version",p,tx,cancellationToken:ct));
   if(changed!=1){tx.Rollback();return false;}
-  await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.Users SET DisplayName=@displayName,ConcurrencyStamp=@stamp WHERE Id=@id",p,tx,cancellationToken:ct));tx.Commit();return true;
+  await c.ExecuteAsync(new CommandDefinition("UPDATE dbo.Users SET DisplayName=@displayName,ConcurrencyStamp=@stamp,"+
+   // Numara değişirse doğrulama düşer; doğrulanmış eski numarayla giriş yapılamaz.
+   "PhoneNumberConfirmed=CASE WHEN PhoneNumber=@normalized THEN PhoneNumberConfirmed ELSE 0 END,"+
+   "PhoneNumber=CASE WHEN PhoneNumber=@normalized THEN PhoneNumber ELSE @normalized END WHERE Id=@id",p,tx,cancellationToken:ct));tx.Commit();return true;
  }
  public async Task<string?> SetPhoto(Guid id,string? name,CancellationToken ct){await using var c=await factory.Open(ct);var old=await c.QueryAsync<string?>(new CommandDefinition("UPDATE dbo.UserProfiles SET PhotoFile=@name OUTPUT deleted.PhotoFile WHERE UserId=@id",new{id,name},cancellationToken:ct));return old.SingleOrDefault();}
 }
