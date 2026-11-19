@@ -76,7 +76,7 @@ window.HasadimMessages = (() => {
                     });
                     item.setAttribute('aria-pressed', String(g.id === selected));
                     item.append(el('strong', g.person), el('span', g.title, 'conversation-product'),
-                        el('p', (last.senderId === owner ? 'Sen: ' : '') + last.body, 'conversation-preview'), el('small', timestamp(last.createdAt)));
+                        (p => (p.setAttribute('translate', 'no'), p))(el('p', (last.senderId === owner ? 'Sen: ' : '') + last.body, 'conversation-preview')), el('small', timestamp(last.createdAt)));
                     list.append(item);
                 }
                 if (!filtered.length) list.append(el('p', 'Yüklenen konuşmalarda sonuç yok.', 'muted'));
@@ -97,7 +97,8 @@ window.HasadimMessages = (() => {
             if (hasMore) history.append(el('p', 'Eski konuşmalar ve önceki mesajlar için aşağıdaki yükleme düğmesini kullan.', 'history-note'));
             for (const m of g.messages) {
                 const bubble = el('article', undefined, 'message-bubble ' + (m.senderId === owner ? 'outgoing' : 'incoming'));
-                bubble.append(el('small', m.senderId === owner ? 'Sen' : g.person), el('p', m.body), el('time', timestamp(m.createdAt)));
+                const text = el('p', m.body); text.setAttribute('translate', 'no');
+                bubble.append(el('small', m.senderId === owner ? 'Sen' : g.person), text, el('time', timestamp(m.createdAt)));
                 history.append(bubble);
             }
             const form = el('form', undefined, 'conversation-reply');

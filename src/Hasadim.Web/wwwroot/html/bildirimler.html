@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Bildirimler — Hasadım</title>
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css">
+    <link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/ticaret.css">
+    <link rel="stylesheet" href="/css/hesap.css"><link rel="stylesheet" href="/css/hesap-merkezi.css">
+    <link rel="stylesheet" href="/css/tema-koyu.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
+    <script src="/js/fruit-icons.js" defer></script>
+    <script src="/js/fruit-varieties.js" defer></script>
+    <script src="/js/product-catalog.js" defer></script>
+    <script src="/js/market-catalog.js" defer></script>
+    <script src="/js/confirm-dialog.js" defer></script>
+    <script src="/js/notification-bell.js" defer></script>
+    <script src="/js/site-header.js" defer></script>
+    <script src="/js/hasadim-api.js" defer></script>
+    <script src="/js/account-nav.js" defer></script>
+    <script src="/js/account-center.js" defer></script>
+    <script src="/js/navigation.js" defer></script>
+</head>
+<body data-page="notifications">
+<div id="siteLayout"></div>
+<main class="account-page">
+    <div class="account-layout">
+        <aside class="account-sidebar">
+            <nav class="account-nav" data-account-nav aria-label="Hesabım menüsü"></nav>
+        </aside>
+        <div class="account-content">
+            <header class="account-head">
+                <p class="eyebrow">Hesabım</p>
+                <h1>Bildirimler</h1>
+                <p>Teklifler, mesajlar, kayıtlı aramalarına uyan yeni ilanlar ve favorilerindeki fiyat düşüşleri.</p>
+            </header>
+            <div class="center-toolbar">
+                <button id="readAll" type="button" class="secondary">Tümünü okundu işaretle</button>
+                <a href="/html/ayarlar.html#bildirim-ayarlari" class="textbtn">Bildirim ayarları</a>
+            </div>
+            <p id="centerStatus" role="status" aria-live="polite">Yükleniyor…</p>
+            <div id="notificationList" class="center-list"></div>
+            <button id="centerMore" type="button" class="secondary" hidden>Daha eski bildirimler</button>
+        </div>
+    </div>
+</main>
+<div id="siteFooter"></div>
+<div id="toast" role="status" hidden></div>
+</body>
+</html>

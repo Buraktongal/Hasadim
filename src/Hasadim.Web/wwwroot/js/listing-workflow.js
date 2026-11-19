@@ -147,14 +147,24 @@
                 const minimum = Number(data.get('minAlimKg'));
                 if (data.get('minAlimKg') && (!Number.isFinite(minimum) || minimum <= 0 || minimum > Number(data.get('miktarKg'))))
                     throw Error('Minimum alım miktarı ürün miktarını aşamaz ve sıfırdan büyük olmalı.');
+                if (!data.get('kategori')) throw Error('Önce bir kategori seç.');
                 if (window.ListingEditor && !window.ListingEditor.ready(form)) return;
                 const body = {};
-                for (const key of ['baslik', 'meyveTuru', 'cesit', 'il', 'ilce', 'aciklama', 'ambalaj', 'teslimat'])
-                    body[key] = String(data.get(key) || '').trim();
+                const text = key => String(data.get(key) || '').trim();
+                for (const key of ['baslik', 'kategori', 'meyveTuru', 'cesit', 'il', 'ilce', 'aciklama', 'ambalaj', 'teslimat'])
+                    body[key] = text(key);
+                body.birim = window.ListingCategory ? window.ListingCategory.unit(form) : (text('birim') || null);
                 body.miktarKg = Number(data.get('miktarKg'));
                 body.kilogramFiyati = Number(data.get('kilogramFiyati'));
                 body.minAlimKg = data.get('minAlimKg') ? minimum : null;
                 body.hasatTarihi = data.get('hasatTarihi') || null;
+                // Arazi bilgileri yalnızca arazi kategorisinde gönderilir (gizli alanlar devre dışıdır).
+                for (const key of ['imarDurumu', 'tapuDurumu', 'sulama', 'ada', 'parsel']) body[key] = text(key) || null;
+                const land = body.kategori === 'Arazi';
+                body.elektrik = land ? data.has('elektrik') : null;
+                body.yolCephesi = land ? data.has('yolCephesi') : null;
+                body.enlem = data.get('enlem') ? Number(data.get('enlem')) : null;
+                body.boylam = data.get('boylam') ? Number(data.get('boylam')) : null;
                 body.version = data.get('version') || null;
 
                 let result;

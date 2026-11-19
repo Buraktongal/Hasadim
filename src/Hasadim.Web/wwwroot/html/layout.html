@@ -1,6 +1,6 @@
 <div class="utility-bar">
     <div class="utility-inner">
-        <span>Türkiye’nin toptan meyve ilan pazarı · Üreticiden, tüccardan, kooperatiften</span>
+        <span>Türkiye’nin toptan tarım ilan pazarı · Meyve, tahıl, yem, bal, kuruyemiş ve arazi</span>
         <span class="utility-note">İlan vermek ücretsiz · İlanlar 30 gün yayında</span>
     </div>
 </div>
@@ -22,6 +22,8 @@
                         data-view="all">
                     Pazar yeri
                 </button>
+                <a class="plain" href="/html/harita.html">Harita</a>
+                <a class="plain" href="/html/urun-takvimi.html">Ürün takvimi</a>
 
                 <hr data-auth-menu hidden>
 
@@ -59,6 +61,10 @@
                     Mesajlarım <span class="message-count" data-message-count hidden></span>
                 </button>
 
+                <a class="plain" href="/html/tekliflerim.html" data-auth-menu hidden>Tekliflerim <span class="message-count" data-offer-count hidden></span></a>
+                <a class="plain" href="/html/kayitli-aramalar.html" data-auth-menu hidden>Kayıtlı aramalar</a>
+                <a class="plain" href="/html/bildirimler.html" data-auth-menu hidden>Bildirimler <span class="message-count" data-notification-count hidden></span></a>
+
                 <button type="button"
                         class="navbtn"
                         data-account-action="create-listing"
@@ -86,6 +92,7 @@
                    hidden>
                     Hesap güvenliği
                 </a>
+                <a class="plain" href="/html/ayarlar.html">Ayarlar</a>
 
                 <!-- Yalnızca yönetici hesabında gösterilir -->
                 <button id="adminNav"
@@ -131,13 +138,19 @@
         <input id="globalQuery"
                name="q"
                type="search"
-               placeholder="Meyve, çeşit veya ilan ara…"
+               placeholder="Ürün, çeşit veya ilan ara…"
                maxlength="150">
 
         <button type="submit" class="primary">
             Ara
         </button>
     </form>
+
+    <!-- Bildirimler (giriş yapınca görünür) -->
+    <a id="notificationBell" class="notification-bell" href="/html/bildirimler.html" aria-label="Bildirimler" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.6 2H4.4zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="bell-count" data-notification-count hidden></span>
+    </a>
 
     <!-- Hızlı ilan oluşturma -->
     <button id="newBtn"
@@ -148,7 +161,7 @@
 </header>
 <div id="messageAlert" class="message-alert" role="status" aria-live="polite" hidden><a href="/?view=messages"><strong id="messageAlertText"></strong><span>Mesajları aç →</span></a><button id="dismissMessageAlert" type="button" aria-label="Bildirimi kapat">×</button></div>
 
-<nav id="categoryBar" class="category-bar" aria-label="Meyve kategorileri"></nav>
+<nav id="categoryBar" class="category-bar" aria-label="İlan kategorileri"></nav>
 
 <nav id="breadcrumbs"
      class="breadcrumbs"

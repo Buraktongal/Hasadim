@@ -20,11 +20,15 @@ function loadPageScript(source) {
 
         await loadPageScript('/js/locations.js');
         await loadPageScript('/js/fruit-varieties.js');
+        await loadPageScript('/js/product-catalog.js');
         await loadPageScript('/js/navigation.js');
         await loadPageScript('/js/return-path.js');
         await loadPageScript('/js/phone-input.js');
         await loadPageScript('/js/listing-editor.js');
         await loadPageScript('/js/fruit-icons.js');
+        await loadPageScript('/js/listing-category.js');
+        await loadPageScript('/js/mini-map.js');
+        await loadPageScript('/js/location-picker.js');
         await loadPageScript('/js/listing-wizard.js');
         await loadPageScript('/js/listing-photos.js');
         await loadPageScript('/js/confirm-dialog.js');
@@ -35,6 +39,10 @@ function loadPageScript(source) {
         await loadPageScript('/js/messages.js');
         await loadPageScript('/js/message-notifications.js');
         await loadPageScript('/js/searchable-select.js');
+        await loadPageScript('/js/hasadim-api.js');
+        await loadPageScript('/js/offer-dialog.js');
+        await loadPageScript('/js/saved-search.js');
+        await loadPageScript('/js/notification-bell.js');
         await loadPageScript('/js/app.js');
     } catch (error) {
         console.error(error);

@@ -155,6 +155,43 @@ Check(Hasadim.Infrastructure.Database.MigrationChecksum.Compute(sqlLf) == Hasadi
 Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.Replace("SELECT 1", "SELECT 2"), RawHash(sqlCrLf)), "Gerçek SQL değişikliği reddedilir");
 Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.Replace("'text'", "' text'"), RawHash(sqlLf)), "SQL içindeki boşluk değişikliği reddedilir");
 Check(!Hasadim.Infrastructure.Database.MigrationChecksum.Matches(sqlLf.TrimEnd(), RawHash(sqlLf)), "Son satırın silinmesi sessizce kabul edilmez");
+// Kategoriler, birimler ve satılık arazi kuralları.
+user.Id = owner; user.IsAdmin = false;
+ListingRequest Land() => new()
+{
+    Baslik = "Isparta Eğirdir'de satılık elma bahçesi", Kategori = "Arazi", MeyveTuru = "Meyve bahçesi",
+    MiktarKg = 12500, KilogramFiyati = 4_750_000, Il = "Isparta", Ilce = "Eğirdir",
+    ImarDurumu = "İmarsız (tarım arazisi)", TapuDurumu = "Müstakil tapu", Sulama = "Sulu", Ada = "112", Parsel = "7",
+    Elektrik = true, YolCephesi = true, Ambalaj = "Kasa", MinAlimKg = 100, HasatTarihi = DateTime.UtcNow
+};
+var landId = await service.Create(Land(), ct, ["arazi.jpg"]);
+var land = repo.Items[landId];
+Check(land.Kategori == "Arazi" && land.Birim == "m2", "Arazi ilanı m² birimiyle kaydedilir");
+Check(land.KilogramFiyati == 4_750_000 && land.Ambalaj is null && land.MinAlimKg is null && land.HasatTarihi is null, "Arazide toplam fiyat 1 milyonu aşabilir; ürün alanları temizlenir");
+var noZoning = Land(); noZoning.ImarDurumu = null;
+await Status(400, () => service.Create(noZoning, ct, ["arazi.jpg"]), "İmar durumu olmadan arazi ilanı reddedilir");
+var badParcel = Land(); badParcel.Parsel = "7; DROP";
+await Status(400, () => service.Create(badParcel, ct, ["arazi.jpg"]), "Geçersiz parsel bilgisi reddedilir");
+var expensiveFruit = Request(); expensiveFruit.KilogramFiyati = 2_000_000;
+await Status(400, () => service.Create(expensiveFruit, ct, ["photo.jpg"]), "Ürünlerde birim fiyat 1 milyon TL'yi aşamaz");
+var hay = Request(); hay.Kategori = "Yem"; hay.MeyveTuru = "Yonca balyası"; hay.Cesit = ""; hay.Birim = "balya"; hay.Ambalaj = "Balya";
+var hayId = await service.Create(hay, ct, ["balya.jpg"]);
+Check(repo.Items[hayId].Birim == "balya" && repo.Items[hayId].Ambalaj == "Balya", "Yem ilanı balya birimiyle verilebilir");
+var wrongUnit = Request(); wrongUnit.Birim = "balya";
+await Status(400, () => service.Create(wrongUnit, ct, ["photo.jpg"]), "Meyve ilanında balya birimi reddedilir");
+var wrongCategory = Request(); wrongCategory.Kategori = "Sebze";
+await Status(400, () => service.Create(wrongCategory, ct, ["photo.jpg"]), "Tanımsız kategori reddedilir");
+var outside = Request(); outside.Enlem = 51.5m; outside.Boylam = 0.1m;
+await Status(400, () => service.Create(outside, ct, ["photo.jpg"]), "Türkiye dışındaki harita konumu reddedilir");
+var pinned = Request(); pinned.Enlem = 37.764512m; pinned.Boylam = 30.556789m;
+var pinnedId = await service.Create(pinned, ct, ["photo.jpg"]);
+Check(repo.Items[pinnedId].Enlem == 37.7645m && repo.Items[pinnedId].Boylam == 30.5568m, "Harita konumu 4 ondalığa yuvarlanır");
+await Status(400, () => service.Search(new ListingQuery { Kategori = "Sebze" }, ct), "Tanımsız kategori filtresi reddedilir");
+var parsed = SavedSearchFilters.Parse("?kategori=Meyve&meyveTuru=Elma&il=Isparta&maxFiyat=30&evil=1&sort=priceAsc");
+Check(parsed.Kategori == "Meyve" && parsed.MeyveTuru == "Elma" && parsed.Il == "Isparta" && parsed.MaxFiyat == 30, "Kayıtlı arama filtreleri ayrıştırılır");
+Check(!parsed.Query.Contains("evil") && parsed.Query.Contains("sort=priceAsc"), "Kayıtlı aramada yalnızca bilinen filtreler saklanır");
+Check(SavedSearchFilters.Parse("kategori=Sebze").Kategori is null, "Kayıtlı aramada tanımsız kategori yok sayılır");
+Check(EngagementService.Price(32.5m, "kg") == "32,50 TL/kg" && EngagementService.Price(4_750_000m, "m2") == "4.750.000,00 TL", "Bildirim fiyat metni birime göre yazılır");
 Console.WriteLine($"ALL {checks} WORKFLOW CHECKS PASSED");
 
 class Current : ICurrentUser
@@ -169,6 +206,8 @@ class MemoryRepo : IMarketplaceRepository
     public Task<long> RecordView(Guid id, Guid? user, CancellationToken ct) => Task.FromResult(0L);
     public Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<CategoryCount>>([]);
+    public Task<MapData> Map(MapQuery q, Guid? user, CancellationToken ct) =>
+        Task.FromResult(new MapData([], []));
     public bool UpdateSuccess = true;
     private static Listing Clone(Listing l) => (Listing)typeof(object)
         .GetMethod("MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(l, null)!;

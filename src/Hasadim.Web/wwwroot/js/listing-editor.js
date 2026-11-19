@@ -19,18 +19,34 @@ window.ListingEditor = (() => {
         preview.replaceChildren(node('p', editing ? 'Değişiklikleri kontrol et' : 'Yayın öncesi kontrol', 'eyebrow'), node('h3', data.get('baslik')));
         const facts = node('dl', undefined, 'preview-facts');
         const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
-        for (const [label, value] of [
-            ['Ürün', data.get('meyveTuru') + ' / ' + data.get('cesit')],
-            ['Miktar', new Intl.NumberFormat('tr-TR').format(Number(data.get('miktarKg'))) + ' kg'],
-            ['Birim fiyat', money.format(Number(data.get('kilogramFiyati'))) + ' / kg'],
+        const nf = new Intl.NumberFormat('tr-TR');
+        const land = data.get('kategori') === 'Arazi';
+        const u = unitText(form);
+        const category = window.HasadimCatalog?.category(data.get('kategori'))?.name || '';
+        const photos = String(Number(form.dataset.photoCount || 0) + data.getAll('photo').filter(f => f.size).length);
+        const pin = data.get('enlem') ? 'Haritada işaretli' : 'İl merkezine yakın (yaklaşık)';
+        const rows = land ? [
+            ['Kategori', category + ' / ' + data.get('meyveTuru')],
+            ['Alan', nf.format(Number(data.get('miktarKg'))) + ' m² (' + nf.format(Number(data.get('miktarKg')) / 1000) + ' dönüm)'],
+            ['Satış fiyatı', money.format(Number(data.get('kilogramFiyati')))],
+            ['İmar / tapu', (data.get('imarDurumu') || '—') + ' · ' + (data.get('tapuDurumu') || '—')],
+            ['Konum', data.get('il') + ' / ' + data.get('ilce')],
+            ['Harita', pin],
+            ['Fotoğraf', photos],
+            ['Yayın süresi', published ? 'Mevcut bitiş tarihi korunacak' : '30 gün']
+        ] : [
+            ['Ürün', category + ' / ' + data.get('meyveTuru') + (data.get('cesit') ? ' / ' + data.get('cesit') : '')],
+            ['Miktar', nf.format(Number(data.get('miktarKg'))) + ' ' + u],
+            ['Birim fiyat', money.format(Number(data.get('kilogramFiyati'))) + ' / ' + u],
             ['Konum', data.get('il') + ' / ' + data.get('ilce')],
             ['Hasat tarihi', data.get('hasatTarihi') || 'Belirtilmedi'],
-            ['Fotoğraf', String(Number(form.dataset.photoCount || 0) + data.getAll('photo').filter(f => f.size).length)],
+            ['Fotoğraf', photos],
             ['Ambalaj', data.get('ambalaj') || 'Belirtilmedi'],
             ['Teslimat', data.get('teslimat') || 'Belirtilmedi'],
-            ['Minimum alım', data.get('minAlimKg') ? data.get('minAlimKg') + ' kg' : 'Belirtilmedi'],
+            ['Minimum alım', data.get('minAlimKg') ? data.get('minAlimKg') + ' ' + u : 'Belirtilmedi'],
             ['Yayın süresi', published ? 'Mevcut bitiş tarihi korunacak' : '30 gün']
-        ]) { const item = node('div'); item.append(node('dt', label), node('dd', value)); facts.append(item); }
+        ];
+        for (const [label, value] of rows) { const item = node('div'); item.append(node('dt', label), node('dd', value)); facts.append(item); }
         if (editing && form.dataset.original) preview.append(changes(JSON.parse(form.dataset.original), data, form));
         preview.append(facts, node('p', data.get('aciklama') || 'Açıklama eklenmemiş.', 'preview-description'),
             node('p', editing ? 'Bilgileri kontrol et ve Değişiklikleri kaydet düğmesine bas.' : 'Bilgileri kontrol et. Düzeltmek için yukarıdaki alanları değiştirebilirsin. İlanı yayımla düğmesiyle başvurun gönderilir.', 'muted'));
@@ -40,10 +56,16 @@ window.ListingEditor = (() => {
         preview.focus?.();
         return false;
     }
+    function unitText(form) {
+        const unit = window.ListingCategory ? window.ListingCategory.unit(form) : 'kg';
+        return ({ kg: 'kg', balya: 'balya', m2: 'm²' })[unit] || 'kg';
+    }
     // Düzenlemede değişen alanları "Önce → Sonra" olarak gösterir.
     function changes(before, data, form) {
-        const money = value => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value) + ' / kg';
-        const kg = value => new Intl.NumberFormat('tr-TR').format(value) + ' kg';
+        const land = data.get('kategori') === 'Arazi';
+        const u = unitText(form);
+        const money = value => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value) + (land ? '' : ' / ' + u);
+        const kg = value => new Intl.NumberFormat('tr-TR').format(value) + ' ' + u;
         const text = value => (value === null || value === undefined || value === '') ? '—' : String(value);
         const short = value => { const t = text(value); return t.length > 90 ? t.slice(0, 87) + '…' : t; };
         const num = value => (value === null || value === undefined || value === '') ? null : Number(value);
@@ -54,7 +76,9 @@ window.ListingEditor = (() => {
             rows.push({ label, before: show(oldValue), after: show(newValue), kind });
         };
         add('Başlık', text(before.baslik).trim(), text(after('baslik')).trim(), short);
-        add('Meyve türü', text(before.meyveTuru), text(after('meyveTuru')), text);
+        const name = id => window.HasadimCatalog?.category(id)?.name || id;
+        add('Kategori', text(name(before.kategori || 'Meyve')), text(name(after('kategori'))), text);
+        add(land ? 'Arazi türü' : 'Ürün', text(before.meyveTuru), text(after('meyveTuru')), text);
         add('Çeşit', text(before.cesit), text(after('cesit')), text);
         const oldPrice = num(before.kilogramFiyati), newPrice = num(after('kilogramFiyati'));
         if (oldPrice !== newPrice) {
@@ -65,7 +89,13 @@ window.ListingEditor = (() => {
                 kind: down ? 'down' : '',
                 note: down && oldPrice ? '%' + new Intl.NumberFormat('tr-TR').format(-diff) + ' indirim' : '' });
         }
-        add('Toplam miktar', num(before.miktarKg), num(after('miktarKg')), v => v === null ? '—' : kg(v));
+        add(land ? 'Alan' : 'Toplam miktar', num(before.miktarKg), num(after('miktarKg')), v => v === null ? '—' : kg(v));
+        if (land) {
+            add('İmar durumu', text(before.imarDurumu), text(after('imarDurumu')), text);
+            add('Tapu durumu', text(before.tapuDurumu), text(after('tapuDurumu')), text);
+            add('Sulama', text(before.sulama), text(after('sulama')), text);
+        }
+        add('Harita konumu', before.enlem ? 'İşaretli' : 'Yok', after('enlem') ? (Number(after('enlem')) === before.enlem && Number(after('boylam')) === before.boylam ? 'İşaretli' : 'Yeni konum') : 'Yok', text);
         add('Minimum alım', num(before.minAlimKg), num(after('minAlimKg')), v => v === null ? 'Belirtilmedi' : kg(v));
         add('Ambalaj', text(before.ambalaj), text(after('ambalaj')), text);
         add('Teslimat', text(before.teslimat), text(after('teslimat')), text);

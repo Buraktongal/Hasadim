@@ -8,7 +8,7 @@ var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();app.Us
 app.Use(async(c,next)=>{
  c.Response.Headers["X-Content-Type-Options"]="nosniff";c.Response.Headers["Referrer-Policy"]="strict-origin-when-cross-origin";
  // Google ve Apple ile giriş için yalnızca resmi betik/çerçeve adreslerine izin verilir.
- c.Response.Headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://appleid.cdn-apple.com; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' blob: https://appleid.cdn-apple.com; connect-src 'self' https://accounts.google.com/gsi/ https://appleid.apple.com; frame-src https://accounts.google.com/gsi/ https://appleid.apple.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com";
+ c.Response.Headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://appleid.cdn-apple.com; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' blob: https://appleid.cdn-apple.com https://tile.openstreetmap.org; connect-src 'self' https://accounts.google.com/gsi/ https://appleid.apple.com; frame-src https://accounts.google.com/gsi/ https://appleid.apple.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com";
  c.Response.Headers["Cache-Control"]="no-store";await next();
 });
 app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c,IHttpClientFactory clients)=>{

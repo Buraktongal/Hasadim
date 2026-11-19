@@ -21,11 +21,15 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
        AND l.Hidden = 0
        AND l.Status = 4
        AND (l.ExpiresAt IS NULL OR l.ExpiresAt > SYSUTCDATETIME())
+       AND NOT EXISTS(SELECT 1 FROM dbo.UserBlocks b WHERE b.BlockerId=@user AND b.BlockedId=l.OwnerId)
       """;
         if (q.OwnerId.HasValue) where += " AND l.OwnerId=@owner";
         if (q.Favorites) where += " AND EXISTS(SELECT 1 FROM dbo.Favorites f WHERE f.ListingId=l.Id AND f.UserId=@user)";
         if (!string.IsNullOrWhiteSpace(q.Q)) where += " AND (l.Baslik LIKE @term OR l.Cesit LIKE @term)";
+        if (!string.IsNullOrWhiteSpace(q.Kategori)) where += " AND l.Kategori=@category";
         if (!string.IsNullOrWhiteSpace(q.MeyveTuru)) where += " AND l.MeyveTuru=@fruit";
+        if (!string.IsNullOrWhiteSpace(q.ImarDurumu)) where += " AND l.ImarDurumu=@zoning";
+        if (!string.IsNullOrWhiteSpace(q.TapuDurumu)) where += " AND l.TapuDurumu=@deed";
         if (!string.IsNullOrWhiteSpace(q.Il)) where += " AND l.Il=@city";
         if (!string.IsNullOrWhiteSpace(q.Ilce)) where += " AND l.Ilce=@district";
         if (!string.IsNullOrWhiteSpace(q.Cesit)) where += " AND l.Cesit=@variety";
@@ -47,6 +51,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         var args = new
         {
             user, owner = q.OwnerId, term = "%" + q.Q?.Trim() + "%", fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim(),
+            category = q.Kategori, zoning = q.ImarDurumu?.Trim(), deed = q.TapuDurumu?.Trim(),
             district = q.Ilce?.Trim(), variety = q.Cesit?.Trim(), packaging = q.Ambalaj, delivery = q.Teslimat,
             min = q.MinFiyat, max = q.MaxFiyat, minQty = q.MinMiktar, maxQty = q.MaxMiktar,
             skip = (q.Page - 1) * q.PageSize, take = q.PageSize
@@ -98,6 +103,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Aciklama,
             Telefon,
             HasatTarihi, Ambalaj, Teslimat, MinAlimKg,
+            Kategori, Birim, ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, Enlem, Boylam,
             OlusturulmaTarihi,
             Active,
             Status,
@@ -120,6 +126,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             @Aciklama,
             @Telefon,
             @HasatTarihi, @Ambalaj, @Teslimat, @MinAlimKg,
+            @Kategori, @Birim, @ImarDurumu, @TapuDurumu, @Sulama, @Ada, @Parsel, @Elektrik, @YolCephesi, @Enlem, @Boylam,
             @OlusturulmaTarihi,
             @Active,
             @Status,
@@ -144,6 +151,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             l.Aciklama,
             l.Telefon,
             l.HasatTarihi, l.Ambalaj, l.Teslimat, l.MinAlimKg,
+            l.Kategori, l.Birim, l.ImarDurumu, l.TapuDurumu, l.Sulama, l.Ada, l.Parsel, l.Elektrik, l.YolCephesi, l.Enlem, l.Boylam,
             l.OlusturulmaTarihi,
             Status = (int)l.Status,
             l.Active,
@@ -326,6 +334,8 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Aciklama = @Aciklama,
             Telefon = @Telefon,
             HasatTarihi = @HasatTarihi, Ambalaj = @Ambalaj, Teslimat = @Teslimat, MinAlimKg = @MinAlimKg,
+            Kategori = @Kategori, Birim = @Birim, ImarDurumu = @ImarDurumu, TapuDurumu = @TapuDurumu, Sulama = @Sulama,
+            Ada = @Ada, Parsel = @Parsel, Elektrik = @Elektrik, YolCephesi = @YolCephesi, Enlem = @Enlem, Boylam = @Boylam,
             Active = @Active,
             Status = @Status,
             ReviewNote = @ReviewNote,
@@ -407,14 +417,35 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
     {
         await using var c = await factory.Open(ct);
         const string sql = """
-        SELECT l.MeyveTuru, COUNT(*) AS Count
+        SELECT l.MeyveTuru, COUNT(*) AS Count, l.Kategori
         FROM dbo.Listings l
         WHERE l.IsDeleted = 0 AND l.Active = 1 AND l.Hidden = 0 AND l.Status = 4
             AND (l.ExpiresAt IS NULL OR l.ExpiresAt > SYSUTCDATETIME())
-        GROUP BY l.MeyveTuru
+        GROUP BY l.Kategori, l.MeyveTuru
         ORDER BY COUNT(*) DESC, l.MeyveTuru;
         """;
         return (await c.QueryAsync<CategoryCount>(new CommandDefinition(sql, cancellationToken: ct))).ToList();
+    }
+
+    public async Task<MapData> Map(MapQuery q, Guid? user, CancellationToken ct)
+    {
+        await using var c = await factory.Open(ct);
+        var where = """
+            l.IsDeleted = 0 AND l.Active = 1 AND l.Hidden = 0 AND l.Status = 4
+            AND (l.ExpiresAt IS NULL OR l.ExpiresAt > SYSUTCDATETIME())
+            AND NOT EXISTS(SELECT 1 FROM dbo.UserBlocks b WHERE b.BlockerId=@user AND b.BlockedId=l.OwnerId)
+            """;
+        if (!string.IsNullOrWhiteSpace(q.Kategori)) where += " AND l.Kategori=@category";
+        if (!string.IsNullOrWhiteSpace(q.MeyveTuru)) where += " AND l.MeyveTuru=@fruit";
+        var pointsWhere = where + (string.IsNullOrWhiteSpace(q.Il) ? "" : " AND l.Il=@city");
+        var sql = "SELECT l.Il, COUNT(*) AS Count FROM dbo.Listings l WHERE " + where + " GROUP BY l.Il ORDER BY COUNT(*) DESC, l.Il;" +
+            " SELECT TOP (500) l.Id, l.Baslik, l.Kategori, l.MeyveTuru, l.Il, l.Ilce, l.KilogramFiyati, l.Birim, l.MiktarKg, l.Enlem, l.Boylam" +
+            " FROM dbo.Listings l WHERE " + pointsWhere + " ORDER BY l.OlusturulmaTarihi DESC, l.Id;";
+        using var results = await c.QueryMultipleAsync(new CommandDefinition(sql,
+            new { user, category = q.Kategori, fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim() }, cancellationToken: ct));
+        var cities = (await results.ReadAsync<CityCount>()).ToList();
+        var points = (await results.ReadAsync<MapPoint>()).ToList();
+        return new MapData(cities, points);
     }
     public async Task<long> RecordView(Guid id, Guid? user, CancellationToken ct)
     {

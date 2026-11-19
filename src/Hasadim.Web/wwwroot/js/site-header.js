@@ -22,7 +22,7 @@
     }
 
     // Kategori çubuğu her sayfada aynı.
-    window.MarketCatalog?.highlight('');
+    window.MarketCatalog?.highlight({});
 
     const menu = $('#accountMenu');
     const closeMenu = () => { if (menu) menu.open = false; };
@@ -59,6 +59,8 @@
     if ($('#securityLink')) $('#securityLink').hidden = !user;
     if ($('#adminNav')) $('#adminNav').hidden = !user?.isAdmin;
     for (const item of document.querySelectorAll('[data-auth-menu]')) item.hidden = !user;
+    void window.NotificationBell?.refresh(user);
+    window.dispatchEvent(new CustomEvent('hasadim:user', { detail: user }));
 
     if (!user) return;
     try {

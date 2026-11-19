@@ -30,8 +30,55 @@ public record ListingData(
     bool Active,
     string? Ambalaj = null,
     string? Teslimat = null,
-    decimal? MinAlimKg = null
+    decimal? MinAlimKg = null,
+    // Ana kategori: Meyve, Tahil, Yem, Bal, Kuruyemis veya Arazi.
+    string Kategori = ListingCategories.Meyve,
+    // Miktarın birimi: kg, balya veya m2 (arazi alanı).
+    string? Birim = null,
+    LandDetails? Arazi = null,
+    // Satıcının haritada işaretlediği isteğe bağlı konum.
+    decimal? Enlem = null,
+    decimal? Boylam = null
 );
+
+// Satılık arazi ilanlarına özel bilgiler.
+public record LandDetails(
+    string? ImarDurumu,
+    string? TapuDurumu,
+    string? Sulama,
+    string? Ada,
+    string? Parsel,
+    bool? Elektrik,
+    bool? YolCephesi
+);
+
+public static class ListingCategories
+{
+    public const string Meyve = "Meyve";
+    public const string Tahil = "Tahil";
+    public const string Yem = "Yem";
+    public const string Bal = "Bal";
+    public const string Kuruyemis = "Kuruyemis";
+    public const string Arazi = "Arazi";
+
+    public static readonly string[] All = [Meyve, Tahil, Yem, Bal, Kuruyemis, Arazi];
+
+    public static readonly string[] Packaging =
+        ["Kasa", "Koli", "Dökme", "Çuval", "Big bag", "Balya", "Kavanoz", "Teneke", "Diğer"];
+    public static readonly string[] Delivery = ["Yerinden teslim", "Satıcı teslimatı", "Görüşülür"];
+    public static readonly string[] Zoning =
+        ["İmarsız (tarım arazisi)", "Konut imarlı", "Ticari imarlı", "Sanayi imarlı", "Turizm imarlı", "Belirtilmedi"];
+    public static readonly string[] Deed = ["Müstakil tapu", "Hisseli tapu", "Tahsisli", "Zilliyet"];
+    public static readonly string[] Irrigation = ["Sulu", "Kısmen sulu", "Kuru (yağışa bağlı)"];
+
+    // Kategoriye göre izin verilen birimler; ilk değer varsayılandır.
+    public static string[] UnitsOf(string category) => category switch
+    {
+        Yem => ["balya", "kg"],
+        Arazi => ["m2"],
+        _ => ["kg"]
+    };
+}
 
 public class Listing
 {
@@ -56,6 +103,18 @@ public class Listing
     public decimal? MinAlimKg { get; private set; }
     public DateTime? HasatTarihi { get; private set; }
     public DateTime OlusturulmaTarihi { get; private set; }
+
+    public string Kategori { get; private set; } = ListingCategories.Meyve;
+    public string Birim { get; private set; } = "kg";
+    public string? ImarDurumu { get; private set; }
+    public string? TapuDurumu { get; private set; }
+    public string? Sulama { get; private set; }
+    public string? Ada { get; private set; }
+    public string? Parsel { get; private set; }
+    public bool? Elektrik { get; private set; }
+    public bool? YolCephesi { get; private set; }
+    public decimal? Enlem { get; private set; }
+    public decimal? Boylam { get; private set; }
 
     public ListingStatus Status { get; private set; }
         = ListingStatus.Draft;
@@ -126,6 +185,23 @@ public class Listing
         Ambalaj = string.IsNullOrWhiteSpace(data.Ambalaj) ? null : data.Ambalaj;
         Teslimat = string.IsNullOrWhiteSpace(data.Teslimat) ? null : data.Teslimat;
         MinAlimKg = data.MinAlimKg;
+        Kategori = data.Kategori;
+        Birim = UnitOf(data);
+        var land = Kategori == ListingCategories.Arazi ? data.Arazi : null;
+        ImarDurumu = Clean(land?.ImarDurumu);
+        TapuDurumu = Clean(land?.TapuDurumu);
+        Sulama = Clean(land?.Sulama);
+        Ada = Clean(land?.Ada);
+        Parsel = Clean(land?.Parsel);
+        Elektrik = land?.Elektrik;
+        YolCephesi = land?.YolCephesi;
+        if (Kategori == ListingCategories.Arazi)
+        {
+            // Arazi ilanında ürün koşulları kullanılmaz.
+            Ambalaj = null; Teslimat = null; MinAlimKg = null; HasatTarihi = null;
+        }
+        Enlem = data.Enlem is null || data.Boylam is null ? null : decimal.Round(data.Enlem.Value, 4);
+        Boylam = data.Enlem is null || data.Boylam is null ? null : decimal.Round(data.Boylam.Value, 4);
 
         // Yayındaki düzenleme mevcut yayın tarihlerini ve durumunu korur.
         Active = Status == ListingStatus.Published;
@@ -160,8 +236,7 @@ public class Listing
         if (Hidden || (Status != ListingStatus.PendingReview && Status != ListingStatus.AwaitingPayment))
             throw new InvalidOperationException("İlan otomatik yayına uygun değil.");
 
-        ValidateData(new(Baslik, MeyveTuru, Cesit, MiktarKg, KilogramFiyati,
-            Il, Ilce, Aciklama, Telefon, HasatTarihi, false, Ambalaj, Teslimat, MinAlimKg));
+        ValidateData(Snapshot());
         var now = DateTime.UtcNow;
         Status = ListingStatus.Published;
         Active = true;
@@ -237,6 +312,21 @@ public class Listing
         Active = false;
     }
 
+    // Kayıtlı alanlardan doğrulama için ilan verisi üretir.
+    public ListingData Snapshot() => new(Baslik, MeyveTuru, Cesit, MiktarKg, KilogramFiyati,
+        Il, Ilce, Aciklama, Telefon, HasatTarihi, false, Ambalaj, Teslimat, MinAlimKg,
+        Kategori, Birim, new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi),
+        Enlem, Boylam);
+
+    private static string? Clean(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string UnitOf(ListingData data)
+    {
+        var units = ListingCategories.UnitsOf(data.Kategori);
+        return string.IsNullOrWhiteSpace(data.Birim) ? units[0] : data.Birim.Trim();
+    }
+
     private void EnsureNotDeleted()
     {
         if (IsDeleted)
@@ -261,14 +351,42 @@ public class Listing
 
     private static void ValidateData(ListingData data)
     {
+        if (!ListingCategories.All.Contains(data.Kategori))
+            throw new ArgumentException("Kategori geçersiz.");
+        var land = data.Kategori == ListingCategories.Arazi;
+        if (!ListingCategories.UnitsOf(data.Kategori).Contains(UnitOf(data)))
+            throw new ArgumentException("Bu kategori için miktar birimi geçersiz.");
         if (decimal.Round(data.KilogramFiyati, 2) != data.KilogramFiyati)
             throw new ArgumentException("Fiyat en fazla iki ondalık basamak içerebilir.");
-        if (data.MinAlimKg is not null && (data.MinAlimKg < 0.01m || data.MinAlimKg > data.MiktarKg || decimal.Round(data.MinAlimKg.Value,2) != data.MinAlimKg))
+        // Ürünlerde birim fiyat, arazide toplam satış fiyatı girilir.
+        if (!land && data.KilogramFiyati > 1_000_000m)
+            throw new ArgumentException("Birim fiyat en fazla 1.000.000 TL olabilir.");
+        if (land && data.KilogramFiyati > 10_000_000_000m)
+            throw new ArgumentException("Arazi fiyatı en fazla 10 milyar TL olabilir.");
+        if (land && (data.MiktarKg < 1 || data.MiktarKg > 100_000_000m))
+            throw new ArgumentException("Arazi alanı 1 ile 100.000.000 m² arasında olmalı.");
+        if (!land && data.MinAlimKg is not null && (data.MinAlimKg < 0.01m || data.MinAlimKg > data.MiktarKg || decimal.Round(data.MinAlimKg.Value,2) != data.MinAlimKg))
             throw new ArgumentException("Minimum alım miktarı sıfırdan büyük olmalı ve ürün miktarını aşmamalı.");
-        if (!string.IsNullOrEmpty(data.Ambalaj) && data.Ambalaj is not ("Kasa" or "Koli" or "Dökme" or "Çuval" or "Diğer"))
+        if (!land && !string.IsNullOrEmpty(data.Ambalaj) && !ListingCategories.Packaging.Contains(data.Ambalaj))
             throw new ArgumentException("Ambalaj seçeneği geçersiz.");
-        if (!string.IsNullOrEmpty(data.Teslimat) && data.Teslimat is not ("Yerinden teslim" or "Satıcı teslimatı" or "Görüşülür"))
+        if (!land && !string.IsNullOrEmpty(data.Teslimat) && !ListingCategories.Delivery.Contains(data.Teslimat))
             throw new ArgumentException("Teslimat seçeneği geçersiz.");
+        if (land)
+        {
+            var a = data.Arazi;
+            if (a is null || string.IsNullOrWhiteSpace(a.ImarDurumu) || !ListingCategories.Zoning.Contains(a.ImarDurumu.Trim()))
+                throw new ArgumentException("Arazinin imar durumunu seç.");
+            if (string.IsNullOrWhiteSpace(a.TapuDurumu) || !ListingCategories.Deed.Contains(a.TapuDurumu.Trim()))
+                throw new ArgumentException("Arazinin tapu durumunu seç.");
+            if (!string.IsNullOrWhiteSpace(a.Sulama) && !ListingCategories.Irrigation.Contains(a.Sulama.Trim()))
+                throw new ArgumentException("Sulama seçeneği geçersiz.");
+            foreach (var part in new[] { a.Ada, a.Parsel })
+                if (!string.IsNullOrWhiteSpace(part) && !System.Text.RegularExpressions.Regex.IsMatch(part.Trim(), @"\A[0-9A-Za-z/ -]{1,20}\z"))
+                    throw new ArgumentException("Ada ve parsel en fazla 20 karakter; rakam, harf, / ve - içerebilir.");
+        }
+        if ((data.Enlem is null) != (data.Boylam is null) ||
+            data.Enlem is < 35.5m or > 42.5m || data.Boylam is < 25.5m or > 45m)
+            throw new ArgumentException("Harita konumu Türkiye sınırları içinde olmalı.");
         if (string.IsNullOrWhiteSpace(data.Baslik) ||
             string.IsNullOrWhiteSpace(data.MeyveTuru) ||
             string.IsNullOrWhiteSpace(data.Il) ||

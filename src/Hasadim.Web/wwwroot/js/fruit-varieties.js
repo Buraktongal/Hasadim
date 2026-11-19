@@ -40,7 +40,7 @@ window.setupFruitVarietySelectors = function (
     const varietySelect = form.elements.namedItem('cesit');
 
     if (!fruitSelect || !varietySelect) {
-        throw new Error('Meyve türü veya çeşit alanı bulunamadı.');
+        throw new Error('Ürün veya çeşit alanı bulunamadı.');
     }
 
     const normalize = value =>
@@ -62,7 +62,7 @@ window.setupFruitVarietySelectors = function (
         // Yeni ilanda kullanıcı önce meyve seçsin.
         if (!Array.from(fruitSelect.options).some(option => option.value === '')) {
             fruitSelect.insertBefore(
-                new Option('Meyve türü seç', ''),
+                new Option('Ürün seç', ''),
                 fruitSelect.firstChild
             );
         }
@@ -75,12 +75,13 @@ window.setupFruitVarietySelectors = function (
 
         varietySelect.replaceChildren(
             new Option(
-                fruit ? 'Çeşit seç' : 'Önce meyve türü seç',
+                fruit ? 'Çeşit seç' : 'Önce ürün seç',
                 ''
             )
         );
 
-        varietySelect.disabled = !fruit;
+        // Arazi gibi çeşidi olmayan kategorilerde alan kilitli kalır.
+        varietySelect.disabled = !fruit || varietySelect.dataset.locked === 'true';
 
         if (!fruit) return;
 

@@ -20,8 +20,26 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms,AccountDeletion deletion):ControllerBase
 {
+ // Hesabı kalıcı olarak siler (App Store / Google Play hesap silme şartı).
+ // Şifresi olan hesapta şifre, tüm hesaplarda "HESABIMI SİL" onayı istenir.
+ [Authorize,HttpPost("delete")]
+ public async Task<IActionResult> DeleteAccount(Hasadim.Application.DeleteAccountRequest r,CancellationToken ct)
+ {
+  var u=await MeUser();
+  var confirm=r.Confirm.Trim();
+  if(!string.Equals(confirm,"HESABIMI SİL",StringComparison.Ordinal)&&!string.Equals(confirm.ToUpperInvariant(),"DELETE MY ACCOUNT",StringComparison.Ordinal))
+   return BadRequest(new{mesaj="Onay için kutuya HESABIMI SİL yaz."});
+  if(await users.HasPasswordAsync(u)&&(string.IsNullOrEmpty(r.Password)||!await users.CheckPasswordAsync(u,r.Password)))
+   return BadRequest(new{mesaj="Şifre hatalı."});
+  if(await users.IsInRoleAsync(u,"Admin")&&(await users.GetUsersInRoleAsync("Admin")).Count<=1)
+   return BadRequest(new{mesaj="Son yönetici hesabı silinemez. Önce başka bir yönetici ekle."});
+  var photo=await deletion.Delete(u.Id,ct);
+  if(photo is not null&&Path.GetFileName(photo)==photo){try{System.IO.File.Delete(Path.Combine(env.ContentRootPath,"App_Data","profiles",photo));}catch(IOException){}}
+  await signIn.SignOutAsync();
+  return Ok(new{mesaj="Hesabın silindi. Hasadım'ı kullandığın için teşekkürler."});
+ }
  // Geliştirmede başarısız girişin nedeni API konsoluna yazılır (şifre yazılmaz).
  void LogLogin(string email,string reason){if(env.IsDevelopment())logger.LogWarning("Giriş başarısız: {Email} — {Reason}",email,reason);}
  // İki adımlı doğrulama kurulumu şimdilik kapalı; açmak için "Features:TwoFactorSetup": true.
@@ -30,7 +48,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  IActionResult Errors(IdentityResult r)=>BadRequest(new{mesaj=string.Join(" ",r.Errors.Select(x=>x.Description))});
  async Task<AppUser> MeUser()=>await users.GetUserAsync(User)??throw new Hasadim.Application.AppException(401,"Giriş yapın.");
  [HttpGet("me")]
- public async Task<IActionResult> Me(){var u=await users.GetUserAsync(User);return Ok(u is null?null:new{u.Id,u.DisplayName,u.Email,u.TwoFactorEnabled,isAdmin=await users.IsInRoleAsync(u,"Admin")});}
+ public async Task<IActionResult> Me(){var u=await users.GetUserAsync(User);return Ok(u is null?null:new{u.Id,u.DisplayName,u.Email,u.TwoFactorEnabled,isAdmin=await users.IsInRoleAsync(u,"Admin"),hasPassword=await users.HasPasswordAsync(u)});}
  [HttpPost("register")]
  public async Task<IActionResult> Register(RegisterRequest r,CancellationToken ct)
  {

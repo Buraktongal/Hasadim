@@ -37,6 +37,13 @@ public class ListingsController(
         return Ok(await service.Categories(ct));
     }
 
+    // Harita: il bazında ilan sayıları ve en yeni 500 ilanın konumu.
+    [HttpGet("harita")]
+    public async Task<IActionResult> Map([FromQuery] MapQuery query, CancellationToken ct)
+    {
+        return Ok(await service.Map(query, ct));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Detail(
         Guid id,

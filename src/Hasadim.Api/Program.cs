@@ -52,13 +52,13 @@ if (app.Environment.IsDevelopment() || args.Contains("--bootstrap-admin"))
     }
 }
 if (args.Contains("--bootstrap-admin")) { Console.WriteLine("Yönetici hesabı hazır."); return; }
-// Geliştirme ortamı için demo verisi: tüm kullanıcı ve ilanları siler, 6 hesap ve 100 ilan oluşturur.
+// Geliştirme ortamı için demo verisi: tüm kullanıcı ve ilanları siler, 6 hesap, 100 ilan (6 kategori), örnek teklif ve kayıtlı arama oluşturur.
 if (args.Contains("--seed-demo"))
 {
     if (!app.Environment.IsDevelopment()) throw new InvalidOperationException("Demo verisi yalnızca Development ortamında yüklenebilir.");
     using var scope = app.Services.CreateScope();
     await Hasadim.Api.Development.DemoSeeder.Run(scope.ServiceProvider, app.Environment.ContentRootPath, CancellationToken.None);
-    Console.WriteLine("Demo verisi yüklendi: 100 ilan.");
+    Console.WriteLine("Demo verisi yüklendi: 100 ilan (75 meyve, 25 tahıl/yem/bal/kuruyemiş/arazi), örnek teklif ve kayıtlı aramalar.");
     Console.WriteLine("Hesaplar (e-posta / şifre):");
     foreach (var a in Hasadim.Api.Development.DemoSeeder.Accounts)
         Console.WriteLine($"  {(a.IsAdmin ? "Yönetici" : "Kullanıcı"),-9} {a.Email,-24} {a.Password}");

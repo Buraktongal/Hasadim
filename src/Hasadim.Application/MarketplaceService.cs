@@ -6,8 +6,16 @@ namespace Hasadim.Application;
 public class MarketplaceService(
     IMarketplaceRepository repo,
     ICurrentUser current,
-    IProfileRepository profiles)
+    IProfileRepository profiles,
+    IEngagementRepository? engagement = null)
 {
+    // Bildirim hatası asıl işlemi (ilan, mesaj) geri almaz; bildirim isteğe bağlıdır.
+    private static async Task Quietly(Func<Task> task)
+    {
+        try { await task(); }
+        catch (Exception) { /* Bildirim eklenemedi; asıl işlem tamamlandı. */ }
+    }
+
     private Guid User =>
         current.Id
         ?? throw new AppException(401, "Giriş yapın.");
@@ -273,6 +281,12 @@ public class MarketplaceService(
 
     public Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct) => repo.Categories(ct);
 
+    public Task<MapData> Map(MapQuery q, CancellationToken ct)
+    {
+        ValidateRequest(q);
+        return repo.Map(q, current.Id, ct);
+    }
+
     public Task<long> RecordView(Guid id, CancellationToken ct) => repo.RecordView(id, current.Id, ct);
 
     public async Task<Guid> Create(
@@ -308,6 +322,9 @@ public class MarketplaceService(
         Apply(listing.PublishAutomatically);
         await repo.Create(listing, photos, ct);
 
+        if (engagement is not null)
+            await Quietly(() => engagement.NotifySavedSearches(listing, ct));
+
         return listing.Id;
     }
 
@@ -332,6 +349,9 @@ public class MarketplaceService(
         if (detail.Photos.Count < 1 || detail.Photos.Count > 10)
             throw new AppException(400, "İlan için 1–10 fotoğraf gerekli.");
 
+        var oldPrice = listing.KilogramFiyati;
+        var wasPublished = listing.Status == ListingStatus.Published;
+
         Apply(() =>
         {
             listing.Update(request.Data());
@@ -343,6 +363,10 @@ public class MarketplaceService(
         });
 
         await Save(listing, request.Version!, ct);
+
+        // Yayındaki ilanın fiyatı düştüyse favoriye ekleyenlere haber ver.
+        if (engagement is not null && wasPublished && listing.KilogramFiyati < oldPrice)
+            await Quietly(() => engagement.NotifyPriceDrop(listing, oldPrice, ct));
     }
 
     public async Task AddPhotos(
@@ -605,7 +629,15 @@ public class MarketplaceService(
             }
         }
 
+        if (engagement is not null && await engagement.IsBlocked(userId, request.RecipientId, ct))
+            throw new AppException(403, "Bu üyeyle mesajlaşma engellenmiş.");
+
         await repo.Send(Guid.NewGuid(), userId, request, ct);
+
+        if (engagement is not null)
+            await Quietly(() => engagement.Notify(request.RecipientId, NotificationKinds.Message, "Yeni mesaj",
+                $"\"{listing.Baslik}\" ilanı hakkında yeni mesajın var.", "/?view=messages",
+                new { listing = listing.Baslik }, ct));
     }
 
     public async Task Report(

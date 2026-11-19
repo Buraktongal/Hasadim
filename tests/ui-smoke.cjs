@@ -75,12 +75,24 @@ const context=vm.createContext({document:doc,window:{location},fetch:fetcher,For
 context.history={replaceState(_state,_title,url){location.href=new URL(url,'https://localhost').href;}};
 vm.runInContext(fs.readFileSync(path.join(root,'js/phone-input.js'),'utf8'),context);
 assert.equal(context.window.formatListingPhone,undefined,'Listing form no longer asks for a phone');
+context.Option=function(text,value){const e=doc.createElement('option');e.textContent=text;e.value=value;return e;};
+E.prototype.add=function(option){this.append(option);};
+vm.runInContext(fs.readFileSync(path.join(root,'js/fruit-varieties.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'js/product-catalog.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'js/listing-category.js'),'utf8'),context);
+assert(context.window.HasadimCatalog.products('Tahil').includes('Buğday'),'Tahıl kategorisinde buğday var');
+assert(context.window.HasadimCatalog.products('Yem').includes('Yonca balyası'),'Yem kategorisinde yonca balyası var');
+assert(context.window.HasadimCatalog.products('Kuruyemis').includes('Ceviz'),'Kuruyemiş kategorisinde ceviz var');
+assert(context.window.HasadimCatalog.products('Bal').includes('Bal'),'Bal kategorisi var');
+assert(context.window.HasadimCatalog.products('Arazi').includes('Tarla'),'Arazi kategorisi var');
+assert.equal(context.window.HasadimCatalog.categoryOf('Arpa'),'Tahil');
+assert(context.window.HasadimCatalog.products('Meyve').includes('Elma')&&!context.window.HasadimCatalog.products('Meyve').includes('Buğday'),'Meyve listesi diğer kategorileri içermez');
 context.window.setupFruitVarietySelectors=()=>{};
 context.window.setupLocationSelectors=async()=>{};
 const run=s=>vm.runInContext(s,context),tick=()=>new Promise(r=>setTimeout(r,15)),get=s=>doc.querySelector(s);
 const field=(form,name,value)=>get(form).elements.namedItem(name).value=value;
 async function publish(){ const form=get('#editorForm'); const before=logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length; await form.onsubmit({preventDefault(){},currentTarget:form}); assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,before,'Preview must not create a listing'); assert.equal(get('#listingPreview').hidden,false); await form.onsubmit({preventDefault(){},currentTarget:form}); }
-function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',aciklama:'Test'}))field('#editorForm',k,v);}
+function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,type:'image/png'}];for(const [k,v]of Object.entries({kategori:'Meyve',baslik:'Korkuteli yeni elma',meyveTuru:'Elma',cesit:'Starking',miktarKg:'100',kilogramFiyati:'25',il:'Antalya',ilce:'Korkuteli',aciklama:'Test'}))field('#editorForm',k,v);}
 (async()=>{
  vm.runInContext(fs.readFileSync(path.join(root,'js/return-path.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/listing-editor.js'),'utf8'),context);
@@ -136,6 +148,9 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
  await get('#newBtn').onclick();assert.equal(get('#editorDialog').open,true,'Header action opens the listing form without a phone formatter');get('#editorDialog').close();
  await get('[data-account-action="create-listing"]').onclick();assert.equal(get('#editorDialog').open,true,'Menu action opens the listing form');fill();await publish();await tick();assert.equal(items.length,2);const first=items[1].id;
  run('openEditor()');assert.equal(get('#editorForm').elements.namedItem('id').value,'');assert.equal(get('#editorForm').elements.namedItem('version').value,'');fill();await publish();await tick();assert.equal(items.length,3);assert.notEqual(items[2].id,first);assert.equal(items[1].ownerId,items[2].ownerId);assert.equal(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').length,2);console.log('PASS: same user creates two listings with fresh GUID IDs');
+ {const sent=JSON.parse(logs.filter(x=>x.method==='POST'&&x.url==='/api/meyve-ilanlari/with-photos').at(-1).body.get('listing'));
+  assert.equal(sent.kategori,'Meyve');assert.equal(sent.birim,'kg');assert.equal(sent.elektrik,null);assert.equal(sent.enlem,null);
+  console.log('PASS: listing body carries category, unit and optional map location');}
  assert.equal(items[1].status,4);assert(get('#listings').textContent.includes('Yayında'));
  assert(items[1].active);assert(items[2].active);
  const ownerDetail=new E('div');ownerDetail.id='detailContent';doc.append(ownerDetail);

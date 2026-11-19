@@ -16,14 +16,19 @@ window.MarketPresentation = (() => {
     function stats(x) {
         return node('p', number(x.viewCount || 0) + ' görüntülenme · ' + number(x.favoriteCount || 0) + ' favori', 'listing-stats');
     }
+    const unit = x => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[x?.birim] || 'kg';
+    const land = x => x?.kategori === 'Arazi';
+    // Ürünlerde birim fiyat, arazide toplam fiyat (ve m² fiyatı) gösterilir.
     function price(x) {
-        const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY'}).format(value);
+        const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: land(x) ? 0 : 2}).format(value);
+        const suffix = land(x) ? '' : ' / ' + unit(x);
         const root = node('div', undefined, 'listing-price');
-        const current = node('p', currency(x.kilogramFiyati) + ' / kg', 'price');
+        const current = node('p', currency(x.kilogramFiyati) + suffix, 'price');
         root.append(current);
+        if (land(x) && x.miktarKg > 0) root.append(node('span', new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(x.kilogramFiyati / x.miktarKg) + ' / m²', 'unit-price'));
         if (x.oncekiKilogramFiyati > x.kilogramFiyati && x.kilogramFiyati > 0) {
             const percent = Math.round((1 - x.kilogramFiyati / x.oncekiKilogramFiyati) * 1000) / 10;
-            const old = node('del', currency(x.oncekiKilogramFiyati) + ' / kg');
+            const old = node('del', currency(x.oncekiKilogramFiyati) + suffix);
             old.setAttribute('aria-label', 'Önceki ilan fiyatı: ' + currency(x.oncekiKilogramFiyati));
             // Yalnızca fiyat düştüyse gösterilir; artışlarda eski fiyat hiç görünmez.
             current.classList?.add?.('has-discount');
@@ -46,7 +51,7 @@ window.MarketPresentation = (() => {
     }
     function facts(x) {
         const root = node('dl', undefined, 'harvest-facts');
-        for (const [label, value] of [['Miktar', number(x.miktarKg) + ' kg'], ['Hasat tarihi', date(x.hasatTarihi)]]) {
+        for (const [label, value] of [[land(x) ? 'Alan' : 'Miktar', number(x.miktarKg) + ' ' + unit(x)], ['Hasat tarihi', date(x.hasatTarihi)]]) {
             const item = node('div');
             item.append(node('dt', label), node('dd', value));
             root.append(item);
@@ -77,7 +82,9 @@ window.MarketPresentation = (() => {
         for (const [label, value] of [['Yayındaki ilan', Number.isInteger(p.activeListingCount) ? number(p.activeListingCount) : 'Belirtilmedi'], ['Üyelik tarihi', date(p.memberSince)]]) {
             const item = node('div'); item.append(node('dt', label), node('dd', value)); stats.append(item);
         }
-        root.append(header, badges, stats, node('p', p.about || 'Satıcı henüz tanıtım bilgisi eklememiş.', 'seller-about'));
+        const about = node('p', p.about || 'Satıcı henüz tanıtım bilgisi eklememiş.', 'seller-about');
+        if (p.about) about.setAttribute('translate', 'no');
+        root.append(header, badges, stats, about);
         root.append(node('small', 'E-posta doğrulaması, ürün kalitesi veya ticari kimlik onayı değildir.', 'muted'));
         if (full && p.phone) {
             root.append(contact(p.phone, { message: 'Merhaba, Hasadım\'daki satıcı profilinizi gördüm.' }));
@@ -138,7 +145,8 @@ window.MarketPresentation = (() => {
     function estimate(x) {
         const root = node('section', undefined, 'quantity-estimate');
         const heading = node('h3', 'Alım tutarını hesapla');
-        const label = node('label', 'Almak istediğin miktar (kg)');
+        const u = unit(x);
+        const label = node('label', 'Almak istediğin miktar (' + u + ')');
         const input = node('input');
         const minimum = x.minAlimKg || 0.01;
         input.type = 'number'; input.min = String(minimum); input.max = String(x.miktarKg); input.step = '0.01';
@@ -149,7 +157,7 @@ window.MarketPresentation = (() => {
         const update = () => {
             const amount = Number(input.value);
             if (!Number.isFinite(amount) || amount < minimum || amount > x.miktarKg) {
-                result.textContent = number(minimum) + ' ile ' + number(x.miktarKg) + ' kg arasında bir miktar gir.';
+                result.textContent = number(minimum) + ' ile ' + number(x.miktarKg) + ' ' + u + ' arasında bir miktar gir.';
                 input.setAttribute('aria-invalid', 'true'); return;
             }
             input.setAttribute('aria-invalid', 'false');
@@ -159,5 +167,28 @@ window.MarketPresentation = (() => {
         root.append(heading, label, result, node('small', 'İlan fiyatına göre hesaplanır. Sipariş oluşturmaz; teslimat, ek masraflar ve satış koşullarını satıcıyla netleştir.', 'muted'));
         return root;
     }
-    return { facts, seller, estimate, stats, price, recordView, contact };
+    // İlan detayında konum haritası. İşaretli konum yoksa il merkezine yakın yaklaşık konum.
+    function locationMap(x) {
+        const root = node('section', undefined, 'detail-map');
+        root.append(node('h3', 'Konum'));
+        const exact = x.enlem !== null && x.enlem !== undefined && x.boylam !== null && x.boylam !== undefined;
+        const point = exact ? [Number(x.enlem), Number(x.boylam)] : window.HasadimMap?.approximate(x.id, x.il);
+        root.append(node('p', x.il + ' / ' + x.ilce + (exact ? '' : ' · yaklaşık konum'), 'muted'));
+        const box = node('div', undefined, 'mini-map detail-mini-map');
+        box.setAttribute('aria-label', 'İlan konumu haritası');
+        root.append(box);
+        if (point && window.HasadimMap) {
+            // Harita, sayfaya eklendikten sonra ölçülerek çizilir.
+            setTimeout(() => {
+                const map = window.HasadimMap.create(box, { center: point, zoom: exact ? 13 : 9 });
+                map?.setPin(point[0], point[1]);
+            });
+            const link = node('a', 'Haritada büyük aç ↗', 'textbtn');
+            link.href = 'https://www.openstreetmap.org/?mlat=' + point[0] + '&mlon=' + point[1] + '#map=' + (exact ? 14 : 10) + '/' + point[0] + '/' + point[1];
+            link.target = '_blank'; link.rel = 'noopener noreferrer';
+            root.append(link);
+        } else box.hidden = true;
+        return root;
+    }
+    return { facts, seller, estimate, stats, price, recordView, contact, locationMap };
 })();

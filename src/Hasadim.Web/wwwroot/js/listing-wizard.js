@@ -29,11 +29,15 @@ window.ListingWizard = (() => {
                 return false;
             }
         }
-        // Çeşit seçimi meyve seçilmeden açılmaz; ayrıca kontrol et.
+        // Kategori ve ürün seçilmeden ilerlenemez.
         if (step === 1) {
+            if (!form().elements.namedItem('kategori')?.value) {
+                setError('Devam etmek için bir kategori seç.');
+                return false;
+            }
             const f = form().elements.namedItem('meyveTuru');
             if (f && !f.value) {
-                setError('Devam etmek için bir meyve türü seç.');
+                setError(window.HasadimCatalog?.isLand(form().elements.namedItem('kategori').value) ? 'Devam etmek için arazi türünü seç.' : 'Devam etmek için bir ürün seç.');
                 return false;
             }
         }
@@ -70,6 +74,8 @@ window.ListingWizard = (() => {
         if (next) next.hidden = current === total;
         if (submit) submit.hidden = current !== total;
         root.dataset.step = String(current);
+        // Harita, görünür olduğunda boyutunu doğru ölçebilsin diye 3. adımda açılır.
+        if (current === 3) window.LocationPicker?.show(root);
     }
 
     function go(step, { check = true } = {}) {
@@ -87,12 +93,55 @@ window.ListingWizard = (() => {
         return true;
     }
 
-    // Kategori kutucukları meyve seçimini doldurur.
+    // Ana kategori kutucukları (Meyve, Tahıl, Yem/balya, Bal, Kuruyemiş, Arazi).
+    function renderMainTiles() {
+        const root = $('#mainCategoryTiles');
+        const catalog = window.HasadimCatalog;
+        if (!root || !catalog) return;
+        const selected = form()?.elements.namedItem('kategori')?.value || '';
+        root.replaceChildren();
+        for (const c of catalog.categories) {
+            const tile = document.createElement('button');
+            tile.type = 'button';
+            tile.className = 'main-category-tile' + (c.id === selected ? ' selected' : '');
+            tile.dataset.category = c.id;
+            tile.setAttribute('aria-pressed', String(c.id === selected));
+            const icon = window.FruitIcons ? window.FruitIcons.node(c.icon, 34, 'tile-icon') : document.createElement('span');
+            const name = document.createElement('strong');
+            name.textContent = c.name;
+            const count = document.createElement('small');
+            count.textContent = c.land ? 'Tarla, bahçe, bağ…' : c.products.slice(0, 3).join(', ') + '…';
+            tile.append(icon, name, count);
+            tile.onclick = () => pickCategory(c.id, tile);
+            root.append(tile);
+        }
+    }
+
+    function pickCategory(id, tile) {
+        const root = form();
+        const before = root.elements.namedItem('kategori').value;
+        if (before !== id) window.ListingCategory?.apply(root, id);
+        renderMainTiles();
+        refreshTiles();
+        setError('');
+        const tiles = $('#categoryTiles');
+        if (tiles && before !== id) {
+            tiles.classList.remove('is-entering');
+            void tiles.offsetWidth;
+            tiles.classList.add('is-entering');
+            setTimeout(() => tiles.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }), 120);
+        }
+        void tile;
+    }
+
+    // Ürün kutucukları seçili kategorinin ürünleriyle dolar.
     function refreshTiles() {
+        renderMainTiles();
         const root = $('#categoryTiles');
         const select = form()?.elements.namedItem('meyveTuru');
         if (!root || !select) return;
         root.replaceChildren();
+        root.hidden = !form().elements.namedItem('kategori')?.value;
         const options = Array.from(select.options || select.children || []).filter(o => o.value);
         for (const o of options) {
             const tile = document.createElement('button');
@@ -146,8 +195,9 @@ window.ListingWizard = (() => {
         const fruit = form()?.elements.namedItem('meyveTuru')?.value;
         const variety = form()?.elements.namedItem('cesit');
         if (!panel || !variety) return;
-        panel.hidden = !fruit;
-        if (!fruit) return;
+        const land = window.HasadimCatalog?.isLand(form()?.elements.namedItem('kategori')?.value);
+        panel.hidden = !fruit || land || !(window.HasadimCatalog?.varieties(fruit) || []).length;
+        if (panel.hidden) return;
         const title = panel.querySelector('.variety-title');
         if (title) title.textContent = fruit + ' çeşidini seç';
         const chips = panel.querySelector('.variety-chips');
@@ -157,6 +207,7 @@ window.ListingWizard = (() => {
             chip.type = 'button';
             chip.className = 'variety-chip' + (o.value === variety.value ? ' selected' : '');
             chip.textContent = o.value;
+            chip.dataset.value = o.value;
             chip.setAttribute('aria-pressed', String(o.value === variety.value));
             chip.style?.setProperty?.('--i', String(i));
             chip.onclick = () => {
@@ -199,7 +250,7 @@ window.ListingWizard = (() => {
         root.elements.namedItem('cesit')?.addEventListener('change', () => {
             const value = root.elements.namedItem('cesit').value;
             for (const c of document.querySelectorAll('#varietyPanel .variety-chip')) {
-                const on = c.textContent === value;
+                const on = c.dataset.value === value;
                 c.classList.toggle('selected', on);
                 c.setAttribute('aria-pressed', String(on));
             }
@@ -222,5 +273,5 @@ window.ListingWizard = (() => {
         render();
     }
 
-    return { reset, go, refreshTiles, current: () => current };
+    return { reset, go, refreshTiles, pickCategory, current: () => current };
 })();

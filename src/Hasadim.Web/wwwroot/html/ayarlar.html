@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Ayarlar — Hasadım</title>
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css">
+    <link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/ticaret.css">
+    <link rel="stylesheet" href="/css/hesap.css"><link rel="stylesheet" href="/css/hesap-merkezi.css">
+    <link rel="stylesheet" href="/css/tema-koyu.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
+    <script src="/js/fruit-icons.js" defer></script>
+    <script src="/js/fruit-varieties.js" defer></script>
+    <script src="/js/product-catalog.js" defer></script>
+    <script src="/js/market-catalog.js" defer></script>
+    <script src="/js/confirm-dialog.js" defer></script>
+    <script src="/js/notification-bell.js" defer></script>
+    <script src="/js/site-header.js" defer></script>
+    <script src="/js/hasadim-api.js" defer></script>
+    <script src="/js/account-nav.js" defer></script>
+    <script src="/js/settings.js" defer></script>
+    <script src="/js/navigation.js" defer></script>
+</head>
+<body data-page="settings">
+<div id="siteLayout"></div>
+<main class="account-page">
+    <div class="account-layout">
+        <aside class="account-sidebar">
+            <nav class="account-nav" data-account-nav aria-label="Hesabım menüsü"></nav>
+        </aside>
+        <div class="account-content">
+            <header class="account-head">
+                <p class="eyebrow">Hesabım</p>
+                <h1>Ayarlar</h1>
+                <p>Görünüm, dil ve bildirim tercihlerini yönet; gerekirse hesabını sil.</p>
+            </header>
+            <p id="settingsStatus" role="status" aria-live="polite"></p>
+            <section class="account-panel" aria-labelledby="appearanceTitle">
+                <h2 id="appearanceTitle">Görünüm</h2>
+                <p class="muted">Koyu mod gözü yormaz ve gece kullanımında pil tasarrufu sağlar.</p>
+                <div class="choice-row" role="radiogroup" aria-labelledby="appearanceTitle">
+                    <label class="choice-card"><input type="radio" name="theme" value="system"><span class="theme-sample sample-system" aria-hidden="true"></span><strong>Cihaza göre</strong><small>Telefon veya bilgisayar ayarını izler</small></label>
+                    <label class="choice-card"><input type="radio" name="theme" value="light"><span class="theme-sample sample-light" aria-hidden="true"></span><strong>Açık mod</strong><small>Gündüz kullanımı için</small></label>
+                    <label class="choice-card"><input type="radio" name="theme" value="dark"><span class="theme-sample sample-dark" aria-hidden="true"></span><strong>Koyu mod</strong><small>Karanlık ortamlar için</small></label>
+                </div>
+            </section>
+            <section class="account-panel" aria-labelledby="languageTitle">
+                <h2 id="languageTitle">Dil / Language</h2>
+                <div class="choice-row" role="radiogroup" aria-labelledby="languageTitle">
+                    <label class="choice-card"><input type="radio" name="language" value="tr"><span class="lang-flag" aria-hidden="true">TR</span><strong>Türkçe</strong><small>Varsayılan dil</small></label>
+                    <label class="choice-card"><input type="radio" name="language" value="en"><span class="lang-flag" aria-hidden="true">EN</span><strong>English</strong><small>Menus and pages in English</small></label>
+                </div>
+                <small class="muted" data-no-i18n>İlan başlıkları ve açıklamaları satıcının yazdığı dilde gösterilir. · Listing titles and descriptions are shown as written by the seller.</small>
+            </section>
+            <section class="account-panel" id="bildirim-ayarlari" aria-labelledby="notifyTitle" data-auth-only hidden>
+                <h2 id="notifyTitle">Bildirim tercihleri</h2>
+                <p class="muted">Hangi durumlarda uygulama içi bildirim almak istediğini seç.</p>
+                <form id="notifyForm" class="toggle-list">
+                    <label class="switch-row"><span><strong>Mesajlar</strong><small>İlanlarınla ilgili yeni mesaj geldiğinde</small></span><input type="checkbox" name="notifyMessages" role="switch"></label>
+                    <label class="switch-row"><span><strong>Teklifler</strong><small>Teklif aldığında, teklifin kabul edildiğinde veya reddedildiğinde</small></span><input type="checkbox" name="notifyOffers" role="switch"></label>
+                    <label class="switch-row"><span><strong>Kayıtlı aramalar</strong><small>Kayıtlı aramana uyan yeni ilan yayına girdiğinde</small></span><input type="checkbox" name="notifySavedSearches" role="switch"></label>
+                    <label class="switch-row"><span><strong>Fiyat düşüşleri</strong><small>Favorindeki bir ilanın fiyatı düştüğünde</small></span><input type="checkbox" name="notifyPriceDrops" role="switch"></label>
+                </form>
+            </section>
+            <section class="account-panel" aria-labelledby="privacyTitle" data-auth-only hidden>
+                <h2 id="privacyTitle">Gizlilik</h2>
+                <ul class="link-list">
+                    <li><a href="/html/profilim.html">Telefon numaramın görünürlüğü</a></li>
+                    <li><a href="/html/engellenenler.html">Engellenen üyeler</a></li>
+                    <li><a href="/html/hesabim.html">Şifre ve oturumlar</a></li>
+                </ul>
+            </section>
+            <section class="account-panel danger-zone" aria-labelledby="deleteTitle" data-auth-only hidden>
+                <h2 id="deleteTitle">Hesabı sil</h2>
+                <p>Hesabını sildiğinde <strong>tüm ilanların yayından kalkar</strong>, favorilerin, kayıtlı aramaların, bildirimlerin ve profil bilgilerin kalıcı olarak silinir. Karşı tarafın mesaj geçmişinde adın “Silinmiş üye” olarak görünür. Bu işlem geri alınamaz.</p>
+                <form id="deleteForm" class="stack-form">
+                    <label data-password-field>Şifren<input name="password" type="password" maxlength="128" autocomplete="current-password"></label>
+                    <label>Onaylamak için <strong>HESABIMI SİL</strong> yaz<input name="confirm" required maxlength="40" autocomplete="off" spellcheck="false"></label>
+                    <p class="form-error" role="alert"></p>
+                    <button class="danger" type="submit">Hesabımı kalıcı olarak sil</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+<div id="siteFooter"></div>
+<div id="toast" role="status" hidden></div>
+</body>
+</html>

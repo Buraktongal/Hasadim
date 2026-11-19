@@ -4,6 +4,11 @@ const fruits = {Elma: '🍎', Armut: '🍐', Ayva: '🍐', Portakal: '🍊', Man
 const money = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n);
 const number = n => new Intl.NumberFormat('tr-TR').format(n);
 const date = v => v ? v.slice(0,10).split('-').reverse().join('.') : 'Belirtilmedi';
+// Birim ve kategoriye göre miktar/fiyat metinleri.
+const unitOf = x => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[x?.birim] || 'kg';
+const isLand = x => x?.kategori === 'Arazi';
+const qtyText = x => isLand(x) ? number(x.miktarKg) + ' m² · ' + new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(x.miktarKg / 1000) + ' dönüm' : number(x.miktarKg) + ' ' + unitOf(x);
+const categoryName = id => window.HasadimCatalog?.category(id)?.name || 'Meyve';
 // Sayfalama: sunucudan yalnızca seçili sayfadaki ilanlar istenir.
 const PAGE_SIZES = [10, 25, 50, 100];
 const urlParams0 = new URLSearchParams(location.search);
@@ -54,6 +59,7 @@ async function session() {
     }
     await token();
     void window.messageAlerts?.refresh();
+    void window.NotificationBell?.refresh(user);
 }
 function openAuth(){closeAccountMenu();window.location.href=user?'/html/profilim.html':'/html/giris.html?returnUrl='+encodeURIComponent(window.HasadimReturn.resolve(location.pathname+location.search));}
 async function submit(form,task){const b=form.querySelector('[type=submit]')||form.querySelector('button');if(b.disabled)return;b.disabled=true;form.querySelector('.form-error').textContent='';try{await task();}catch(e){form.querySelector('.form-error').textContent=e.message;}finally{b.disabled=false;}}
@@ -62,7 +68,7 @@ $('#accountBtn').onclick=openAuth;
 async function confirmAction(message, options) { return window.HasadimConfirm ? window.HasadimConfirm(message, options) : confirm(message); }
 $('#logoutBtn').onclick=async()=>{closeAccountMenu();if(!await confirmAction('Hesabından çıkış yapmak istediğine emin misin?',{title:'Çıkış yap',okText:'Çıkış yap'}))return;try{await api('/api/account/logout','POST');if(isDetailPage()){window.location.href='/';return;}await session();await changeView('all');toast('Çıkış yapıldı.');}catch(e){toast(e.message);}};
 for(const b of document.querySelectorAll('[data-close]'))b.onclick=()=>close(b.dataset.close);
-for(const name of Object.keys(fruits)){for(const id of ['fruitFilter','editorFruit']){const o=el('option',name);o.value=name;$('#'+id).append(o);}}
+// Ürün seçenekleri kategoriye göre doldurulur (market-catalog.js, listing-category.js).
 // Ortak hesap menüsü: seçim, dışarı tıklama ve Escape ile kapanır.
 for (const item of document.querySelectorAll('[data-view]')) {
     item.onclick = async () => {
@@ -173,12 +179,12 @@ function marketCrumbs() {
     const form = $('#filters');
     const value = name => form.elements.namedItem(name)?.value?.trim() || '';
     const base = '/html/index.html';
-    const items = [{ label: 'Ana sayfa', href: '/' }, { label: 'Meyve ilanları', href: base }];
-    const fruit = value('meyveTuru'), variety = value('cesit'), city = value('il'), district = value('ilce'), query = value('q');
+    const items = [{ label: 'Ana sayfa', href: '/' }, { label: 'İlanlar', href: base }];
+    const category = value('kategori'), fruit = value('meyveTuru'), variety = value('cesit'), city = value('il'), district = value('ilce'), query = value('q');
     const params = new URLSearchParams();
-    for (const [key, label] of [['meyveTuru', fruit], ['cesit', variety], ['il', city], ['ilce', district]]) {
+    for (const [key, label] of [['kategori', category ? categoryName(category) : ''], ['meyveTuru', fruit], ['cesit', variety], ['il', city], ['ilce', district]]) {
         if (!label) continue;
-        params.set(key, label);
+        params.set(key, key === 'kategori' ? category : label);
         items.push({ label, href: base + '?' + params });
     }
     if (query) items.push({ label: '“' + query + '” araması' });
@@ -200,7 +206,8 @@ async function loadListings(){
  $('#listStatus').textContent='İlanlar yükleniyor…';$('#prevPage').disabled=true;$('#nextPage').disabled=true;
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
- $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value;window.MarketCatalog.highlight(selectedFruit);if(view==='all'){$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':'Tüm meyve ilanları';marketCrumbs();}
+ $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value,selectedCategory=$('#filters').elements.namedItem('kategori').value;window.MarketCatalog.highlight({kategori:selectedCategory,meyveTuru:selectedFruit});if(view==='all'){$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':selectedCategory?categoryName(selectedCategory)+' ilanları':'Tüm ilanlar';marketCrumbs();}
+ window.SavedSearch?.sync($('#filters'),view==='all');
  if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
  renderPager(data);
@@ -266,15 +273,17 @@ function card(x) {
     const main = el('div', undefined, 'card-body card-main');
     const title = el('h3');
     const link = el('a', x.baslik, 'card-title');
+    link.setAttribute('translate', 'no');
     link.href = '/html/ilan.html?id=' + encodeURIComponent(x.id) + '&from=' + encodeURIComponent(view);
     link.addEventListener('click', event => { event.preventDefault(); openDetail(x.id); });
     title.append(link);
     main.append(
-        el('span', x.meyveTuru + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
+        el('span', (isLand(x) ? 'Satılık ' + x.meyveTuru.toLocaleLowerCase('tr-TR') : x.meyveTuru) + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
         title,
-        el('p', x.il + ' / ' + x.ilce + ' · ' + number(x.miktarKg) + ' kg', 'card-meta'));
+        el('p', x.il + ' / ' + x.ilce + ' · ' + qtyText(x), 'card-meta'));
     const badges = el('div', undefined, 'card-badges');
-    if (x.minAlimKg) badges.append(el('span', 'Min. ' + number(x.minAlimKg) + ' kg', 'badge'));
+    if (isLand(x)) for (const v of [x.imarDurumu, x.tapuDurumu, x.sulama, x.yolCephesi ? 'Yola cepheli' : '', x.elektrik ? 'Elektrik var' : '']) if (v) badges.append(el('span', v, 'badge'));
+    if (x.minAlimKg) badges.append(el('span', 'Min. ' + number(x.minAlimKg) + ' ' + unitOf(x), 'badge'));
     if (x.ambalaj) badges.append(el('span', x.ambalaj, 'badge'));
     if (x.teslimat) badges.append(el('span', x.teslimat, 'badge'));
     if (x.hasatTarihi) badges.append(el('span', 'Hasat ' + date(x.hasatTarihi), 'badge'));
@@ -290,8 +299,8 @@ function card(x) {
     };
     const priceBox = window.MarketPresentation.price(x);
     c.append(media, main,
-        column('col-variety', 'Çeşit', x.cesit || '—'),
-        column('col-qty', 'Miktar', number(x.miktarKg) + ' kg'),
+        column('col-variety', isLand(x) ? 'Arazi türü' : 'Çeşit', isLand(x) ? x.meyveTuru : (x.cesit || '—')),
+        column('col-qty', isLand(x) ? 'Alan' : 'Miktar', isLand(x) ? number(x.miktarKg) + ' m²' : number(x.miktarKg) + ' ' + unitOf(x)),
         column('col-price', 'Fiyat', priceBox),
         column('col-date', 'İlan tarihi', date(x.publishedAt || x.olusturulmaTarihi)),
         column('col-location', 'İl / İlçe', x.il + '\n' + x.ilce));
@@ -308,6 +317,7 @@ function card(x) {
 }
 $('#filters').onsubmit = e => { e.preventDefault(); page = 1; loadListings(); }; $('#clearFilters').onclick = () => {
     $('#filters').reset();
+    window.MarketCatalog.fillProducts($('#filters'));
     window.MarketCatalog.fillVarieties($('#filters'));
     window.MarketCatalog.syncSort($('#filters'));
     page = 1; loadListings();
@@ -358,17 +368,19 @@ async function renderDetail(id)
         const from = params.get('from');
         const crumbs = [{ label: 'Ana sayfa', href: '/' },
             { label: ({ mine: 'İlanlarım', history: 'Geçmiş ilanlar', favorites: 'Favorilerim', admin: 'Yönetim' })[from] || 'İlanlar', href: '/?view=' + encodeURIComponent(from || 'all') }];
-        if (!from || from === 'all') crumbs.push({ label: x.meyveTuru, href: '/html/index.html?meyveTuru=' + encodeURIComponent(x.meyveTuru) });
+        if (!from || from === 'all') crumbs.push({ label: categoryName(x.kategori), href: '/html/index.html?kategori=' + encodeURIComponent(x.kategori || 'Meyve') },
+            { label: x.meyveTuru, href: '/html/index.html?kategori=' + encodeURIComponent(x.kategori || 'Meyve') + '&meyveTuru=' + encodeURIComponent(x.meyveTuru) });
         crumbs.push({ label: x.baslik });
         window.setBreadcrumbs?.(crumbs);
         const originSeller = params.get('seller');
         if (originSeller === x.ownerId) window.setBreadcrumbs?.([{ label: 'Ana sayfa', href: '/' }, { label: x.ownerName, href: '/html/satici.html?id=' + encodeURIComponent(originSeller) }, { label: x.baslik }]);
-        window.MarketCatalog?.highlight(x.meyveTuru);
+        window.MarketCatalog?.highlight({ kategori: x.kategori, meyveTuru: x.meyveTuru });
 
         // Başlık satırı
         const head = el('header', undefined, 'detail-head');
-        head.append(el('p', x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik),
+        head.append(el('p', isLand(x) ? categoryName(x.kategori) + ' / ' + x.meyveTuru : x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik),
             el('p', 'İlan No: ' + x.listingNumber + ' · ' + x.il + ' / ' + x.ilce, 'detail-sub'));
+        head.querySelector('h2')?.setAttribute('translate', 'no');
         content.append(head);
 
         const layout = el('div', undefined, 'detail-layout');
@@ -385,7 +397,11 @@ async function renderDetail(id)
         // Fiyat ve ilan bilgileri tablosu
         infoCol.append(window.MarketPresentation.price(x));
         const grid = el('div', undefined, 'detail-grid info-table');
-        for (const [k, v] of Object.entries({ 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Meyve türü': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' kg', 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' kg' : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName })) {
+        const yes = v => v === true ? 'Var' : v === false ? 'Yok' : 'Belirtilmedi';
+        const info = isLand(x)
+            ? { 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Arazi türü': x.meyveTuru, 'Alan': qtyText(x), 'm² fiyatı': money(x.kilogramFiyati / x.miktarKg), 'İmar durumu': x.imarDurumu || 'Belirtilmedi', 'Tapu durumu': x.tapuDurumu || 'Belirtilmedi', 'Sulama': x.sulama || 'Belirtilmedi', 'Ada / parsel': [x.ada, x.parsel].filter(Boolean).join(' / ') || 'Belirtilmedi', 'Elektrik': yes(x.elektrik), 'Yol cephesi': yes(x.yolCephesi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName }
+            : { 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Kategori': categoryName(x.kategori), 'Ürün': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' ' + unitOf(x), 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' ' + unitOf(x) : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName };
+        for (const [k, v] of Object.entries(info)) {
             const n = el('div');
             n.append(el('span', k), el('strong', v)); grid.append(n);
         }
@@ -416,22 +432,31 @@ async function renderDetail(id)
             }));
             actions.append(button('Satıcıya mesaj gönder', 'primary',
                 () => openCompose(x.id, x.ownerId, x.baslik)));
+            actions.append(button('Teklif ver', 'secondary offer-button', () => window.OfferDialog?.open(x, { api, toast })));
             actions.append(button('İlanı bildir', 'textbtn', () => {
                 $('#reportForm').reset();
                 $('#reportForm [name=id]').value = id;
                 $('#reportForm .form-error').textContent = '';
                 show('reportDialog');
             }));
+            actions.append(button('Satıcıyı engelle', 'textbtn', async () => {
+                if (!await confirmAction(x.ownerName + ' engellenirse ilanlarını görmezsin; birbirinize mesaj ve teklif gönderemezsiniz. Engeli Ayarlar → Engellenen üyeler bölümünden kaldırabilirsin.', { title: 'Satıcı engellensin mi?', okText: 'Engelle', danger: true })) return;
+                try { const r = await api('/api/blocks/' + x.ownerId, 'POST'); toast(r?.mesaj || 'Üye engellendi.'); window.location.href = '/'; }
+                catch (error) { toast(error.message); }
+            }));
         } else if (!user && publiclyVisible) {
             actions.append(button('İletişim için giriş yap', 'primary', openAuth));
         }
         sideCol.append(actions);
-        if (publiclyVisible) sideCol.append(window.MarketPresentation.estimate(x));
+        if (publiclyVisible && !isLand(x)) sideCol.append(window.MarketPresentation.estimate(x));
+        sideCol.append(window.MarketPresentation.locationMap(x));
 
         // Alt bölüm: açıklama, sorular, yönetim işlemleri
         const lower = el('div', undefined, 'detail-lower');
         const description = el('section', undefined, 'description');
-        description.append(el('h3', 'Ürün açıklaması', 'listing-description-title'), el('p', x.aciklama || 'Açıklama eklenmemiş.'));
+        const descriptionText = el('p', x.aciklama || 'Açıklama eklenmemiş.');
+        if (x.aciklama) descriptionText.setAttribute('translate', 'no');
+        description.append(el('h3', isLand(x) ? 'Arazi açıklaması' : 'Ürün açıklaması', 'listing-description-title'), descriptionText);
         lower.append(description);
         content.append(lower);
         window.ListingWorkflow.appendReviewActions(lower, x);
@@ -507,20 +532,21 @@ async function openEditor(x) {
     $('#photoPreviews').replaceChildren();
 
     // Düzenlemede önce/sonra karşılaştırması için ilk değerler saklanır.
-    if (x) form.dataset.original = JSON.stringify({ baslik: x.baslik, meyveTuru: x.meyveTuru, cesit: x.cesit, miktarKg: x.miktarKg,
+    if (x) form.dataset.original = JSON.stringify({ baslik: x.baslik, kategori: x.kategori, birim: x.birim, meyveTuru: x.meyveTuru, cesit: x.cesit, miktarKg: x.miktarKg,
         kilogramFiyati: x.kilogramFiyati, minAlimKg: x.minAlimKg, ambalaj: x.ambalaj, teslimat: x.teslimat, il: x.il, ilce: x.ilce,
-        hasatTarihi: x.hasatTarihi ? x.hasatTarihi.slice(0, 10) : '', aciklama: x.aciklama, photoCount: photoCount });
+        hasatTarihi: x.hasatTarihi ? x.hasatTarihi.slice(0, 10) : '', aciklama: x.aciklama, photoCount: photoCount,
+        imarDurumu: x.imarDurumu, tapuDurumu: x.tapuDurumu, sulama: x.sulama, ada: x.ada, parsel: x.parsel, enlem: x.enlem, boylam: x.boylam });
     else delete form.dataset.original;
     window.ListingPhotos?.render(x, { api, toast, onChange: fresh => { if (isDetailPage()) void renderDetail(fresh.id); } });
 
     try {
         window.formatListingPhone?.();
 
-        window.setupFruitVarietySelectors(
-            form,
-            x?.meyveTuru ?? '',
-            x?.cesit ?? ''
-        );
+        // Yeni ilanda kategori kullanıcıya seçtirilir; düzenlemede ilanın kategorisi açılır.
+        window.ListingCategory.bind(form);
+        window.ListingCategory.apply(form, x?.kategori || 'Meyve', { product: x?.meyveTuru ?? '', variety: x?.cesit ?? '' });
+        if (!x) form.elements.namedItem('kategori').value = '';
+        window.LocationPicker?.reset(form, x?.enlem ?? null, x?.boylam ?? null);
 
         await window.setupLocationSelectors(
             form,
@@ -557,10 +583,13 @@ document
 window.ListingWorkflow.bindEditor();
 window.MarketTools.bindFilters($('#filters'), () => { page=1; return loadListings(); });
 window.MarketCatalog.bind($('#filters'), () => { page = 1; return loadListings(); });
-window.MarketCatalog.onCategory = async fruit => {
-    if (view !== 'all') return changeView('all', { filters: { meyveTuru: fruit } });
+window.SavedSearch?.bind({ api, toast, requireLogin: mustLogin });
+window.MarketCatalog.onCategory = async selection => {
+    const kategori = selection?.kategori || '', meyveTuru = selection?.meyveTuru || '';
+    if (view !== 'all') return changeView('all', { filters: { kategori, meyveTuru } });
     const form = $('#filters');
-    form.elements.namedItem('meyveTuru').value = fruit;
+    form.elements.namedItem('kategori').value = kategori;
+    window.MarketCatalog.fillProducts(form, meyveTuru);
     window.MarketCatalog.fillVarieties(form);
     page = 1;
     await loadListings();
@@ -590,14 +619,18 @@ $('#refreshAdmin').onclick = () => Promise.all([
             syncHeaderQuery(params.get('q') || '');
             const id = params.get('id');
             if (!id) throw Error('İlan bağlantısında ilan kimliği bulunamadı.');
-            window.MarketCatalog.highlight('');
+            window.MarketCatalog.highlight({});
             await renderDetail(id);
         } else {
+            if (params.get('hesap') === 'silindi') {
+                toast('Hesabın silindi. Hasadım’ı kullandığın için teşekkürler.');
+                const clean = new URL(location.href); clean.searchParams.delete('hesap'); history.replaceState(null, '', clean.pathname + clean.search);
+            }
             const initialView = params.get('view') || 'all';
             const permittedView = initialView === 'admin' && !user?.isAdmin
                 ? 'all' : initialView;
             await changeView(permittedView, { query: (params.get('q') || '').slice(0, 150), filters: window.MarketCatalog.readUrl() });
-            void window.MarketCatalog.refresh(api, $('#filters').elements.namedItem('meyveTuru').value);
+            void window.MarketCatalog.refresh(api, { kategori: $('#filters').elements.namedItem('kategori').value, meyveTuru: $('#filters').elements.namedItem('meyveTuru').value });
             if (params.get('action') === 'new-listing' && !user) {
                 window.location.href = '/html/giris.html?returnUrl=' + encodeURIComponent('/?action=new-listing');
                 return;

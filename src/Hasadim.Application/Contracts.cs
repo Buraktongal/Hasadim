@@ -34,12 +34,34 @@ public class ListingRequest
         ParseLimitsInInvariantCulture = true)]
     public decimal MiktarKg { get; set; }
 
+    // Ürünlerde birim fiyat (en fazla 1.000.000), arazide toplam fiyat.
+    // Kategoriye göre üst sınırı Core katmanı uygular.
     [Range(
         typeof(decimal),
         "0.01",
-        "1000000",
+        "10000000000",
         ParseLimitsInInvariantCulture = true)]
     public decimal KilogramFiyati { get; set; }
+
+    [Required, RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Kategori geçersiz.")]
+    public string Kategori { get; set; } = ListingCategories.Meyve;
+
+    [RegularExpression("^(kg|balya|m2)$", ErrorMessage = "Birim geçersiz.")]
+    public string? Birim { get; set; }
+
+    [StringLength(40)] public string? ImarDurumu { get; set; }
+    [StringLength(40)] public string? TapuDurumu { get; set; }
+    [StringLength(40)] public string? Sulama { get; set; }
+    [StringLength(20)] public string? Ada { get; set; }
+    [StringLength(20)] public string? Parsel { get; set; }
+    public bool? Elektrik { get; set; }
+    public bool? YolCephesi { get; set; }
+
+    [Range(typeof(decimal), "35.5", "42.5", ParseLimitsInInvariantCulture = true)]
+    public decimal? Enlem { get; set; }
+
+    [Range(typeof(decimal), "25.5", "45", ParseLimitsInInvariantCulture = true)]
+    public decimal? Boylam { get; set; }
 
     [Required, StringLength(100)]
     public string Il { get; set; } = "";
@@ -76,7 +98,10 @@ public class ListingRequest
         Aciklama,
         Telefon,
         HasatTarihi,
-        false, Ambalaj, Teslimat, MinAlimKg
+        false, Ambalaj, Teslimat, MinAlimKg,
+        Kategori, Birim,
+        new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi),
+        Enlem, Boylam
     );
 }
 
@@ -97,7 +122,16 @@ public class ListingQuery
     [StringLength(100)]
     public string? Cesit { get; set; }
 
-    [RegularExpression("^(Kasa|Koli|Dökme|Çuval|Diğer)$", ErrorMessage = "Geçersiz ambalaj seçeneği.")]
+    [RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
+    public string? Kategori { get; set; }
+
+    [StringLength(40)]
+    public string? ImarDurumu { get; set; }
+
+    [StringLength(40)]
+    public string? TapuDurumu { get; set; }
+
+    [RegularExpression("^(Kasa|Koli|Dökme|Çuval|Big bag|Balya|Kavanoz|Teneke|Diğer)$", ErrorMessage = "Geçersiz ambalaj seçeneği.")]
     public string? Ambalaj { get; set; }
 
     [RegularExpression("^(Yerinden teslim|Satıcı teslimatı|Görüşülür)$", ErrorMessage = "Geçersiz teslimat seçeneği.")]
@@ -165,6 +199,18 @@ public class ListingView
     public DateTime? HasatTarihi { get; set; }
     public DateTime OlusturulmaTarihi { get; set; }
 
+    public string Kategori { get; set; } = ListingCategories.Meyve;
+    public string Birim { get; set; } = "kg";
+    public string? ImarDurumu { get; set; }
+    public string? TapuDurumu { get; set; }
+    public string? Sulama { get; set; }
+    public string? Ada { get; set; }
+    public string? Parsel { get; set; }
+    public bool? Elektrik { get; set; }
+    public bool? YolCephesi { get; set; }
+    public decimal? Enlem { get; set; }
+    public decimal? Boylam { get; set; }
+
     public bool ShowPhone { get; set; } = true;
 
     public bool Active { get; set; }
@@ -207,7 +253,29 @@ public class ListingView
     };
 }
 
-public record CategoryCount(string MeyveTuru, int Count);
+// Sütun sırası SQL ile aynı olmalı (Dapper kurucuyu sıraya göre eşler).
+public record CategoryCount(string MeyveTuru, int Count, string Kategori = ListingCategories.Meyve);
+
+// Harita: il bazında ilan sayısı ve haritada gösterilecek ilan noktaları.
+public record CityCount(string Il, int Count);
+
+public record MapPoint(
+    Guid Id, string Baslik, string Kategori, string MeyveTuru, string Il, string Ilce,
+    decimal KilogramFiyati, string Birim, decimal MiktarKg, decimal? Enlem, decimal? Boylam);
+
+public record MapData(IReadOnlyList<CityCount> Iller, IReadOnlyList<MapPoint> Noktalar);
+
+public class MapQuery
+{
+    [RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
+    public string? Kategori { get; set; }
+
+    [StringLength(100)]
+    public string? MeyveTuru { get; set; }
+
+    [StringLength(100)]
+    public string? Il { get; set; }
+}
 
 public record Paged<T>(
     IReadOnlyList<T> Items,
@@ -280,8 +348,11 @@ public interface IMarketplaceRepository
     // Seçilen fotoğrafı ilk sıraya alır ve kapak yapar.
     Task SetCover(Guid id, Guid photoId, CancellationToken ct);
 
-    // Yayındaki ilanların meyve türüne göre sayıları.
+    // Yayındaki ilanların kategori ve ürün türüne göre sayıları.
     Task<IReadOnlyList<CategoryCount>> Categories(CancellationToken ct);
+
+    // Harita için il sayıları ve en yeni 500 ilan noktası.
+    Task<MapData> Map(MapQuery q, Guid? user, CancellationToken ct);
     Task<Paged<ListingView>> Search(
         ListingQuery q,
         Guid? user,
