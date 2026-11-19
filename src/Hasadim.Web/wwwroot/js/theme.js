@@ -39,6 +39,22 @@
         } catch { }
     }
 
+    // Görünüm değişiminde içeriğin kısa bir kayma ile gelmesi (hareket azaltma tercihine uyar).
+    window.HasadimMotion = {
+        enter(target) {
+            const el = typeof target === 'string' ? document.querySelector(target) : target;
+            if (!el || matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+            el.classList.remove('view-enter');
+            void el.offsetWidth;
+            el.classList.add('view-enter');
+        }
+    };
+    // Hesap ve araç sayfalarında içerik açılışta yumuşakça gelir.
+    document.addEventListener('DOMContentLoaded', () => {
+        const main = document.querySelector('main.account-page, main.tool-page, main.auth-main');
+        if (main) window.HasadimMotion.enter(main);
+    });
+
     window.HasadimTheme = {
         get: () => read(THEME, 'system'),
         set(choice) { write(THEME, choice); apply(choice); },

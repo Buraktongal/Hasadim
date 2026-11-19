@@ -71,7 +71,7 @@
     const sections = () => Array.from(document.querySelectorAll('[data-settings-section]'));
     function route() {
         const id = decodeURIComponent(location.hash.slice(1));
-        const target = sections().find(x => x.id === id && (user || !['bildirim-ayarlari', 'hesap-sil'].includes(x.id)));
+        const target = sections().find(x => x.id === id && (user || !['bildirim-ayarlari', 'hesap-sil', 'sifre'].includes(x.id)) && (x.id !== 'sifre' || !user || user.hasPassword));
         for (const section of sections()) section.hidden = section !== target;
         const menu = $('#settingsMenu');
         if (menu) menu.hidden = Boolean(target);
@@ -101,6 +101,27 @@
         if (user) set('bildirim-ayarlari', on === 4 ? 'Tüm bildirimler açık' : on === 0 ? 'Tüm bildirimler kapalı' : on + ' / 4 bildirim açık');
     }
 
+    // Şifre değiştirme (Ayarlar sayfası ve menü aynı işlevi kullanır).
+    function bindPassword(form) {
+        if (!form || form.dataset.bound) return;
+        form.dataset.bound = '1';
+        form.onsubmit = async event => {
+            event.preventDefault();
+            const error = form.querySelector('.form-error');
+            const data = Object.fromEntries(new FormData(form));
+            error.textContent = '';
+            if (data.newPassword !== data.newPasswordConfirm) { error.textContent = 'Yeni şifreler eşleşmiyor.'; return; }
+            const submit = form.querySelector('[type="submit"]');
+            submit.disabled = true;
+            try {
+                await window.HasadimApi('/api/account/change-password', 'POST', data);
+                try { sessionStorage.setItem('hasadim-auth-notice', JSON.stringify({ message: 'Şifren değiştirildi. Yeni şifrenle tekrar giriş yap.', email: '' })); } catch { }
+                location.replace('/html/giris.html');
+            } catch (e) { error.textContent = e.message; submit.disabled = false; }
+        };
+    }
+    window.HasadimPasswordForm = bindPassword;
+
     async function init() {
         addBackButtons();
         window.addEventListener('hashchange', route);
@@ -109,7 +130,8 @@
         fill({ theme: window.HasadimTheme?.get() || 'system', language: window.HasadimTheme?.language() || 'tr' });
         for (const input of document.querySelectorAll('#themeFollow, input[name="theme"], input[name="language"], #notifyForm input')) input.addEventListener('change', save);
         try { user = await api('/api/account/me'); } catch { user = null; }
-        for (const item of document.querySelectorAll('#settingsMenu [data-auth-only]')) item.hidden = !user;
+        for (const item of document.querySelectorAll('#settingsMenu [data-auth-only]')) item.hidden = !user || (item.hasAttribute('data-password-only') && !user.hasPassword);
+        bindPassword($('#passwordForm'));
         route();
         if (!user) return;
         try {

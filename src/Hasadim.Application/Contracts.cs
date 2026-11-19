@@ -159,7 +159,7 @@ public class ListingQuery
 
     // Arayüz 10, 25, 50 veya 100 seçtirir; sunucu en fazla 100 kayıt döndürür.
     [Range(1, 100)]
-    public int PageSize { get; set; } = 10;
+    public int PageSize { get; set; } = 25;
 
     public bool Mine { get; set; }
     public bool Favorites { get; set; }

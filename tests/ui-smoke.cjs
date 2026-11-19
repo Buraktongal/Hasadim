@@ -131,7 +131,7 @@ function fill(){get('#editorForm').elements.namedItem('photo').files=[{size:100,
 
  vm.runInContext(fs.readFileSync(path.join(root,'js/messages.js'),'utf8'),context);
  vm.runInContext(fs.readFileSync(path.join(root,'js/message-notifications.js'),'utf8'),context);
- vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);assert(logs.some(x=>x.url.startsWith('/api/meyve-ilanlari?')&&x.url.includes('pageSize=10')),'İlk açılışta yalnızca 10 ilan istenir');console.log('PASS: listing loaded');assert(logs.some(x=>x.url==='/api/messages/notifications'),'Application startup must start unread checks');
+ vm.runInContext(fs.readFileSync(path.join(root,'js/app.js'),'utf8'),context);await tick();assert.equal(get('#listings').children.length,1);assert(logs.some(x=>x.url.startsWith('/api/meyve-ilanlari?')&&x.url.includes('pageSize=25')),'İlk açılışta varsayılan 25 ilan istenir');console.log('PASS: listing loaded');assert(logs.some(x=>x.url==='/api/messages/notifications'),'Application startup must start unread checks');
  const menu=get('#accountMenu');
  assert(!menu.querySelector('summary').textContent.includes(current.displayName),'Personal name must stay out of the menu trigger');
  assert(menu.querySelector('.menu-identity').textContent.includes(current.displayName));

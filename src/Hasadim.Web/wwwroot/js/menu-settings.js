@@ -84,7 +84,8 @@
                     row({ icon: '🔔', title: 'Bildirim tercihleri', sub: 'Hangi bildirimleri alacağını seç', onClick: () => open('notifications') }),
                     row({ icon: '👤', title: 'Profil bilgilerim', sub: 'Ad, telefon ve görünürlük', href: '/html/profilim.html' }),
                     row({ icon: '🚫', title: 'Engellenen üyeler', sub: 'Engellediğin üyeleri yönet', href: '/html/engellenenler.html' }),
-                    row({ icon: '🔒', title: 'Hesap güvenliği', sub: 'Şifre ve oturumlar', href: '/html/hesabim.html' }),
+                    ...(u.hasPassword ? [row({ icon: '🔑', title: 'Şifre değiştir', sub: 'Değişince tüm cihazlardan çıkış yapılır', onClick: () => open('password') })] : []),
+                    row({ icon: '🔒', title: 'Hesap güvenliği', sub: 'Oturumlar ve iki adımlı doğrulama', href: '/html/hesabim.html' }),
                     row({ icon: '🗑️', title: 'Hesabı sil', sub: 'Hesabını ve ilanlarını kalıcı olarak sil', href: '/html/ayarlar.html#hesap-sil', danger: true }));
             }
             return ['Ayarlar', list];
@@ -110,6 +111,37 @@
                 option('menuLanguage', 'en', 'English', 'Menus and pages in English', language() === 'en', v => { save({ language: v }); render(); }));
             render();
             return ['Dil / Language', box];
+        },
+        password() {
+            const form = node('form', undefined, 'menu-sub-form');
+            const field = (label, name, auto) => {
+                const l = node('label', label);
+                const i = node('input');
+                i.type = 'password'; i.name = name; i.required = true; i.maxLength = 128; i.autocomplete = auto;
+                if (name !== 'password') i.minLength = 12;
+                l.append(i);
+                return l;
+            };
+            const submit = node('button', 'Şifreyi değiştir', 'primary');
+            submit.type = 'submit';
+            const error = node('p', '', 'form-error');
+            error.setAttribute('role', 'alert');
+            form.append(field('Mevcut şifre', 'password', 'current-password'), field('Yeni şifre', 'newPassword', 'new-password'),
+                field('Yeni şifre tekrar', 'newPasswordConfirm', 'new-password'),
+                node('small', 'En az 12 karakter; büyük harf, küçük harf ve rakam içermeli. Değişince tüm cihazlardan çıkış yapılır.', 'muted'), error, submit);
+            form.onsubmit = async event => {
+                event.preventDefault();
+                const data = Object.fromEntries(new FormData(form));
+                error.textContent = '';
+                if (data.newPassword !== data.newPasswordConfirm) { error.textContent = 'Yeni şifreler eşleşmiyor.'; return; }
+                submit.disabled = true;
+                try {
+                    await window.HasadimApi('/api/account/change-password', 'POST', data);
+                    try { sessionStorage.setItem('hasadim-auth-notice', JSON.stringify({ message: 'Şifren değiştirildi. Yeni şifrenle tekrar giriş yap.', email: '' })); } catch { }
+                    location.replace('/html/giris.html');
+                } catch (e) { error.textContent = e.message; submit.disabled = false; }
+            };
+            return ['Şifre değiştir', form];
         },
         async notifications() {
             const s = await loadSettings() || {};

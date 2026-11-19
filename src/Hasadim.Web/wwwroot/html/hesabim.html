@@ -42,7 +42,7 @@
             <header class="account-head">
                 <p class="eyebrow">Hesabım</p>
                 <h1>Hesap güvenliği</h1>
-                <p>Şifreni ve açık oturumlarını yönet.</p>
+                <p>Açık oturumlarını ve giriş güvenliğini yönet. Şifre değiştirme Ayarlar bölümünde.</p>
             </header>
             <p id="accountStatus" role="status"></p>
 
@@ -99,16 +99,9 @@
                 </div>
             </section>
 
-            <section class="account-panel" aria-labelledby="passwordTitle">
-                <h2 id="passwordTitle">Şifreni değiştir</h2>
-                <p class="muted">Şifren değişince tüm cihazlardan çıkış yapılır ve yeni şifrenle tekrar girersin.</p>
-                <form id="changeForm" class="stack-form">
-                    <label>Mevcut şifre<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
-                    <label>Yeni şifre<input name="newPassword" type="password" required minlength="12" maxlength="128" autocomplete="new-password"></label>
-                    <label>Yeni şifre tekrar<input name="newPasswordConfirm" type="password" required minlength="12" maxlength="128" autocomplete="new-password" data-match="newPassword"></label>
-                    <small class="match-hint" data-match-hint="newPasswordConfirm" aria-live="polite"></small>
-                    <button class="primary" type="submit">Şifreyi değiştir</button>
-                </form>
+            <section class="account-panel tip-panel" aria-labelledby="passwordTitle">
+                <p><strong id="passwordTitle">Şifre değiştirme Ayarlar'a taşındı.</strong> Sol üstteki Menü → Ayarlar → Şifre değiştir yolunu kullanabilirsin.</p>
+                <a class="secondary" href="/html/ayarlar.html#sifre">Şifremi değiştir</a>
             </section>
 
             <section class="account-panel" aria-labelledby="sessionsTitle">

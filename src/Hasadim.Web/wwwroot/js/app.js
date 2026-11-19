@@ -17,7 +17,7 @@ let pageSize = (() => {
     const fromUrl = Number(urlParams0.get('pageSize'));
     if (PAGE_SIZES.includes(fromUrl)) return fromUrl;
     try { const saved = Number(localStorage.getItem('hasadim-page-size')); if (PAGE_SIZES.includes(saved)) return saved; } catch { }
-    return 10;
+    return 25;
 })();
 let pendingPage = Math.max(1, Math.min(100000, Number(urlParams0.get('page')) || 1));
 let user=null, csrf='', view='all', page=1, registration=false, listRequest=0, detailRequest=0;
@@ -134,6 +134,8 @@ async function changeView(next, { query = '', filters = null } = {}) {
     window.setBreadcrumbs?.([
         { label: 'Ana sayfa', href: '/' }, { label: titles[next] }
     ]);
+    document.body.dataset.view = next;
+    window.HasadimMotion?.enter(next === 'messages' ? '#messagesView' : next === 'admin' ? '#adminView' : '#marketView');
     $('#hero').hidden = next !== 'all';
     $('#marketView').hidden = ['messages', 'admin'].includes(next);
     $('#messagesView').hidden = next !== 'messages';
@@ -173,7 +175,7 @@ function updateMarketAddress() {
     window.MarketCatalog.writeUrl(url, $('#filters'), !['messages', 'admin'].includes(view));
     const listView = !['messages', 'admin'].includes(view);
     if (listView && page > 1) url.searchParams.set('page', page); else url.searchParams.delete('page');
-    if (listView && pageSize !== 10) url.searchParams.set('pageSize', pageSize); else url.searchParams.delete('pageSize');
+    if (listView && pageSize !== 25) url.searchParams.set('pageSize', pageSize); else url.searchParams.delete('pageSize');
     history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
 // Pazar yerinde sayfa konumu seçili filtreleri izler: Ana sayfa › Meyve ilanları › Elma › Starking › Isparta
@@ -209,7 +211,7 @@ async function loadListings(){
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
  $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value,selectedCategory=$('#filters').elements.namedItem('kategori').value;window.MarketCatalog.highlight({kategori:selectedCategory,meyveTuru:selectedFruit});if(view==='all'){$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':selectedCategory?categoryName(selectedCategory)+' ilanları':'Tüm ilanlar';marketCrumbs();}
- window.SavedSearch?.sync($('#filters'),view==='all');
+ window.SavedSearch?.sync($('#filters'),view==='all');window.HasadimMotion?.enter('#listings');
  if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
  renderPager(data);
@@ -384,6 +386,7 @@ async function renderDetail(id)
             el('p', 'İlan No: ' + x.listingNumber + ' · ' + x.il + ' / ' + x.ilce, 'detail-sub'));
         head.querySelector('h2')?.setAttribute('translate', 'no');
         content.append(head);
+        window.HasadimMotion?.enter(content);
 
         const layout = el('div', undefined, 'detail-layout');
         const mediaCol = el('div', undefined, 'detail-media');

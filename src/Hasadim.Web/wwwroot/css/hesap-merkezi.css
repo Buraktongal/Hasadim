@@ -443,3 +443,39 @@ body:has(#siteLayout .header-new-listing) { padding-bottom: 84px; }
 @media (prefers-reduced-motion: reduce) {
     #siteLayout .account-menu-panel > .menu-sub, #siteLayout .account-menu-panel > :not(.menu-sub) { transition: none; }
 }
+
+/* ---------- Mesajlarım: üstte yalnızca logo ve arama, hemen altında mesajlar ---------- */
+body[data-view="messages"] #siteLayout .utility-bar,
+body[data-view="messages"] .category-bar,
+body[data-view="messages"] .category-quick,
+body[data-view="messages"] #breadcrumbs,
+body[data-view="messages"] .message-alert,
+body[data-view="messages"] #siteLayout .market-header > .header-new-listing { display: none !important; }
+body[data-view="messages"] { padding-bottom: 0; }
+body[data-view="messages"] main { padding-top: 8px; padding-bottom: 16px; }
+body[data-view="messages"] #messagesView .section-heading { margin: 4px 0 8px; align-items: center; }
+body[data-view="messages"] #messagesView .section-heading h2 { font-size: 22px; margin: 0; }
+body[data-view="messages"] #messagesView > p { margin: 0 0 10px; }
+body[data-view="messages"] #siteLayout .topbar.market-header { border-bottom: 1px solid var(--t-line); }
+
+/* ---------- Sayfa ve görünüm geçişleri ---------- */
+.view-enter { animation: hasadim-view-in .32s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes hasadim-view-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+/* Sayfadan sayfaya geçişte yumuşak kayma (destekleyen tarayıcılarda). */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: hasadim-page-out .18s ease both; }
+::view-transition-new(root) { animation: hasadim-page-in .28s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes hasadim-page-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes hasadim-page-in { from { opacity: 0; transform: translateY(10px); } }
+/* Üst menü geçiş sırasında yerinde kalır; yalnızca içerik kayar. */
+/* Başlık kendi katmanında: açılır menü, kayarak gelen içeriğin üstünde kalır. */
+#siteLayout .topbar.market-header { position: relative; z-index: 70; view-transition-name: site-header; }
+::view-transition-group(site-header) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+    .view-enter, ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}
+
+.menu-sub-form { display: grid; gap: 10px; padding: 4px; }
+.menu-sub-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; }
+.menu-sub-form input { width: 100%; box-sizing: border-box; }
+.menu-sub-form .form-error:empty { display: none; }
