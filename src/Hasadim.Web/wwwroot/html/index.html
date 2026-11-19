@@ -153,6 +153,14 @@
                                     <option value="qtyAsc">Miktar: azdan çoğa</option>
                                 </select>
                             </label>
+                            <label class="sort-bar">Göster
+                                <select id="pageSize" aria-label="Sayfa başına ilan sayısı">
+                                    <option value="10">10 ilan</option>
+                                    <option value="25">25 ilan</option>
+                                    <option value="50">50 ilan</option>
+                                    <option value="100">100 ilan</option>
+                                </select>
+                            </label>
                             <div class="view-toggle" role="group" aria-label="Görünüm">
                                 <button type="button" data-layout="list" aria-pressed="true">☰ Liste</button>
                                 <button type="button" data-layout="gallery" aria-pressed="false">▦ Galeri</button>
@@ -167,11 +175,12 @@
                     </div>
                     <div id="listings" class="cards list-view"></div>
 
-                    <div class="pagination">
+                    <nav class="pagination" aria-label="Sayfalar">
                         <button id="prevPage" type="button" class="secondary">← Önceki</button>
-                        <span id="pageLabel" aria-live="polite"></span>
+                        <div id="pageNumbers" class="page-numbers"></div>
                         <button id="nextPage" type="button" class="secondary">Sonraki →</button>
-                    </div>
+                    </nav>
+                    <p id="pageLabel" class="page-summary" aria-live="polite"></p>
                 </div>
             </div>
         </section>

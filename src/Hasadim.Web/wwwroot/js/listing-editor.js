@@ -59,9 +59,11 @@ window.ListingEditor = (() => {
         const oldPrice = num(before.kilogramFiyati), newPrice = num(after('kilogramFiyati'));
         if (oldPrice !== newPrice) {
             const diff = oldPrice ? Math.round((newPrice - oldPrice) / oldPrice * 1000) / 10 : 0;
+            // İndirim yeşil rozetle gösterilir; artışta rozet ve renk kullanılmaz.
+            const down = newPrice < oldPrice;
             rows.push({ label: 'Fiyat', before: money(oldPrice), after: money(newPrice),
-                kind: newPrice < oldPrice ? 'down' : 'up',
-                note: oldPrice ? (diff < 0 ? '%' + new Intl.NumberFormat('tr-TR').format(-diff) + ' düşüş' : '%' + new Intl.NumberFormat('tr-TR').format(diff) + ' artış') : '' });
+                kind: down ? 'down' : '',
+                note: down && oldPrice ? '%' + new Intl.NumberFormat('tr-TR').format(-diff) + ' indirim' : '' });
         }
         add('Toplam miktar', num(before.miktarKg), num(after('miktarKg')), v => v === null ? '—' : kg(v));
         add('Minimum alım', num(before.minAlimKg), num(after('minAlimKg')), v => v === null ? 'Belirtilmedi' : kg(v));

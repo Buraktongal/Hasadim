@@ -62,3 +62,8 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 - **Yeni meyveler:** Ayva, Greyfurt, Nektarin, Ahududu, Böğürtlen, Yaban mersini, Dut, Trabzon hurması; mevcut meyvelere yeni çeşitler (ör. Elma: Scarlet Spur, Red Chief, Jonagold, Braeburn, Arapkızı). Hepsine çizilmiş simge eklendi.
 - **İlan ver – meyve seçimi:** Kutucuk seçilince "pop" animasyonu ve onay işareti; ardından "{Meyve} çeşidini seç" paneli kayarak açılır, çeşitler çip olarak sırayla belirir. Hareket azaltma tercihinde animasyonlar kapanır.
 - **Mobil:** İlan verme adımlarında seçili adımın numarası ortalı; meyve kutucukları mobilde 3 sütun.
+
+## 7. tur düzenlemeleri
+- **Fiyat düşüşü yeşil:** İlan kartında ve detayda indirim yeşil "↓ %x indirim" rozetiyle, eski fiyat üstü çizili gösterilir. Fiyat artışında eski fiyat ve rozet hiç gösterilmez (düzenleme önizlemesinde de artış rozeti yok).
+- **Sayfalama:** İlk açılışta yalnızca 10 ilan istenir. "Göster" seçimi: 10 / 25 / 50 / 100 (tercih tarayıcıda saklanır). Sayfa numaraları (1 … 4 5 [6] 7 8 … 18), "444 ilandan 126–150 arası gösteriliyor". Sayfa ve sayfa boyutu adres çubuğunda (`?page=6&pageSize=25`). Sunucu en fazla 100 kayıt döndürür (`PageSize` 1–100, varsayılan 10).
+- **Giriş:** Kilitlenme ve doğrulanmamış e-posta için ayrı mesajlar; geliştirmede başarısız girişin nedeni API konsoluna yazılır. Demo şifreleri Türkçe karakter içermeyecek şekilde değişti (bkz. DEMO-VERI.md).

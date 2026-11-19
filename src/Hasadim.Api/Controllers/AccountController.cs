@@ -17,8 +17,10 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env):ControllerBase
 {
+ // Geliştirmede başarısız girişin nedeni API konsoluna yazılır (şifre yazılmaz).
+ void LogLogin(string email,string reason){if(env.IsDevelopment())logger.LogWarning("Giriş başarısız: {Email} — {Reason}",email,reason);}
  // İki adımlı doğrulama kurulumu şimdilik kapalı; açmak için "Features:TwoFactorSetup": true.
  bool TwoFactorSetupAvailable=>config.GetValue("Features:TwoFactorSetup",false);
  IActionResult SetupClosed()=>BadRequest(new{mesaj="İki adımlı doğrulama şu anda kullanıma kapalı."});
@@ -51,11 +53,14 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  [HttpPost("login")]
  public async Task<IActionResult> Login(LoginRequest r)
  {
+  const string failed="E-posta veya şifre hatalı. Şifrede büyük/küçük harf ve Türkçe karakterlere (ı/i, ö/o) dikkat et.";
   var u=await users.FindByEmailAsync(r.Email.Trim());
-  if(u is null)return Unauthorized(new{mesaj="Giriş yapılamadı. Bilgilerinizi ve e-posta doğrulamanızı kontrol edin; kilitlenme durumunda 15 dakika bekleyin."});
+  if(u is null){LogLogin(r.Email,"kullanıcı bulunamadı");return Unauthorized(new{mesaj=failed});}
   var result=await signIn.PasswordSignInAsync(u,r.Password,false,true);
   if(result.RequiresTwoFactor)return Ok(new{requiresTwoFactor=true});
-  if(!result.Succeeded)return Unauthorized(new{mesaj="Giriş yapılamadı. Bilgilerinizi ve e-posta doğrulamanızı kontrol edin; kilitlenme durumunda 15 dakika bekleyin."});
+  if(result.IsLockedOut){LogLogin(r.Email,"hesap kilitli");return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene veya şifreni yenile."});}
+  if(result.IsNotAllowed){LogLogin(r.Email,"e-posta doğrulanmamış");return Unauthorized(new{mesaj="Giriş için önce e-posta adresini doğrulamalısın."});}
+  if(!result.Succeeded){LogLogin(r.Email,"şifre hatalı");return Unauthorized(new{mesaj=failed});}
   return Ok(new{requiresTwoFactor=false});
  }
  [HttpPost("two-factor-login")]

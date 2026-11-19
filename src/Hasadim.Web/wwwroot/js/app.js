@@ -4,6 +4,16 @@ const fruits = {Elma: '🍎', Armut: '🍐', Ayva: '🍐', Portakal: '🍊', Man
 const money = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n);
 const number = n => new Intl.NumberFormat('tr-TR').format(n);
 const date = v => v ? v.slice(0,10).split('-').reverse().join('.') : 'Belirtilmedi';
+// Sayfalama: sunucudan yalnızca seçili sayfadaki ilanlar istenir.
+const PAGE_SIZES = [10, 25, 50, 100];
+const urlParams0 = new URLSearchParams(location.search);
+let pageSize = (() => {
+    const fromUrl = Number(urlParams0.get('pageSize'));
+    if (PAGE_SIZES.includes(fromUrl)) return fromUrl;
+    try { const saved = Number(localStorage.getItem('hasadim-page-size')); if (PAGE_SIZES.includes(saved)) return saved; } catch { }
+    return 10;
+})();
+let pendingPage = Math.max(1, Math.min(100000, Number(urlParams0.get('page')) || 1));
 let user=null, csrf='', view='all', page=1, registration=false, listRequest=0, detailRequest=0;
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function button(text,cls,fn){const b=el('button',text,cls);b.type='button';b.addEventListener('click',fn);return b;}
@@ -111,7 +121,7 @@ async function changeView(next, { query = '', filters = null } = {}) {
 
     closeAccountMenu();
     view = next;
-    page = 1;
+    page = pendingPage; pendingPage = 1;
     listRequest++;
     window.setBreadcrumbs?.([
         { label: 'Ana sayfa', href: '/' }, { label: titles[next] }
@@ -153,6 +163,9 @@ function updateMarketAddress() {
     if (query && !['messages', 'admin'].includes(view)) url.searchParams.set('q', query);
     else url.searchParams.delete('q');
     window.MarketCatalog.writeUrl(url, $('#filters'), !['messages', 'admin'].includes(view));
+    const listView = !['messages', 'admin'].includes(view);
+    if (listView && page > 1) url.searchParams.set('page', page); else url.searchParams.delete('page');
+    if (listView && pageSize !== 10) url.searchParams.set('pageSize', pageSize); else url.searchParams.delete('pageSize');
     history.replaceState(null, '', url.pathname + url.search + url.hash);
 }
 // Pazar yerinde sayfa konumu seçili filtreleri izler: Ana sayfa › Meyve ilanları › Elma › Starking › Isparta
@@ -183,15 +196,45 @@ async function loadListings(){
  updateMarketAddress();
  const request=++listRequest;const f=new FormData($('#filters'));const p=new URLSearchParams();for(const [k,v]of f)if(v)p.set(k,v.trim());
  if(f.get('minFiyat')&&f.get('maxFiyat')&&Number(f.get('minFiyat'))>Number(f.get('maxFiyat'))){$('#listStatus').textContent='En düşük fiyat, en yüksek fiyattan büyük olamaz.';return;}
- p.set('page',page);if(view==='mine')p.set('mine','true');if(view==='history')p.set('history','true');if(view==='favorites')p.set('favorites','true');
+ p.set('page',page);p.set('pageSize',pageSize);if(view==='mine')p.set('mine','true');if(view==='history')p.set('history','true');if(view==='favorites')p.set('favorites','true');
  $('#listStatus').textContent='İlanlar yükleniyor…';$('#prevPage').disabled=true;$('#nextPage').disabled=true;
  try{const data=await api('/api/meyve-ilanlari?'+p);if(request!==listRequest)return;
  if(data.items.length===0&&page>1){page--;return loadListings();}
  $('#listings').replaceChildren();$('#listStatus').textContent='';$('#resultCount').textContent=number(data.total)+' ilan bulundu';const selectedFruit=$('#filters').elements.namedItem('meyveTuru').value;window.MarketCatalog.highlight(selectedFruit);if(view==='all'){$('#viewTitle').textContent=selectedFruit?selectedFruit+' ilanları':'Tüm meyve ilanları';marketCrumbs();}
  if(!data.items.length)empty($('#listings'),view==='history'?'Henüz geçmiş ilanın yok':'Henüz ilan yok',view==='history'?'Süresi dolan ve satılan ilanların burada görünecek.':'Filtreleri değiştirebilir veya ilk ilanını verebilirsin.');
  for(const x of data.items)$('#listings').append(card(x));
- $('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#prevPage').disabled=page<=1;$('#nextPage').disabled=page*data.pageSize>=data.total;
+ renderPager(data);
  }catch(e){if(request===listRequest){$('#listings').replaceChildren();$('#listStatus').textContent=e.message;}}
+}
+// Sayfa numaraları: 1 … 4 5 [6] 7 8 … 45
+function renderPager(data) {
+    const size = data.pageSize || pageSize;
+    const pages = Math.max(1, Math.ceil(data.total / size));
+    $('#prevPage').disabled = page <= 1;
+    $('#nextPage').disabled = page >= pages;
+    const from = data.total ? (page - 1) * size + 1 : 0, to = Math.min(data.total, page * size);
+    $('#pageLabel').textContent = data.total
+        ? number(data.total) + ' ilandan ' + number(from) + '–' + number(to) + ' arası gösteriliyor · Sayfa ' + page + ' / ' + pages
+        : '';
+    const root = $('#pageNumbers');
+    if (!root) return;
+    root.replaceChildren();
+    const wanted = new Set([1, pages, page - 2, page - 1, page, page + 1, page + 2].filter(n => n >= 1 && n <= pages));
+    let last = 0;
+    for (const n of [...wanted].sort((a, b) => a - b)) {
+        if (n - last > 1) root.append(el('span', '…', 'page-gap'));
+        const b = button(String(n), 'page-number' + (n === page ? ' current' : ''), () => goToPage(n));
+        b.setAttribute('aria-label', 'Sayfa ' + n);
+        if (n === page) b.setAttribute('aria-current', 'page');
+        root.append(b);
+        last = n;
+    }
+    root.hidden = pages <= 1;
+}
+async function goToPage(n) {
+    page = n;
+    await loadListings();
+    $('#marketView')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
 }
 function picture(x, cls) {
     if (x.photoUrl) { const img = el('img', undefined, cls); img.src = x.photoUrl; img.alt = x.baslik; img.loading = 'lazy'; return img; }
@@ -268,7 +311,19 @@ $('#filters').onsubmit = e => { e.preventDefault(); page = 1; loadListings(); };
     window.MarketCatalog.fillVarieties($('#filters'));
     window.MarketCatalog.syncSort($('#filters'));
     page = 1; loadListings();
-}; $('#prevPage').onclick = () => { page--; loadListings(); }; $('#nextPage').onclick = () => { page++; loadListings(); };
+}; $('#prevPage').onclick = () => goToPage(page - 1); $('#nextPage').onclick = () => goToPage(page + 1);
+// Sayfa başına ilan sayısı: 10 / 25 / 50 / 100
+const pageSizeSelect = $('#pageSize');
+if (pageSizeSelect) {
+    pageSizeSelect.value = String(pageSize);
+    pageSizeSelect.onchange = () => {
+        const next = Number(pageSizeSelect.value);
+        if (!PAGE_SIZES.includes(next)) return;
+        pageSize = next; page = 1;
+        try { localStorage.setItem('hasadim-page-size', String(next)); } catch { }
+        loadListings();
+    };
+}
 function openDetail(id){window.location.href='/html/ilan.html?id='+encodeURIComponent(id)+'&from='+encodeURIComponent(view);}
 function createGallery(photos,title){
     let index = 0; const gallery = el('section', undefined, 'gallery'); gallery.setAttribute('aria-label', 'İlan fotoğrafları');

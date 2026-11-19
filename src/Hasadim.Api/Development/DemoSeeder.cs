@@ -18,8 +18,9 @@ public static class DemoSeeder
         string City, string District, string AccountType, string Activity,
         string BusinessName, string About, bool IsAdmin, Region[] Regions);
 
-    public const string UserPassword = "Hasadim2026Demo";
-    public const string AdminPassword = "Hasadim2026Yonetim";
+    // Türkçe karakter içermez (ı/i, ö/o karışmasın diye).
+    public const string UserPassword = "DemoUser2026";
+    public const string AdminPassword = "AdminPanel2026";
 
     public static readonly DemoAccount[] Accounts =
     [

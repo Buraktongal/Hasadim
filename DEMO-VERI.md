@@ -17,12 +17,13 @@ Komut yalnızca `Development` ortamında çalışır; canlı ortamda hata verip 
 ## Hesaplar
 | Rol | E-posta | Şifre | Ad / Firma | Konum |
 |---|---|---|---|---|
-| Yönetici | yonetici@hasadim.test | Hasadim2026Yonetim | Hasadım Yönetim | Ankara / Çankaya |
-| Kullanıcı | ahmet@hasadim.test | Hasadim2026Demo | Ahmet Yılmaz (üretici) | Isparta / Eğirdir |
-| Kullanıcı | ayse@hasadim.test | Hasadim2026Demo | Ayşe Demir (üretici) | Mersin / Erdemli |
-| Kullanıcı | mehmet@hasadim.test | Hasadim2026Demo | Mehmet Kaya — Kaya Tarım Ürünleri (tüccar) | Antalya / Korkuteli |
-| Kullanıcı | fatma@hasadim.test | Hasadim2026Demo | Fatma Çelik — Alaşehir Bağcılar Kooperatifi | Manisa / Alaşehir |
-| Kullanıcı | mustafa@hasadim.test | Hasadim2026Demo | Mustafa Şahin — Şahin Yaş Meyve (tüccar) | Malatya / Yeşilyurt |
+| Yönetici | yonetici@hasadim.test | AdminPanel2026 | Hasadım Yönetim | Ankara / Çankaya |
+| Kullanıcı | ahmet@hasadim.test | DemoUser2026 | Ahmet Yılmaz (üretici) | Isparta / Eğirdir |
+| Kullanıcı | ayse@hasadim.test | DemoUser2026 | Ayşe Demir (üretici) | Mersin / Erdemli |
+| Kullanıcı | mehmet@hasadim.test | DemoUser2026 | Mehmet Kaya — Kaya Tarım Ürünleri (tüccar) | Antalya / Korkuteli |
+| Kullanıcı | fatma@hasadim.test | DemoUser2026 | Fatma Çelik — Alaşehir Bağcılar Kooperatifi | Manisa / Alaşehir |
+| Kullanıcı | mustafa@hasadim.test | DemoUser2026 | Mustafa Şahin — Şahin Yaş Meyve (tüccar) | Malatya / Yeşilyurt |
 
-Bu şifreler yalnızca yerel geliştirme içindir; gerçek ortamda kullanma.
+Şifrelerde Türkçe karakter yoktur; büyük/küçük harfe dikkat et. Yalnızca yerel geliştirme içindir.
+Şifre değiştiyse veya hesap kilitlendiyse `DEMO-VERI.bat` dosyasını yeniden çalıştırman yeterli.
 Fotoğraflar `src/Hasadim.Api/SeedData/photos` içindeki çizim görsellerdir (gerçek ürün fotoğrafı değildir).

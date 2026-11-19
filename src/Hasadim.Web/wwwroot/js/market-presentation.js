@@ -19,11 +19,14 @@ window.MarketPresentation = (() => {
     function price(x) {
         const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY'}).format(value);
         const root = node('div', undefined, 'listing-price');
-        root.append(node('p', currency(x.kilogramFiyati) + ' / kg', 'price'));
+        const current = node('p', currency(x.kilogramFiyati) + ' / kg', 'price');
+        root.append(current);
         if (x.oncekiKilogramFiyati > x.kilogramFiyati && x.kilogramFiyati > 0) {
             const percent = Math.round((1 - x.kilogramFiyati / x.oncekiKilogramFiyati) * 1000) / 10;
             const old = node('del', currency(x.oncekiKilogramFiyati) + ' / kg');
             old.setAttribute('aria-label', 'Önceki ilan fiyatı: ' + currency(x.oncekiKilogramFiyati));
+            // Yalnızca fiyat düştüyse gösterilir; artışlarda eski fiyat hiç görünmez.
+            current.classList?.add?.('has-discount');
             root.append(old, node('span', (percent ? '%' + number(percent) : '%0,1’den az') + ' indirim', 'discount-badge'));
         }
         return root;
