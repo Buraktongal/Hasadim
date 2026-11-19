@@ -12,15 +12,32 @@
         const value = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
         const form = $('#notifyForm');
         const check = name => Boolean(form?.elements.namedItem(name)?.checked);
+        const follow = $('#themeFollow')?.checked;
         return {
-            theme: value('theme') || 'system', language: value('language') || 'tr',
+            theme: follow ? 'system' : (value('theme') || 'light'), language: value('language') || 'tr',
             notifyMessages: check('notifyMessages'), notifyOffers: check('notifyOffers'),
             notifySavedSearches: check('notifySavedSearches'), notifyPriceDrops: check('notifyPriceDrops')
         };
     }
 
+    // "Cihaza göre" açıkken açık/koyu seçimi pasif görünür ve cihazın şu anki modunu gösterir.
+    function syncThemeControls(theme) {
+        const follow = theme === 'system';
+        const toggle = $('#themeFollow');
+        if (toggle) toggle.checked = follow;
+        const shown = follow ? (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light') : theme;
+        const radio = document.querySelector(`input[name="theme"][value="${shown}"]`);
+        if (radio) radio.checked = true;
+        const choices = $('#themeChoices');
+        if (choices) {
+            choices.classList.toggle('is-following', follow);
+            for (const input of choices.querySelectorAll('input')) input.disabled = follow;
+        }
+    }
+
     function fill(s) {
-        for (const [name, value] of [['theme', s.theme], ['language', s.language]]) {
+        syncThemeControls(s.theme || 'system');
+        for (const [name, value] of [['language', s.language]]) {
             const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
             if (input) input.checked = true;
         }
@@ -35,6 +52,7 @@
     function save() {
         const s = current();
         window.HasadimTheme?.set(s.theme);
+        syncThemeControls(s.theme);
         const languageChanged = s.language !== (window.HasadimTheme?.language() || 'tr');
         if (languageChanged) {
             window.HasadimTheme?.setLanguage(s.language);
@@ -49,7 +67,7 @@
 
     async function init() {
         fill({ theme: window.HasadimTheme?.get() || 'system', language: window.HasadimTheme?.language() || 'tr' });
-        for (const input of document.querySelectorAll('input[name="theme"], input[name="language"], #notifyForm input')) input.addEventListener('change', save);
+        for (const input of document.querySelectorAll('#themeFollow, input[name="theme"], input[name="language"], #notifyForm input')) input.addEventListener('change', save);
         try { user = await api('/api/account/me'); } catch { user = null; }
         for (const section of document.querySelectorAll('[data-auth-only]')) section.hidden = !user;
         if (!user) return;

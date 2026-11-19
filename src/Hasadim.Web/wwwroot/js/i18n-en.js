@@ -184,7 +184,7 @@ window.HasadimEn = (() => {
         // Ayarlar
         'Görünüm, dil ve bildirim tercihlerini yönet; gerekirse hesabını sil.': 'Manage appearance, language and notification preferences; delete your account if needed.',
         'Koyu mod gözü yormaz ve gece kullanımında pil tasarrufu sağlar.': 'Dark mode is easier on the eyes and saves battery at night.',
-        'Cihaza göre': 'Match device', 'Telefon veya bilgisayar ayarını izler': 'Follows your phone or computer setting', 'Açık mod': 'Light mode', 'Gündüz kullanımı için': 'For daytime use',
+        'Cihaza göre': 'Match device', 'Telefonun veya bilgisayarın açık/koyu ayarını otomatik izler': 'Automatically follows your phone or computer light/dark setting', 'Tema seçimi': 'Theme', 'İllere göre ilanlar': 'Listings by province', 'Diğer aylar için tabloyu yana kaydır ↔': 'Swipe the table sideways for other months ↔', 'Hangi ay ne hasat edilir': 'What is harvested when', 'Harita ve ürün takvimi': 'Map and crop calendar', 'Telefon veya bilgisayar ayarını izler': 'Follows your phone or computer setting', 'Açık mod': 'Light mode', 'Gündüz kullanımı için': 'For daytime use',
         'Koyu mod': 'Dark mode', 'Karanlık ortamlar için': 'For dark environments', 'Dil / Language': 'Language / Dil', 'Türkçe': 'Türkçe', 'Varsayılan dil': 'Default language',
         'Bildirim tercihleri': 'Notification preferences', 'Hangi durumlarda uygulama içi bildirim almak istediğini seç.': 'Choose when you want in-app notifications.',
         'İlanlarınla ilgili yeni mesaj geldiğinde': 'When you get a new message about your listings', 'Teklifler': 'Offers',

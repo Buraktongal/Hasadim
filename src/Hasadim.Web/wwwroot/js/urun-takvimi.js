@@ -48,7 +48,8 @@
             if (r.category.id !== group) {
                 group = r.category.id;
                 const tr = node('tr', undefined, 'group-row');
-                const th = node('th', r.category.name);
+                const th = node('th');
+                th.append(node('span', r.category.name, 'group-label'));
                 th.colSpan = 13;
                 tr.append(th);
                 body.append(tr);
@@ -85,6 +86,13 @@
             chips.append(a);
         }
         $('#seasonTitle').textContent = months[now - 1] + ' ayında yoğun hasatta';
+        // Dar ekranda tablo, bu ay görünecek şekilde kendiliğinden kaydırılır.
+        const scroller = $('.calendar-scroll');
+        const current = table.querySelector('thead th.this-month');
+        if (scroller && current && scroller.scrollWidth > scroller.clientWidth) {
+            const sticky = table.querySelector('thead th')?.offsetWidth || 0;
+            scroller.scrollLeft = Math.max(0, current.offsetLeft - sticky - (scroller.clientWidth - sticky) / 2 + current.offsetWidth / 2);
+        }
     }
 
     const params = new URLSearchParams(location.search);

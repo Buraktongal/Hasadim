@@ -263,3 +263,56 @@ a.city-cell:hover { outline: 2px solid var(--t-accent); outline-offset: 1px; }
 
 .land-checks .check { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; margin: 0; }
 .land-checks .check input { width: 18px; height: 18px; margin: 0; }
+
+/* ---------- Mobil: Harita ve Ürün takvimi kartları ---------- */
+.category-quick { display: none; }
+@media (max-width: 860px) {
+    .category-bar .category-tools { display: none; }
+    .category-quick {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        max-width: 1240px; margin: 0 auto; padding: 8px 16px 10px; border-top: 1px solid var(--t-line);
+    }
+    .quick-card {
+        display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px;
+        border: 1px solid var(--t-line); border-radius: 12px; background: var(--t-green-soft);
+        color: var(--t-green); text-decoration: none;
+    }
+    .quick-card svg { flex: none; }
+    .quick-card .quick-text { display: grid; min-width: 0; }
+    .quick-card strong { font-size: 14px; color: var(--t-ink); }
+    .quick-card small { font-size: 11.5px; color: var(--t-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .quick-card[aria-current="page"] { border: 2px solid var(--t-accent); }
+}
+
+/* ---------- Ayarlar: cihaza göre anahtarı ---------- */
+.theme-follow { margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--t-line); border-radius: var(--t-radius); }
+#themeChoices.is-following .choice-card { opacity: .55; cursor: default; }
+#themeChoices.is-following .choice-card:has(input:checked) { border-style: dashed; }
+
+/* Mobil taşma düzeltmeleri: liste genişliği ekranı aşmaz, logo zil ile sığar. */
+@media (max-width: 1000px) {
+    .market-layout { grid-template-columns: minmax(0, 1fr); }
+    #siteLayout .site-logo img { width: min(165px, 100%); }
+}
+@media (max-width: 860px) {
+    .toolbar-controls { flex-wrap: wrap; gap: 8px; }
+    .results-toolbar .sort-bar { min-width: 0; flex: 1 1 140px; }
+    .results-toolbar .sort-bar select { flex: 1; width: 100%; }
+}
+.account-panel label.switch-row.theme-follow { display: flex; flex-direction: row; justify-content: space-between; align-items: center; text-align: left; }
+.account-panel label.switch-row.theme-follow span { display: grid; gap: 2px; justify-items: start; }
+.account-panel label.switch-row.theme-follow strong { font-size: 15px; }
+.account-panel label.switch-row.theme-follow small { font-size: 13px; }
+
+@media (max-width: 860px) {
+    #themeChoices { grid-template-columns: 1fr 1fr; }
+}
+
+.scroll-hint { display: none !important; }
+@media (max-width: 860px) {
+    .calendar-legend { flex-wrap: wrap; row-gap: 4px; }
+    .scroll-hint { display: inline-flex !important; width: 100%; font-weight: 700; color: var(--t-accent-dark); }
+    .crop-calendar .product-cell { box-shadow: 2px 0 0 var(--t-line); z-index: 1; }
+}
+.crop-calendar thead th:first-child { position: sticky; left: 0; z-index: 3; text-align: left; padding-left: 12px; }
+.crop-calendar .group-label { position: sticky; left: 12px; }

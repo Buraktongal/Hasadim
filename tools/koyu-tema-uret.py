@@ -42,10 +42,17 @@ html[data-theme="dark"] dialog { background: #18221c; color: #e3ebe4; }
 html[data-theme="dark"] .main-category-tile.selected, html[data-theme="dark"] .category-tile.selected,
 html[data-theme="dark"] .choice-card:has(input:checked) { background: #2a2018; }
 html[data-theme="dark"] .city-cell { background: #1d2a22; color: #8fa293; }
-html[data-theme="dark"] .crop-calendar td.season::before { background: #3b5e45; }
-html[data-theme="dark"] .crop-calendar td.peak::before { background: #6fbf87; }
-html[data-theme="dark"] .calendar-legend i.season { background: #3b5e45; }
-html[data-theme="dark"] .calendar-legend i.peak { background: #6fbf87; }
+/* Takvim: hasat dönemi kehribar (çizgili), yoğun hasat parlak yeşil; koyu zeminde net ayrışır. */
+html[data-theme="dark"] .crop-calendar td.season::before,
+html[data-theme="dark"] .calendar-legend i.season {
+    background: repeating-linear-gradient(135deg, #b8862b 0 5px, #8f6a24 5px 10px);
+}
+html[data-theme="dark"] .crop-calendar td.peak::before,
+html[data-theme="dark"] .calendar-legend i.peak { background: #4fd17f; box-shadow: 0 0 0 1px #8ff0b0 inset; }
+html[data-theme="dark"] .crop-calendar td.this-month { background: #e2762f1f; }
+html[data-theme="dark"] .sample-light { background: linear-gradient(180deg, #fff 0 34%, #f3f5f1 34%); border-color: #3a4a40; }
+html[data-theme="dark"] .sample-dark { background: linear-gradient(180deg, #1b241e 0 34%, #0b110d 34%); border-color: #3a4a40; }
+html[data-theme="dark"] .crop-calendar .group-row th { background: #22332a; color: #a5d9b3; }
 html[data-theme="dark"] .map-price-pin { background: #18221c; color: #e3ebe4; }
 """
 

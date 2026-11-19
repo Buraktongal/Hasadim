@@ -77,6 +77,41 @@ window.MarketCatalog = (() => {
             tools.append(link);
         }
         bar.append(tools);
+        renderQuick(bar);
+    }
+
+    // Mobilde Harita ve Ürün takvimi, kaydırılan kategori çubuğunda kaybolmasın
+    // diye çubuğun altında iki belirgin kart olarak gösterilir.
+    function renderQuick(bar) {
+        let quick = bar.parentElement?.querySelector?.('.category-quick');
+        if (!quick && typeof bar.insertAdjacentElement === 'function') {
+            quick = node('nav', undefined, 'category-quick');
+            quick.setAttribute('aria-label', 'Harita ve ürün takvimi');
+            bar.insertAdjacentElement('afterend', quick);
+        }
+        if (!quick) return;
+        quick.replaceChildren();
+        const svg = paths => {
+            const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('width', '22'); s.setAttribute('height', '22'); s.setAttribute('aria-hidden', 'true');
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            p.setAttribute('d', paths); p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor');
+            p.setAttribute('stroke-width', '1.9'); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round');
+            s.append(p);
+            return s;
+        };
+        for (const [href, title, text, page, d] of [
+            ['/html/harita.html', 'Harita', 'İllere göre ilanlar', 'map', 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14'],
+            ['/html/urun-takvimi.html', 'Ürün takvimi', 'Hangi ay ne hasat edilir', 'calendar', 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h2M12 14h2M8 17h2']
+        ]) {
+            const a = node('a', undefined, 'quick-card');
+            a.href = href;
+            if (document.body?.dataset?.page === page) a.setAttribute('aria-current', 'page');
+            const label = node('span', undefined, 'quick-text');
+            label.append(node('strong', title), node('small', text));
+            a.append(svg(d), label);
+            quick.append(a);
+        }
     }
 
     function item(label, count, { selected, iconName, onClick, cls = '' }) {

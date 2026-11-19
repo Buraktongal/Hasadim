@@ -42,8 +42,8 @@
             <section class="account-panel" aria-labelledby="appearanceTitle">
                 <h2 id="appearanceTitle">Görünüm</h2>
                 <p class="muted">Koyu mod gözü yormaz ve gece kullanımında pil tasarrufu sağlar.</p>
-                <div class="choice-row" role="radiogroup" aria-labelledby="appearanceTitle">
-                    <label class="choice-card"><input type="radio" name="theme" value="system"><span class="theme-sample sample-system" aria-hidden="true"></span><strong>Cihaza göre</strong><small>Telefon veya bilgisayar ayarını izler</small></label>
+                <label class="switch-row theme-follow"><span><strong>Cihaza göre</strong><small>Telefonun veya bilgisayarın açık/koyu ayarını otomatik izler</small></span><input type="checkbox" id="themeFollow" role="switch"></label>
+                <div class="choice-row" id="themeChoices" role="radiogroup" aria-label="Tema seçimi">
                     <label class="choice-card"><input type="radio" name="theme" value="light"><span class="theme-sample sample-light" aria-hidden="true"></span><strong>Açık mod</strong><small>Gündüz kullanımı için</small></label>
                     <label class="choice-card"><input type="radio" name="theme" value="dark"><span class="theme-sample sample-dark" aria-hidden="true"></span><strong>Koyu mod</strong><small>Karanlık ortamlar için</small></label>
                 </div>
@@ -65,14 +65,6 @@
                     <label class="switch-row"><span><strong>Kayıtlı aramalar</strong><small>Kayıtlı aramana uyan yeni ilan yayına girdiğinde</small></span><input type="checkbox" name="notifySavedSearches" role="switch"></label>
                     <label class="switch-row"><span><strong>Fiyat düşüşleri</strong><small>Favorindeki bir ilanın fiyatı düştüğünde</small></span><input type="checkbox" name="notifyPriceDrops" role="switch"></label>
                 </form>
-            </section>
-            <section class="account-panel" aria-labelledby="privacyTitle" data-auth-only hidden>
-                <h2 id="privacyTitle">Gizlilik</h2>
-                <ul class="link-list">
-                    <li><a href="/html/profilim.html">Telefon numaramın görünürlüğü</a></li>
-                    <li><a href="/html/engellenenler.html">Engellenen üyeler</a></li>
-                    <li><a href="/html/hesabim.html">Şifre ve oturumlar</a></li>
-                </ul>
             </section>
             <section class="account-panel danger-zone" aria-labelledby="deleteTitle" data-auth-only hidden>
                 <h2 id="deleteTitle">Hesabı sil</h2>
