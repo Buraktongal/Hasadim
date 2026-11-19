@@ -123,3 +123,5 @@ dialog { border-radius: var(--radius-l); }
 .ss-option mark { background: #ffe2c9; color: inherit; border-radius: 3px; padding: 0 1px; }
 .ss-empty { margin: 6px 4px; font-size: 13px; color: #7d8a79; }
 label > .ss { margin-top: 6px; }
+.ss.ss-up .ss-panel { top: auto; bottom: calc(100% + 6px); }
+.ss-option.is-placeholder[aria-selected="true"] { font-weight: 600; color: #7d8a79; } .ss-option.is-placeholder::after { content: none !important; }

@@ -115,6 +115,12 @@ window.SearchableSelect = (() => {
         function open() {
             if (select.disabled || !panel.hidden) return;
             closeOthers(wrap);
+            // Altta yer yoksa liste yukarı doğru açılır.
+            const rect = button.getBoundingClientRect();
+            const scroller = button.closest('dialog') || document.documentElement;
+            const bottom = scroller === document.documentElement ? window.innerHeight : scroller.getBoundingClientRect().bottom;
+            const top = scroller === document.documentElement ? 0 : scroller.getBoundingClientRect().top;
+            wrap.classList.toggle('ss-up', bottom - rect.bottom < 320 && rect.top - top > bottom - rect.bottom);
             panel.hidden = false;
             wrap.classList.add('is-open');
             button.setAttribute('aria-expanded', 'true');
