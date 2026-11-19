@@ -17,3 +17,5 @@ window.layoutReady = (async () => {
 
     container.innerHTML = await response.text();
 })();
+
+window.HasadimLoading?.track(window.layoutReady);

@@ -24,6 +24,7 @@ window.HasadimI18n = (() => {
             script.onerror = () => { dict = {}; resolve(); };
             document.head.append(script);
         });
+        window.HasadimLoading?.track(loading);
         return loading;
     }
 

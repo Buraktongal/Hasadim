@@ -1,0 +1,197 @@
+@charset "UTF-8";
+
+/* Hasadım yükleme düzeni (js/yukleme.js).
+   - Açılışta bütün bölümler hazır olana kadar gizli kalır, sonra birlikte belirir.
+   - Bekleme yaklaşık yarım saniyeyi geçerse yaprak simgeli açılış ekranı görünür.
+   - Sonraki beklemelerde üstte ince ilerleme çizgisi, uzarsa küçük yükleme kartı. */
+
+:root {
+    --load-bg: #F7F9F3;
+    --load-ink: #1F5F3F;
+    --load-muted: #637460;
+    --load-leaf: #22613F;
+    --load-vein: #D6AD45;
+    --load-track: #DCE5D6;
+    --load-card: #FFFFFF;
+}
+:root[data-theme="dark"] {
+    --load-bg: #121A15;
+    --load-ink: #CFE6D2;
+    --load-muted: #9DB3A2;
+    --load-leaf: #5FAF7B;
+    --load-vein: #E2BE5C;
+    --load-track: #26362C;
+    --load-card: #1A251E;
+}
+
+/* Açılış: sayfa içeriği hazır olana kadar gizli */
+html.is-loading body > :not(.hasadim-splash) { opacity: 0; }
+html.is-ready body > :not(.hasadim-splash, .hasadim-progress, .hasadim-loading-card) {
+    animation: hasadim-reveal .32s cubic-bezier(.2, .7, .2, 1);
+}
+@keyframes hasadim-reveal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hasadim-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 10px;
+    background: var(--load-bg);
+    color: var(--load-ink);
+    text-align: center;
+    opacity: 0;
+    animation: hasadim-splash-in .3s ease .45s forwards;
+}
+.hasadim-splash.is-leaving {
+    animation: hasadim-splash-out .35s ease forwards;
+    pointer-events: none;
+}
+@keyframes hasadim-splash-in { to { opacity: 1; } }
+@keyframes hasadim-splash-out { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+
+.hasadim-splash p { margin: 0; }
+.hasadim-splash-mark {
+    margin-top: 6px !important;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: var(--load-ink);
+}
+.hasadim-splash-text {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--load-muted);
+}
+
+/* Tarla sıraları: soldan sağa sırayla filizlenen beş çizgi */
+.hasadim-splash-rows {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 18px;
+    margin: 4px 0 2px;
+}
+.hasadim-splash-rows span {
+    width: 6px;
+    height: 100%;
+    border-radius: 6px 6px 2px 2px;
+    background: var(--load-leaf);
+    transform-origin: bottom;
+    animation: hasadim-sprout 1.2s ease-in-out infinite;
+}
+.hasadim-splash-rows span:nth-child(2) { animation-delay: .12s; }
+.hasadim-splash-rows span:nth-child(3) { animation-delay: .24s; background: var(--load-vein); }
+.hasadim-splash-rows span:nth-child(4) { animation-delay: .36s; }
+.hasadim-splash-rows span:nth-child(5) { animation-delay: .48s; }
+@keyframes hasadim-sprout {
+    0%, 100% { transform: scaleY(.25); opacity: .45; }
+    45% { transform: scaleY(1); opacity: 1; }
+}
+
+/* Yaprak simgesi */
+.hasadim-leaf { display: block; overflow: visible; }
+.hasadim-leaf .leaf-track { fill: none; stroke: var(--load-track); stroke-width: 3; }
+.hasadim-leaf .leaf-orbit {
+    fill: none;
+    stroke: var(--load-vein);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 22 78;
+    transform-origin: 40px 40px;
+    animation: hasadim-orbit 1.1s linear infinite;
+}
+.hasadim-leaf .leaf-body {
+    transform-origin: 27px 60px;
+    animation: hasadim-sway 2.4s ease-in-out infinite;
+}
+.hasadim-leaf .leaf-blade { fill: var(--load-leaf); }
+.hasadim-leaf .leaf-stem { fill: none; stroke: var(--load-leaf); stroke-width: 3; stroke-linecap: round; }
+.hasadim-leaf .leaf-vein {
+    fill: none;
+    stroke: var(--load-vein);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    animation: hasadim-vein 2.4s ease-in-out infinite;
+}
+@keyframes hasadim-orbit { to { transform: rotate(360deg); } }
+@keyframes hasadim-sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+@keyframes hasadim-vein {
+    0% { stroke-dashoffset: 100; }
+    55%, 100% { stroke-dashoffset: 0; }
+}
+
+/* Sonraki beklemeler: üstte ilerleme çizgisi */
+.hasadim-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2100;
+    height: 3px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+}
+.hasadim-progress::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(90deg, var(--load-leaf), var(--load-vein));
+    animation: hasadim-progress 1.1s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+html.is-busy .hasadim-progress { opacity: 1; }
+@keyframes hasadim-progress {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(260%); }
+}
+
+/* Uzun bekleme: ortada küçük kart (sayfayı kilitlemez) */
+.hasadim-loading-card {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px 12px 14px;
+    border: 1px solid var(--load-track);
+    border-radius: 999px;
+    background: var(--load-card);
+    color: var(--load-ink);
+    font-weight: 700;
+    box-shadow: 0 12px 32px rgb(20 40 28 / 18%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.96);
+    transition: opacity .2s ease, transform .2s ease, visibility 0s .2s;
+}
+html.is-busy-long .hasadim-loading-card {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%);
+    transition: opacity .2s ease, transform .2s ease;
+}
+.hasadim-loading-card .leaf-track { stroke-width: 4; }
+.hasadim-loading-card .leaf-orbit { stroke-width: 5; }
+
+@media (prefers-reduced-motion: reduce) {
+    html.is-ready body > * { animation: none; }
+    .hasadim-leaf .leaf-body, .hasadim-leaf .leaf-vein, .hasadim-splash-rows span { animation: none; }
+    .hasadim-leaf .leaf-vein { stroke-dashoffset: 0; }
+    .hasadim-leaf .leaf-orbit { animation-duration: 2.4s; }
+}

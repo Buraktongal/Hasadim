@@ -106,3 +106,10 @@ Hesaplar ve şifreler aynı kaldı.
 - Güvenlik ipuçları (kapora dolandırıcılığı, kod paylaşmama vb.).
 - Veritabanı güncellemesi: `014_AccountSecurity.sql`.
 - Yeni API uçları: `GET /api/account/security`, `DELETE /api/account/sessions/{id}`, `POST /api/account/sessions/end-others`, `DELETE /api/account/logins/{provider}`.
+
+## Sayfa yükleme ve bekleme ekranı
+- `js/yukleme.js` + `css/yukleme.css` her sayfada head içinde yüklenir.
+- Açılışta üst menü, alt bölüm, sayfa betikleri, çeviri ve sayfanın ilk API istekleri bitene kadar içerik gizli kalır; hepsi aynı anda belirir. Bekleme ~0,5 saniyeyi geçerse yaprak simgeli Hasadım açılış ekranı görünür. En geç 8 saniyede sayfa yine de gösterilir.
+- Sonraki beklemelerde (filtre, sayfa, kaydetme) üstte ince yeşil-altın ilerleme çizgisi; 1,2 saniyeyi geçerse ortada küçük "Yükleniyor…" kartı. Bildirim yoklamaları göstergeyi tetiklemez; bir isteği sessiz yapmak için `fetch(url, { hasadimQuiet: true })`.
+- Pazar yeri betikleri artık tek tek sırayla değil, aynı anda indirilip sırayla çalıştırılıyor (`page-loader.js`).
+- Sayfa betikleri kendi hazırlık işini `HasadimLoading.track(promise)` ile bildirebilir.
