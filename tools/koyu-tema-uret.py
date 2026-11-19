@@ -43,7 +43,13 @@ html[data-theme="dark"] .main-category-tile.selected, html[data-theme="dark"] .c
 html[data-theme="dark"] .choice-card:has(input:checked), html[data-theme="dark"] .deal-option input:checked + span { background: #2a2018; }
 html[data-theme="dark"] .settings-danger .settings-icon { background: #3a1d1a; color: #f2a39b; }
 html[data-theme="dark"] .settings-danger strong { color: #f2a39b; }
-html[data-theme="dark"] .city-cell { background: #1d2a22; color: #8fa293; }
+html[data-theme="dark"] {
+    --map-0: #223029; --map-1: #2c4a35; --map-2: #36693f; --map-3: #4f8f4f; --map-4: #79b65f; --map-5: #b6dd7a;
+    --map-border: #121a15; --map-label: #e3ebe4; --map-badge: #121a15; --map-badge-ink: #e3ebe4; --map-sea: #16201a;
+}
+html[data-theme="dark"] .tr-name { stroke: #121a15b3; }
+html[data-theme="dark"] .tr-label.on-strong .tr-name { fill: #0f1a13; stroke: #e3ebe4aa; }
+html[data-theme="dark"] .tr-badge rect { stroke: #e3ebe455; }
 /* Takvim: hasat dönemi kehribar (çizgili), yoğun hasat parlak yeşil; koyu zeminde net ayrışır. */
 html[data-theme="dark"] .crop-calendar td.season::before,
 html[data-theme="dark"] .calendar-legend i.season {

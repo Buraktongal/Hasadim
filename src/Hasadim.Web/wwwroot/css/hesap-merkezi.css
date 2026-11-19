@@ -84,9 +84,27 @@
 }
 .map-price-pin.exact { border-color: var(--t-accent); }
 .map-price-pin:hover { background: var(--t-green-soft); z-index: 5; }
-.detail-map h3 { margin: 0 0 4px; font-size: 15px; }
-.detail-map p { margin: 0 0 8px; }
-.detail-mini-map { height: 200px; margin-bottom: 6px; }
+.detail-map { padding: 14px; display: grid; gap: 10px; }
+.detail-map p, .detail-map h3 { margin: 0; }
+.detail-map-head { display: flex; align-items: center; gap: 10px; }
+.detail-map-head .eyebrow { margin: 0 0 2px; font-size: 11px; color: var(--t-green-2); }
+.detail-map-head h3 { font-size: 17px; line-height: 1.25; }
+.detail-map-pin {
+    flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--t-green-soft);
+    display: grid; place-items: center;
+}
+.detail-map-pin::before {
+    content: ""; width: 14px; height: 14px; border-radius: 50% 50% 50% 0; rotate: -45deg; translate: 0 -2px;
+    background: var(--t-accent); box-shadow: inset 0 0 0 4px var(--t-accent), inset 0 0 0 9px #fff;
+}
+.detail-map-note { font-size: 13px; color: var(--t-muted); display: flex; align-items: baseline; gap: 6px; }
+.detail-map-note::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--t-muted); opacity: .6; flex: none; }
+.detail-map-note.exact { color: var(--t-green-2); font-weight: 700; }
+.detail-map-note.exact::before { background: var(--t-green-2); opacity: 1; }
+.detail-mini-map { height: 210px; margin: 0; }
+.detail-map-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.detail-map-links a { flex: 1 1 0; min-width: 120px; text-align: center; text-decoration: none; padding: 8px 10px; font-size: 14px; font-weight: 700; }
+.detail-map-links .ext { font-size: 12px; opacity: .7; }
 .unit-price { display: block; color: var(--t-muted); font-size: 13px; font-weight: 700; }
 
 /* ---------- Teklif penceresi ---------- */
@@ -182,21 +200,56 @@ a.center-title:hover { text-decoration: underline; }
 .tool-filters select, .tool-filters input { min-width: 180px; }
 .map-panel { background: var(--t-panel); border: 1px solid var(--t-line); border-radius: var(--t-radius); padding: 16px; }
 .city-panel { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; }
-.city-grid { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-auto-rows: 52px; gap: 4px; }
-.city-cell {
-    display: grid; place-items: center; align-content: center; gap: 0; padding: 2px; border-radius: 7px; text-decoration: none;
-    background: #eef1ec; color: #66735f; font-size: 10px; line-height: 1.1; text-align: center; overflow: hidden;
+/* Türkiye il haritası: her il kendi sınırıyla çizilir, renk ilan yoğunluğunu gösterir. */
+:root {
+    --map-0: #edf2ea; --map-1: #d5e8cc; --map-2: #a9d096; --map-3: #6faa5c; --map-4: #3b8350; --map-5: #1d4a33;
+    --map-border: #ffffff; --map-hover: #e2762f; --map-label: #23392b; --map-label-on-dark: #ffffff;
+    --map-badge: #ffffff; --map-badge-ink: #1d4a33; --map-sea: #eef5f7;
 }
-.city-cell .city-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.city-cell .city-count { font-size: 13px; }
-a.city-cell:hover { outline: 2px solid var(--t-accent); outline-offset: 1px; }
-.level-1 { background: #dcebd5; color: #1d4a33; }
-.level-2 { background: #b6d6a8; color: #1d4a33; }
-.level-3 { background: #7fb46b; color: #fff; }
-.level-4 { background: #3f8a4f; color: #fff; }
-.level-5 { background: #1d4a33; color: #fff; }
-.city-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; font-size: 12px; color: var(--t-muted); }
-.city-legend i { width: 26px; height: 12px; border-radius: 3px; }
+.tr-map { position: relative; border-radius: 12px; background: var(--map-sea); padding: 10px; }
+.tr-map-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tr-il { cursor: pointer; outline: none; }
+.tr-il path {
+    fill: var(--map-0); stroke: var(--map-border); stroke-width: .9; stroke-linejoin: round;
+    transition: fill .18s ease, filter .18s ease;
+}
+.tr-il.level-1 path { fill: var(--map-1); }
+.tr-il.level-2 path { fill: var(--map-2); }
+.tr-il.level-3 path { fill: var(--map-3); }
+.tr-il.level-4 path { fill: var(--map-4); }
+.tr-il.level-5 path { fill: var(--map-5); }
+.tr-il.is-hover path, .tr-il:focus-visible path { filter: brightness(1.08) saturate(1.15); }
+.tr-il:focus-visible path, .tr-il.is-selected path { stroke: var(--map-hover); stroke-width: 2.2; }
+.tr-labels { pointer-events: none; }
+.tr-name {
+    font-size: 8.5px; font-weight: 800; text-anchor: middle; dominant-baseline: central;
+    fill: var(--map-label); paint-order: stroke; stroke: #ffffffb3; stroke-width: 2.2px; stroke-linejoin: round;
+}
+.tr-label.on-strong .tr-name { fill: #ffffff; stroke: #10301fcc; }
+.tr-badge rect { fill: var(--map-badge); stroke: #1d4a3333; stroke-width: .6; }
+.tr-badge text { font-size: 8px; font-weight: 900; text-anchor: middle; dominant-baseline: central; fill: var(--map-badge-ink); }
+.city-map-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.city-map-foot small a { color: inherit; }
+.city-legend { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--t-muted); }
+.city-legend i { width: 22px; height: 12px; border-radius: 3px; }
+.city-legend span { margin: 0 2px; }
+.city-legend .legend-gap { width: 10px; }
+.city-legend i.level-0 { background: var(--map-0); border: 1px solid var(--t-line); }
+.city-legend i.level-1 { background: var(--map-1); } .city-legend i.level-2 { background: var(--map-2); }
+.city-legend i.level-3 { background: var(--map-3); } .city-legend i.level-4 { background: var(--map-4); }
+.city-legend i.level-5 { background: var(--map-5); }
+.city-info { margin: 0 0 18px; padding: 14px; border: 1px solid var(--t-line); border-radius: 12px; background: var(--t-green-soft); display: grid; gap: 10px; }
+.city-info p { margin: 0; }
+.city-info-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.city-info-name { font-size: 18px; }
+.city-info-count { font-weight: 800; color: var(--t-green-2); white-space: nowrap; }
+.city-info-count.empty { color: var(--t-muted); font-weight: 700; }
+.city-info-products { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.city-info-products li { display: flex; align-items: center; gap: 8px; }
+.city-info-products li span { flex: 1; font-weight: 700; }
+.city-info-products li small { color: var(--t-muted); font-weight: 700; }
+.city-info-go { text-align: center; text-decoration: none; padding: 9px 12px; }
+.top-cities .textbtn { padding: 0; font-weight: 700; color: var(--t-ink); }
 .map-total { font-weight: 800; color: var(--t-green); margin: 0 0 10px; }
 .city-side h2 { font-size: 15px; margin: 0 0 8px; }
 .top-cities { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
@@ -250,11 +303,12 @@ a.city-cell:hover { outline: 2px solid var(--t-accent); outline-offset: 1px; }
 }
 @media (max-width: 860px) {
     .category-tools { margin-left: 0; }
-    .city-panel { grid-template-columns: 1fr; }
-    .city-grid { grid-auto-rows: 38px; gap: 2px; }
-    .city-cell .city-name { display: none; }
-    .city-cell .city-count { font-size: 11px; }
-    .save-search { margin-left: 0; }
+    .city-panel { grid-template-columns: minmax(0, 1fr); }
+    .city-map-wrap { min-width: 0; }
+    /* Telefonda harita yana kaydırılarak gezilir; iller dokunmaya yetecek büyüklükte kalır. */
+    .tr-map { padding: 4px; margin: 0 -8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+    .tr-map-svg { width: 760px; max-width: none; }
+            .save-search { margin-left: 0; }
     .main-category-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tool-filters select, .tool-filters input { min-width: 0; width: 100%; }
     .tool-filters { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }

@@ -170,13 +170,20 @@ window.MarketPresentation = (() => {
         root.append(heading, label, result, node('small', 'İlan fiyatına göre hesaplanır. Sipariş oluşturmaz; teslimat, ek masraflar ve satış koşullarını satıcıyla netleştir.', 'muted'));
         return root;
     }
-    // İlan detayında konum haritası. İşaretli konum yoksa il merkezine yakın yaklaşık konum.
+    // İlan detayında konum: başlıkta ilçe/il ve konumun kesinliği, altta harita ve bağlantılar.
+    // İşaretli konum yoksa il merkezine yakın yaklaşık konum gösterilir.
     function locationMap(x) {
         const root = node('section', undefined, 'detail-map');
-        root.append(node('h3', 'Konum'));
         const exact = x.enlem !== null && x.enlem !== undefined && x.boylam !== null && x.boylam !== undefined;
         const point = exact ? [Number(x.enlem), Number(x.boylam)] : window.HasadimMap?.approximate(x.id, x.il);
-        root.append(node('p', x.il + ' / ' + x.ilce + (exact ? '' : ' · yaklaşık konum'), 'muted'));
+        const head = node('div', undefined, 'detail-map-head');
+        const pin = node('span', undefined, 'detail-map-pin');
+        pin.setAttribute('aria-hidden', 'true');
+        const titles = node('div');
+        titles.append(node('p', 'Konum', 'eyebrow'), node('h3', [x.ilce, x.il].filter(Boolean).join(', ')));
+        head.append(pin, titles);
+        root.append(head);
+        root.append(node('p', exact ? 'Satıcının haritada işaretlediği konum' : 'Yaklaşık konum · tam yeri satıcıya sor', 'detail-map-note' + (exact ? ' exact' : '')));
         const box = node('div', undefined, 'mini-map detail-mini-map');
         box.setAttribute('aria-label', 'İlan konumu haritası');
         root.append(box);
@@ -186,10 +193,17 @@ window.MarketPresentation = (() => {
                 const map = window.HasadimMap.create(box, { center: point, zoom: exact ? 13 : 9 });
                 map?.setPin(point[0], point[1]);
             });
-            const link = node('a', 'Haritada büyük aç ↗', 'textbtn');
-            link.href = 'https://www.openstreetmap.org/?mlat=' + point[0] + '&mlon=' + point[1] + '#map=' + (exact ? 14 : 10) + '/' + point[0] + '/' + point[1];
-            link.target = '_blank'; link.rel = 'noopener noreferrer';
-            root.append(link);
+            const links = node('div', undefined, 'detail-map-links');
+            const open = node('a', 'Haritada aç', 'secondary');
+            open.href = 'https://www.openstreetmap.org/?mlat=' + point[0] + '&mlon=' + point[1] + '#map=' + (exact ? 15 : 10) + '/' + point[0] + '/' + point[1];
+            links.append(open);
+            if (exact) {
+                const route = node('a', 'Yol tarifi', 'secondary');
+                route.href = 'https://www.openstreetmap.org/directions?route=%3B' + point[0] + '%2C' + point[1];
+                links.append(route);
+            }
+            for (const a of links.children) { a.target = '_blank'; a.rel = 'noopener noreferrer'; a.append(node('span', ' ↗', 'ext')); }
+            root.append(links);
         } else box.hidden = true;
         return root;
     }

@@ -1,10 +1,8 @@
 'use strict';
 
-// Harita sayfası: il haritası (her il bir kutu, renk ilan yoğunluğu) ve
+// Harita sayfası: il sınırlarıyla çizilmiş Türkiye haritası (renk ilan yoğunluğu) ve
 // OpenStreetMap üzerinde ilan noktaları. Veri: /api/meyve-ilanlari/harita
 (() => {
-    // Türkiye il haritası için ızgara konumları [sütun, satır] (il merkezlerine göre).
-    const GRID = {"Adana":[10,7],"Adıyaman":[13,6],"Afyonkarahisar":[5,5],"Ağrı":[17,4],"Amasya":[10,3],"Ankara":[7,4],"Antalya":[6,7],"Artvin":[16,2],"Aydın":[3,6],"Balıkesir":[3,4],"Bilecik":[5,3],"Bingöl":[15,5],"Bitlis":[17,5],"Bolu":[7,3],"Burdur":[5,6],"Bursa":[4,4],"Çanakkale":[1,3],"Çankırı":[8,3],"Çorum":[9,3],"Denizli":[4,6],"Diyarbakır":[14,6],"Edirne":[2,2],"Elazığ":[13,5],"Erzincan":[14,4],"Erzurum":[15,4],"Eskişehir":[6,4],"Gaziantep":[12,7],"Giresun":[13,2],"Gümüşhane":[14,3],"Hakkari":[18,6],"Hatay":[11,8],"Isparta":[6,6],"Mersin":[9,7],"İstanbul":[4,2],"İzmir":[2,5],"Kars":[17,3],"Kastamonu":[9,2],"Kayseri":[10,5],"Kırklareli":[2,1],"Kırşehir":[9,4],"Kocaeli":[5,2],"Konya":[7,6],"Kütahya":[5,4],"Malatya":[12,5],"Manisa":[3,5],"Kahramanmaraş":[11,6],"Mardin":[15,7],"Muğla":[3,7],"Muş":[16,5],"Nevşehir":[9,5],"Niğde":[9,6],"Ordu":[12,2],"Rize":[15,2],"Sakarya":[6,3],"Samsun":[11,2],"Siirt":[16,6],"Sinop":[10,1],"Sivas":[11,4],"Tekirdağ":[3,2],"Tokat":[11,3],"Trabzon":[14,2],"Tunceli":[14,5],"Şanlıurfa":[13,7],"Uşak":[4,5],"Van":[18,5],"Yozgat":[10,4],"Zonguldak":[7,2],"Aksaray":[8,5],"Bayburt":[15,3],"Karaman":[8,7],"Kırıkkale":[8,4],"Batman":[15,6],"Şırnak":[17,6],"Bartın":[7,1],"Ardahan":[17,2],"Iğdır":[18,4],"Yalova":[4,3],"Karabük":[8,2],"Kilis":[12,8],"Osmaniye":[11,7],"Düzce":[6,2]};
     const api = window.HasadimApi;
     const $ = s => document.querySelector(s);
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
@@ -30,30 +28,158 @@
         return '/html/index.html' + (p.size ? '?' + p : '');
     }
 
+    const SVG = 'http://www.w3.org/2000/svg';
+    const svgNode = (tag, attrs = {}, text) => {
+        const n = document.createElementNS(SVG, tag);
+        for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+        if (text !== undefined) n.textContent = text;
+        return n;
+    };
+    const shapes = new Map();   // il → { group, path }
+    let selected = '';
+
+    // İlin ilanlarındaki en çok geçen ürünler (harita noktalarından).
+    function productsOf(city) {
+        const counts = new Map();
+        for (const p of data.noktalar) if (p.il === city) counts.set(p.meyveTuru, (counts.get(p.meyveTuru) || 0) + 1);
+        return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 4);
+    }
+
+    function showInfo(city) {
+        const box = $('#cityInfo');
+        box.replaceChildren();
+        if (!city) {
+            box.append(node('p', 'Haritada bir ile dokun; o ildeki ilan sayısını ve ürünleri burada gör.', 'muted city-info-hint'));
+            return;
+        }
+        const count = data.iller.find(x => x.il === city)?.count || 0;
+        const head = node('div', undefined, 'city-info-head');
+        head.append(node('strong', city, 'city-info-name'), node('span', count ? number(count) + ' ilan' : 'İlan yok', 'city-info-count' + (count ? '' : ' empty')));
+        box.append(head);
+        const products = productsOf(city);
+        if (products.length) {
+            const list = node('ul', undefined, 'city-info-products');
+            for (const [name, n] of products) {
+                const li = node('li');
+                if (window.FruitIcons) li.append(window.FruitIcons.node(name, 18));
+                li.append(node('span', name), node('small', String(n)));
+                list.append(li);
+            }
+            box.append(list);
+        }
+        if (count) {
+            const go = node('a', city + ' ilanlarını gör →', 'primary city-info-go');
+            go.href = marketLink({ il: city });
+            box.append(go);
+        } else box.append(node('p', 'Bu seçimde ' + city + ' için yayında ilan yok.', 'muted'));
+    }
+
+    function select(city, focus = false) {
+        if (selected) shapes.get(selected)?.group.classList.remove('is-selected');
+        selected = city;
+        const shape = shapes.get(city);
+        if (shape) {
+            shape.group.classList.add('is-selected');
+            shape.group.parentNode.append(shape.group);   // seçili il sınırı üstte çizilsin
+            if (focus) {
+                shape.group.focus({ preventScroll: true });
+                shape.group.scrollIntoView?.({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+            }
+        }
+        showInfo(city);
+    }
+
+    function buildMap() {
+        const geo = window.TurkiyeIller;
+        const root = $('#cityMap');
+        if (!geo || !root || shapes.size) return;
+        const svg = svgNode('svg', { viewBox: '0 0 ' + geo.width + ' ' + geo.height, class: 'tr-map-svg', role: 'group', 'aria-label': 'Türkiye il haritası' });
+        const provinces = svgNode('g', { class: 'tr-provinces' });
+        const labels = svgNode('g', { class: 'tr-labels', 'aria-hidden': 'true' });
+        for (const [city, d, lx, ly, room] of [...geo.iller].sort((a, b) => b[4] - a[4])) {
+            const group = svgNode('g', { class: 'tr-il', tabindex: '0', role: 'button', 'data-il': city });
+            const path = svgNode('path', { d, 'fill-rule': 'evenodd' });
+            const title = svgNode('title', {}, city);
+            group.append(title, path);
+            group.addEventListener('click', () => select(city));
+            group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(city); } });
+            group.addEventListener('mouseenter', () => group.classList.add('is-hover'));
+            group.addEventListener('mouseleave', () => group.classList.remove('is-hover'));
+            provinces.append(group);
+            // İl adı sığıyorsa (veya ilde ilan varsa) yazılır; diğerlerinin adı üzerine gelince görünür.
+            const fits = room * 2.5 >= city.length * 4.6;
+            const label = svgNode('g', { class: 'tr-label', transform: 'translate(' + lx + ' ' + ly + ')' });
+            label.append(svgNode('text', { class: 'tr-name', y: '-2' }, city));
+            const badge = svgNode('g', { class: 'tr-badge', transform: 'translate(0 8)' });
+            badge.append(svgNode('rect', { x: '-9', y: '-6', width: '18', height: '12', rx: '6' }), svgNode('text', { y: '0.5' }));
+            label.append(badge);
+            labels.append(label);
+            shapes.set(city, { group, path, title, label, badge, room, fits });
+        }
+        svg.append(provinces, labels);
+        root.replaceChildren(svg);
+        // Telefonda harita yana kayar; ilk açılışta ortadan başlasın.
+        setTimeout(() => { root.scrollLeft = (root.scrollWidth - root.clientWidth) / 2; });
+    }
+
+    // Komşu illerin adları üst üste binerse adı gizlenir (üzerine gelince görünür).
+    // Öncelik: ilanı olan iller, sonra büyük iller.
+    let nameBoxes = null;
+    function declutter() {
+        if (!shapes.size || $('#cityPanel').hidden) return;
+        if (!nameBoxes) {
+            const list = [];
+            try {
+                for (const [city, s] of shapes) {
+                    const n = s.label.querySelector('.tr-name');
+                    if (!n) continue;
+                    const box = n.getBBox(), m = /translate\(([-\d.]+) ([-\d.]+)\)/.exec(s.label.getAttribute('transform'));
+                    list.push({ city, n, s, x: box.x + +m[1] - 1, y: box.y + +m[2] - 1, w: box.width + 2, h: box.height + 2 });
+                }
+            } catch { return; }
+            if (!list.some(b => b.w > 2)) return;
+            nameBoxes = list;
+        }
+        const counts = new Map(data.iller.map(x => [x.il, x.count]));
+        const order = [...nameBoxes].sort((a, b) => ((counts.get(b.city) ? 1 : 0) - (counts.get(a.city) ? 1 : 0)) || (b.s.room - a.s.room));
+        const shown = [];
+        for (const b of order) {
+            const clash = !(b.s.fits || counts.get(b.city)) || shown.some(o => b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h);
+            b.n.setAttribute('visibility', clash ? 'hidden' : 'visible');
+            b.s.label.classList.toggle('compact', clash);
+            if (clash) b.s.badge.removeAttribute('transform'); else b.s.badge.setAttribute('transform', 'translate(0 8)');
+            if (!clash) shown.push(b);
+        }
+    }
+
     function renderCities() {
-        const root = $('#cityGrid');
-        root.replaceChildren();
+        buildMap();
         const counts = new Map(data.iller.map(x => [x.il, x.count]));
         const max = Math.max(1, ...counts.values());
-        for (const [city, [col, row]] of Object.entries(GRID)) {
+        for (const [city, s] of shapes) {
             const count = counts.get(city) || 0;
             const level = count ? Math.min(5, 1 + Math.floor(Math.sqrt(count / max) * 4.999)) : 0;
-            const cell = node(count ? 'a' : 'span', undefined, 'city-cell level-' + level);
-            cell.style.gridColumn = String(col);
-            cell.style.gridRow = String(row);
-            if (count) cell.href = marketLink({ il: city });
-            cell.title = city + ': ' + number(count) + ' ilan';
-            cell.setAttribute('aria-label', city + ', ' + number(count) + ' ilan');
-            cell.append(node('span', city.length > 9 ? city.slice(0, 8) + '.' : city, 'city-name'), node('strong', count ? number(count) : '–', 'city-count'));
-            root.append(cell);
+            s.group.setAttribute('class', 'tr-il level-' + level + (city === selected ? ' is-selected' : ''));
+            s.group.setAttribute('aria-label', city + ', ' + (count ? number(count) + ' ilan' : 'ilan yok'));
+            s.title.textContent = city + ' · ' + (count ? number(count) + ' ilan' : 'ilan yok');
+            s.badge.lastChild.textContent = count > 999 ? '999+' : String(count);
+            const wide = String(count).length > 2 ? 24 : String(count).length > 1 ? 18 : 14;
+            s.badge.firstChild.setAttribute('x', String(-wide / 2));
+            s.badge.firstChild.setAttribute('width', String(wide));
+            s.badge.setAttribute('visibility', count ? 'visible' : 'hidden');
+            s.label.classList.toggle('has-count', count > 0);
+            s.label.classList.toggle('on-strong', level >= 3);
         }
+        showInfo(selected);
+        declutter();
         const top = $('#topCities');
         top.replaceChildren();
         for (const x of data.iller.slice(0, 10)) {
             const li = node('li');
-            const a = node('a', x.il);
-            a.href = marketLink({ il: x.il });
-            li.append(a, node('span', number(x.count) + ' ilan', 'muted'));
+            const b = node('button', x.il, 'textbtn');
+            b.type = 'button';
+            b.onclick = () => select(x.il, true);
+            li.append(b, node('span', number(x.count) + ' ilan', 'muted'));
             top.append(li);
         }
         if (!data.iller.length) top.append(node('li', 'Bu seçimde yayında ilan yok.', 'muted'));
@@ -110,7 +236,7 @@
         const url = new URL(location.href);
         url.searchParams.set('gorunum', name);
         history.replaceState(null, '', url.pathname + url.search);
-        if (name === 'sokak') setTimeout(renderStreet);
+        if (name === 'sokak') setTimeout(renderStreet); else setTimeout(declutter);
     }
 
     async function load() {

@@ -113,3 +113,12 @@ Hesaplar ve şifreler aynı kaldı.
 - Sonraki beklemelerde (filtre, sayfa, kaydetme) üstte ince yeşil-altın ilerleme çizgisi; 1,2 saniyeyi geçerse ortada küçük "Yükleniyor…" kartı. Bildirim yoklamaları göstergeyi tetiklemez; bir isteği sessiz yapmak için `fetch(url, { hasadimQuiet: true })`.
 - Pazar yeri betikleri artık tek tek sırayla değil, aynı anda indirilip sırayla çalıştırılıyor (`page-loader.js`).
 - Sayfa betikleri kendi hazırlık işini `HasadimLoading.track(promise)` ile bildirebilir.
+
+## İl haritası (gerçek il sınırları)
+- Harita sayfasındaki il haritası artık kutulardan değil, Türkiye'nin gerçek il sınırlarından çiziliyor (SVG). Her il ayrı bir şekil; renk ilan yoğunluğunu gösterir.
+- Bir ile dokununca sağdaki kartta il adı, ilan sayısı, o ildeki öne çıkan ürünler ve "… ilanlarını gör" bağlantısı çıkar. Klavyeyle de (Tab + Enter) gezilebilir.
+- Sığmayan veya üst üste binen il adları gizlenir, üzerine gelince görünür; ilanı olan illerin adı önceliklidir. Telefonda harita yana kaydırılarak gezilir.
+- Veri: `tools/veri/tr-iller-osm.json` (© OpenStreetMap katkıcıları, ODbL; github.com/cihadturhan/tr-geojson). `python tools/il-haritasi-uret.py` sadeleştirip `js/turkiye-iller.js` (~55 KB) dosyasını üretir.
+
+## İlan detayında konum kartı
+- Başlıkta "İlçe, İl", altında konumun satıcı tarafından mı işaretlendiği yoksa yaklaşık mı olduğu; altta harita ve "Haritada aç" / "Yol tarifi" düğmeleri.
