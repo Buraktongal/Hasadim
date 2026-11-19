@@ -166,7 +166,12 @@ ListingRequest Land() => new()
 };
 var landId = await service.Create(Land(), ct, ["arazi.jpg"]);
 var land = repo.Items[landId];
-Check(land.Kategori == "Arazi" && land.Birim == "m2", "Arazi ilanı m² birimiyle kaydedilir");
+Check(land.Kategori == "Arazi" && land.Birim == "m2" && land.IslemTipi == "Satilik", "Arazi ilanı m² birimiyle, varsayılan satılık kaydedilir");
+var rent = Land(); rent.IslemTipi = "Kiralik"; rent.KilogramFiyati = 60_000;
+Check(repo.Items[await service.Create(rent, ct, ["arazi.jpg"])].IslemTipi == "Kiralik", "Arazi kiralık olarak verilebilir");
+var badDeal = Land(); badDeal.IslemTipi = "Takas";
+await Status(400, () => service.Create(badDeal, ct, ["arazi.jpg"]), "Tanımsız işlem tipi reddedilir");
+Check(repo.Items.Values.Where(x => x.Kategori == "Meyve").All(x => x.IslemTipi is null), "Ürün ilanında işlem tipi boş kalır");
 Check(land.KilogramFiyati == 4_750_000 && land.Ambalaj is null && land.MinAlimKg is null && land.HasatTarihi is null, "Arazide toplam fiyat 1 milyonu aşabilir; ürün alanları temizlenir");
 var noZoning = Land(); noZoning.ImarDurumu = null;
 await Status(400, () => service.Create(noZoning, ct, ["arazi.jpg"]), "İmar durumu olmadan arazi ilanı reddedilir");
@@ -191,7 +196,7 @@ var parsed = SavedSearchFilters.Parse("?kategori=Meyve&meyveTuru=Elma&il=Isparta
 Check(parsed.Kategori == "Meyve" && parsed.MeyveTuru == "Elma" && parsed.Il == "Isparta" && parsed.MaxFiyat == 30, "Kayıtlı arama filtreleri ayrıştırılır");
 Check(!parsed.Query.Contains("evil") && parsed.Query.Contains("sort=priceAsc"), "Kayıtlı aramada yalnızca bilinen filtreler saklanır");
 Check(SavedSearchFilters.Parse("kategori=Sebze").Kategori is null, "Kayıtlı aramada tanımsız kategori yok sayılır");
-Check(EngagementService.Price(32.5m, "kg") == "32,50 TL/kg" && EngagementService.Price(4_750_000m, "m2") == "4.750.000,00 TL", "Bildirim fiyat metni birime göre yazılır");
+Check(EngagementService.Price(32.5m, "kg") == "32,50 TL/kg" && EngagementService.Price(4_750_000m, "m2") == "4.750.000 TL", "Bildirim fiyat metni birime göre yazılır");
 Console.WriteLine($"ALL {checks} WORKFLOW CHECKS PASSED");
 
 class Current : ICurrentUser

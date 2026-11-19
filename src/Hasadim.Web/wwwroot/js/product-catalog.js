@@ -61,7 +61,7 @@ window.HasadimCatalog = (() => {
         { id: 'Yem', name: 'Yem ve balya', short: 'Yem / balya', icon: 'Yonca balyası', units: ['balya', 'kg'], products: Object.keys(extra.Yem) },
         { id: 'Bal', name: 'Bal ve arı ürünleri', short: 'Bal', icon: 'Bal', units: ['kg'], products: Object.keys(extra.Bal) },
         { id: 'Kuruyemis', name: 'Kuruyemiş', short: 'Kuruyemiş', icon: 'Ceviz', units: ['kg'], products: Object.keys(extra.Kuruyemis) },
-        { id: 'Arazi', name: 'Satılık arazi', short: 'Arazi', icon: 'Tarla', units: ['m2'], products: Object.keys(extra.Arazi), land: true }
+        { id: 'Arazi', name: 'Satılık / kiralık arazi', short: 'Arazi', icon: 'Tarla', units: ['m2'], products: Object.keys(extra.Arazi), land: true }
     ];
     const byId = new Map(categories.map(c => [c.id, c]));
     const productCategory = new Map();

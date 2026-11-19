@@ -28,6 +28,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         if (!string.IsNullOrWhiteSpace(q.Q)) where += " AND (l.Baslik LIKE @term OR l.Cesit LIKE @term)";
         if (!string.IsNullOrWhiteSpace(q.Kategori)) where += " AND l.Kategori=@category";
         if (!string.IsNullOrWhiteSpace(q.MeyveTuru)) where += " AND l.MeyveTuru=@fruit";
+        if (!string.IsNullOrWhiteSpace(q.IslemTipi)) where += " AND l.IslemTipi=@deal";
         if (!string.IsNullOrWhiteSpace(q.ImarDurumu)) where += " AND l.ImarDurumu=@zoning";
         if (!string.IsNullOrWhiteSpace(q.TapuDurumu)) where += " AND l.TapuDurumu=@deed";
         if (!string.IsNullOrWhiteSpace(q.Il)) where += " AND l.Il=@city";
@@ -51,7 +52,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         var args = new
         {
             user, owner = q.OwnerId, term = "%" + q.Q?.Trim() + "%", fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim(),
-            category = q.Kategori, zoning = q.ImarDurumu?.Trim(), deed = q.TapuDurumu?.Trim(),
+            category = q.Kategori, deal = q.IslemTipi, zoning = q.ImarDurumu?.Trim(), deed = q.TapuDurumu?.Trim(),
             district = q.Ilce?.Trim(), variety = q.Cesit?.Trim(), packaging = q.Ambalaj, delivery = q.Teslimat,
             min = q.MinFiyat, max = q.MaxFiyat, minQty = q.MinMiktar, maxQty = q.MaxMiktar,
             skip = (q.Page - 1) * q.PageSize, take = q.PageSize
@@ -103,7 +104,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Aciklama,
             Telefon,
             HasatTarihi, Ambalaj, Teslimat, MinAlimKg,
-            Kategori, Birim, ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, Enlem, Boylam,
+            Kategori, Birim, IslemTipi, ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, Enlem, Boylam,
             OlusturulmaTarihi,
             Active,
             Status,
@@ -126,7 +127,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             @Aciklama,
             @Telefon,
             @HasatTarihi, @Ambalaj, @Teslimat, @MinAlimKg,
-            @Kategori, @Birim, @ImarDurumu, @TapuDurumu, @Sulama, @Ada, @Parsel, @Elektrik, @YolCephesi, @Enlem, @Boylam,
+            @Kategori, @Birim, @IslemTipi, @ImarDurumu, @TapuDurumu, @Sulama, @Ada, @Parsel, @Elektrik, @YolCephesi, @Enlem, @Boylam,
             @OlusturulmaTarihi,
             @Active,
             @Status,
@@ -151,7 +152,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             l.Aciklama,
             l.Telefon,
             l.HasatTarihi, l.Ambalaj, l.Teslimat, l.MinAlimKg,
-            l.Kategori, l.Birim, l.ImarDurumu, l.TapuDurumu, l.Sulama, l.Ada, l.Parsel, l.Elektrik, l.YolCephesi, l.Enlem, l.Boylam,
+            l.Kategori, l.Birim, l.IslemTipi, l.ImarDurumu, l.TapuDurumu, l.Sulama, l.Ada, l.Parsel, l.Elektrik, l.YolCephesi, l.Enlem, l.Boylam,
             l.OlusturulmaTarihi,
             Status = (int)l.Status,
             l.Active,
@@ -334,7 +335,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
             Aciklama = @Aciklama,
             Telefon = @Telefon,
             HasatTarihi = @HasatTarihi, Ambalaj = @Ambalaj, Teslimat = @Teslimat, MinAlimKg = @MinAlimKg,
-            Kategori = @Kategori, Birim = @Birim, ImarDurumu = @ImarDurumu, TapuDurumu = @TapuDurumu, Sulama = @Sulama,
+            Kategori = @Kategori, Birim = @Birim, IslemTipi = @IslemTipi, ImarDurumu = @ImarDurumu, TapuDurumu = @TapuDurumu, Sulama = @Sulama,
             Ada = @Ada, Parsel = @Parsel, Elektrik = @Elektrik, YolCephesi = @YolCephesi, Enlem = @Enlem, Boylam = @Boylam,
             Active = @Active,
             Status = @Status,

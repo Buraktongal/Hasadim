@@ -173,7 +173,8 @@ public static class DemoSeeder
         new("fatma@hasadim.test", "Kuruyemis", "Kestane", "kg", "kestane", "Aydın", ["Nazilli", "Koçarlı"], ["Aydın kestanesi", "Marron"], 80, 140, 1, 10, 500, ["Çuval", "Kasa"]),
         new("ayse@hasadim.test", "Kuruyemis", "Badem", "kg", "badem", "Muğla", ["Ula", "Milas"], ["Ferragnes", "Nonpareil", "Badem içi"], 250, 400, 1, 8, 500, ["Çuval", "Koli"]),
         new("ahmet@hasadim.test", "Arazi", "Meyve bahçesi", "m2", "meyve-bahcesi", "Isparta", ["Eğirdir", "Gelendost"], [], 2_500_000, 6_000_000, 8, 20, 1000, []),
-        new("mehmet@hasadim.test", "Arazi", "Tarla", "m2", "tarla", "Konya", ["Karapınar", "Cihanbeyli"], [], 1_500_000, 5_000_000, 20, 80, 1000, []),
+        // Tarla kiralık: fiyat yıllık kira bedelidir.
+        new("mehmet@hasadim.test", "Arazi", "Tarla", "m2", "tarla", "Konya", ["Karapınar", "Cihanbeyli"], [], 60_000, 240_000, 20, 80, 1000, []),
         new("fatma@hasadim.test", "Arazi", "Bağ", "m2", "bag", "Manisa", ["Alaşehir", "Sarıgöl"], [], 1_800_000, 4_500_000, 5, 15, 1000, []),
         new("ayse@hasadim.test", "Arazi", "Zeytinlik", "m2", "zeytinlik", "Mersin", ["Silifke", "Erdemli"], [], 2_000_000, 5_000_000, 6, 18, 1000, []),
     ];
@@ -213,11 +214,11 @@ public static class DemoSeeder
         INSERT dbo.Listings
             (Id, OwnerId, Baslik, Kategori, Birim, MeyveTuru, Cesit, MiktarKg, KilogramFiyati, OncekiKilogramFiyati, Il, Ilce, Aciklama, Telefon,
              HasatTarihi, OlusturulmaTarihi, Active, Status, PhotoUrl, Ambalaj, Teslimat, MinAlimKg, PublishedAt, ExpiresAt,
-             ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, Enlem, Boylam)
+             IslemTipi, ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, Enlem, Boylam)
         VALUES
             (@id, @ownerId, @title, @category, @unit, @fruit, @variety, @quantity, @price, @previous, @city, @district, @description, @phone,
              @harvest, @published, 1, 4, @cover, @packaging, @delivery, @minimum, @published, @expires,
-             @zoning, @deed, @irrigation, @block, @parcel, @electricity, @road, @lat, @lon);
+             @deal, @zoning, @deed, @irrigation, @block, @parcel, @electricity, @road, @lat, @lon);
         INSERT dbo.ListingStatistics(ListingId, ViewCount) VALUES(@id, @views);
         """;
 
@@ -336,7 +337,7 @@ public static class DemoSeeder
                     id, ownerId, title, category = "Meyve", unit = "kg", fruit, variety, quantity, price, previous, city = region.City, district, description,
                     phone = account.Phone, harvest = (DateTime?)published.Date.AddDays(-random.Next(0, 30)), published, cover = photos[0],
                     packaging = (string?)packaging, delivery = (string?)delivery, minimum, expires = published.AddDays(30), views = random.Next(5, 900),
-                    zoning = (string?)null, deed = (string?)null, irrigation = (string?)null, block = (string?)null, parcel = (string?)null,
+                    deal = (string?)null, zoning = (string?)null, deed = (string?)null, irrigation = (string?)null, block = (string?)null, parcel = (string?)null,
                     electricity = (bool?)null, road = (bool?)null, lat, lon
                 }, tx, cancellationToken: ct));
                 listingIds.Add((id, ownerId, price, "kg", title));
@@ -374,9 +375,9 @@ public static class DemoSeeder
                 if (land)
                 {
                     var donum = quantity / 1000m;
-                    title = $"{district}'de satılık {donum.ToString("0.#", tr)} dönüm {product}" + (random.Next(2) == 0 ? ", yola cepheli" : ", sulu");
+                    title = $"{district}'de {(x.Product == "Tarla" ? "kiralık" : "satılık")} {donum.ToString("0.#", tr)} dönüm {product}" + (random.Next(2) == 0 ? ", yola cepheli" : ", sulu");
                     description = $"{x.City} {district}'de {quantity.ToString("N0", tr)} m² ({donum.ToString("0.#", tr)} dönüm) {product}. " +
-                                  "Ulaşımı kolay, köy yoluna yakın. Tapu devri hemen yapılabilir.\nAraziyi yerinde görmek için randevu alabilirsiniz. Takas düşünülmez.";
+                                  "Ulaşımı kolay, köy yoluna yakın. " + (x.Product == "Tarla" ? "Yıllık kira, en az 3 yıllık sözleşme." : "Tapu devri hemen yapılabilir.") + "\nAraziyi yerinde görmek için randevu alabilirsiniz. Takas düşünülmez.";
                 }
                 else
                 {
@@ -403,7 +404,7 @@ public static class DemoSeeder
                     harvest = land ? (DateTime?)null : published.Date.AddDays(-random.Next(0, 40)), published, cover = photos[0],
                     packaging = land ? null : x.Packaging[random.Next(x.Packaging.Length)], delivery = land ? null : Deliveries[random.Next(Deliveries.Length)],
                     minimum, expires = published.AddDays(30), views = random.Next(5, 900),
-                    zoning = land ? "İmarsız (tarım arazisi)" : null, deed = land ? (random.Next(3) == 0 ? "Hisseli tapu" : "Müstakil tapu") : null,
+                    deal = land ? (x.Product == "Tarla" ? "Kiralik" : "Satilik") : null, zoning = land ? "İmarsız (tarım arazisi)" : null, deed = land ? (random.Next(3) == 0 ? "Hisseli tapu" : "Müstakil tapu") : null,
                     irrigation = land ? new[] { "Sulu", "Kısmen sulu", "Kuru (yağışa bağlı)" }[random.Next(3)] : null,
                     block = land ? random.Next(100, 900).ToString() : null, parcel = land ? random.Next(1, 60).ToString() : null,
                     electricity = land ? random.Next(2) == 0 : (bool?)null, road = land ? random.Next(3) != 0 : (bool?)null, lat, lon

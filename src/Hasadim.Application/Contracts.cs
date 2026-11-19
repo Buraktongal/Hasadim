@@ -49,6 +49,8 @@ public class ListingRequest
     [RegularExpression("^(kg|balya|m2)$", ErrorMessage = "Birim geçersiz.")]
     public string? Birim { get; set; }
 
+    [RegularExpression("^(Satilik|Kiralik)$", ErrorMessage = "İşlem tipi satılık veya kiralık olmalı.")]
+    public string? IslemTipi { get; set; }
     [StringLength(40)] public string? ImarDurumu { get; set; }
     [StringLength(40)] public string? TapuDurumu { get; set; }
     [StringLength(40)] public string? Sulama { get; set; }
@@ -100,7 +102,7 @@ public class ListingRequest
         HasatTarihi,
         false, Ambalaj, Teslimat, MinAlimKg,
         Kategori, Birim,
-        new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi),
+        new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, IslemTipi),
         Enlem, Boylam
     );
 }
@@ -124,6 +126,9 @@ public class ListingQuery
 
     [RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
     public string? Kategori { get; set; }
+
+    [RegularExpression("^(Satilik|Kiralik)$", ErrorMessage = "Geçersiz işlem tipi.")]
+    public string? IslemTipi { get; set; }
 
     [StringLength(40)]
     public string? ImarDurumu { get; set; }
@@ -201,6 +206,7 @@ public class ListingView
 
     public string Kategori { get; set; } = ListingCategories.Meyve;
     public string Birim { get; set; } = "kg";
+    public string? IslemTipi { get; set; }
     public string? ImarDurumu { get; set; }
     public string? TapuDurumu { get; set; }
     public string? Sulama { get; set; }

@@ -6,7 +6,7 @@ window.MarketCatalog = (() => {
     const icons = {
         Elma: '🍎', Armut: '🍐', Ayva: '🍐', Portakal: '🍊', Mandalina: '🍊', Limon: '🍋', Greyfurt: '🍊', Üzüm: '🍇', Kiraz: '🍒', Vişne: '🍒', Şeftali: '🍑', Nektarin: '🍑', Kayısı: '🍑', Erik: '🟣', Nar: '🔴', Çilek: '🍓', Ahududu: '🍓', Böğürtlen: '🫐', 'Yaban mersini': '🫐', Dut: '🫐', Karpuz: '🍉', Kavun: '🍈', Muz: '🍌', İncir: '🌿', 'Trabzon hurması': '🟠', Avokado: '🥑', Kivi: '🥝', Diğer: '🌱'
     };
-    const filterKeys = ['q', 'kategori', 'meyveTuru', 'cesit', 'il', 'ilce', 'minFiyat', 'maxFiyat', 'minMiktar', 'maxMiktar', 'ambalaj', 'teslimat', 'imarDurumu', 'tapuDurumu', 'sort'];
+    const filterKeys = ['q', 'kategori', 'islemTipi', 'meyveTuru', 'cesit', 'il', 'ilce', 'minFiyat', 'maxFiyat', 'minMiktar', 'maxMiktar', 'ambalaj', 'teslimat', 'imarDurumu', 'tapuDurumu', 'sort'];
     const layoutKey = 'hasadim-layout';
     let counts = new Map();
     let categoryCounts = new Map();
@@ -174,7 +174,7 @@ window.MarketCatalog = (() => {
         const select = form.elements.namedItem('meyveTuru');
         if (!select || typeof select.replaceChildren !== 'function') return;
         const c = category ? catalog()?.category(category) : null;
-        select.replaceChildren(option(c ? 'Tüm ' + c.name.toLocaleLowerCase('tr-TR') + ' ürünleri' : 'Tüm ürünler', ''));
+        select.replaceChildren(option(c ? (c.land ? 'Tüm arazi türleri' : 'Tüm ' + c.name.toLocaleLowerCase('tr-TR') + ' ürünleri') : 'Tüm ürünler', ''));
         const groups = c ? [c] : (catalog()?.categories || []);
         for (const g of groups) {
             const parent = !c && typeof document.createElement('optgroup').append === 'function' ? node('optgroup') : null;
@@ -193,7 +193,8 @@ window.MarketCatalog = (() => {
         for (const n of form.querySelectorAll('[data-land-only]')) n.hidden = !land;
         for (const n of form.querySelectorAll('[data-product-only]')) n.hidden = land;
         const priceLegend = form.querySelector('[data-price-legend]');
-        if (priceLegend) priceLegend.textContent = land ? 'Fiyat (toplam TL)' : 'Fiyat (TL / birim)';
+        const rent = form.elements.namedItem('islemTipi')?.value === 'Kiralik';
+        if (priceLegend) priceLegend.textContent = land ? (rent ? 'Yıllık kira (TL)' : 'Fiyat (toplam TL)') : 'Fiyat (TL / birim)';
         const qtyLegend = form.querySelector('[data-qty-legend]');
         if (qtyLegend) qtyLegend.textContent = land ? 'Alan (m²)' : 'Miktar (kg / balya)';
         const variety = form.elements.namedItem('cesit');
@@ -308,6 +309,7 @@ window.MarketCatalog = (() => {
     function bind(form, reload) {
         const category = form.elements.namedItem('kategori');
         category?.addEventListener?.('change', () => { fillProducts(form); fillVarieties(form); });
+        form.elements.namedItem('islemTipi')?.addEventListener?.('change', () => syncCategoryFields(form));
         const fruit = form.elements.namedItem('meyveTuru');
         if (fruit && form.elements.namedItem('cesit')) {
             fruit.addEventListener?.('change', () => {

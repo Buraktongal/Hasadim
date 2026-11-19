@@ -37,20 +37,21 @@ window.ListingCategory = (() => {
         const c = current(form);
         const land = Boolean(c?.land);
         const u = unitText[unit(form)];
+        const rent = land && form.querySelector('input[name="islemTipi"]:checked')?.value === 'Kiralik';
         setText(form, '[data-qty-label]', land ? 'Arazi alanı (m²)' : 'Toplam miktar (' + u + ')');
-        setText(form, '[data-price-label]', land ? 'Satış fiyatı (toplam TL)' : 'Fiyat (TL/' + u + ')');
+        setText(form, '[data-price-label]', land ? (rent ? 'Yıllık kira bedeli (TL)' : 'Satış fiyatı (toplam TL)') : 'Fiyat (TL/' + u + ')');
         setText(form, '[data-min-label]', 'Minimum alım (' + u + ')');
         setText(form, '[data-product-label]', land ? 'Arazi türü' : 'Ürün');
         setText(form, '[data-location-label]', land ? 'Arazinin bulunduğu il' : 'Ürünün bulunduğu il');
         setText(form, '[data-price-help]', land
-            ? 'Alanı metrekare, fiyatı toplam satış bedeli olarak gir. 1 dönüm = 1.000 m².'
+            ? (rent ? 'Alanı metrekare, fiyatı yıllık kira bedeli olarak gir. 1 dönüm = 1.000 m².' : 'Alanı metrekare, fiyatı toplam satış bedeli olarak gir. 1 dönüm = 1.000 m².')
             : 'Fiyatı ' + u + ' başına, miktarı toplam ' + u + ' olarak gir. Toptan alıcılar en çok bu bilgilere bakar.');
         const qtyInput = form.elements.namedItem('miktarKg'), priceInput = form.elements.namedItem('kilogramFiyati');
         if (qtyInput) qtyInput.placeholder = land ? 'Örn. 12000' : unit(form) === 'balya' ? 'Örn. 3000' : 'Örn. 15000';
-        if (priceInput) priceInput.placeholder = land ? 'Örn. 2500000' : unit(form) === 'balya' ? 'Örn. 350' : 'Örn. 35';
+        if (priceInput) priceInput.placeholder = land ? (rent ? 'Örn. 60000' : 'Örn. 2500000') : unit(form) === 'balya' ? 'Örn. 350' : 'Örn. 35';
         const title = form.elements.namedItem('baslik');
         if (title) title.placeholder = land
-            ? 'Örn. Eğirdir’de yola cepheli 12 dönüm sulu elma bahçesi'
+            ? (rent ? 'Örn. Karapınar’da kiralık 40 dönüm sulu tarla' : 'Örn. Eğirdir’de yola cepheli 12 dönüm sulu elma bahçesi')
             : c?.id === 'Tahil' ? 'Örn. Konya Karapınar Bezostaya buğday — 50 ton, dökme'
             : c?.id === 'Yem' ? 'Örn. 2. biçim yonca balyası — 3.000 balya, ahırdan teslim'
             : c?.id === 'Bal' ? 'Örn. Muğla çam balı — 2026 hasadı, teneke'
@@ -71,7 +72,8 @@ window.ListingCategory = (() => {
         const price = Number(form.elements.namedItem('kilogramFiyati')?.value);
         if (!current(form)?.land || !(area > 0)) { hint.textContent = ''; return; }
         const nf = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
-        hint.textContent = nf.format(area / 1000) + ' dönüm' + (price > 0 ? ' · m² fiyatı ' + nf.format(price / area) + ' TL' : '');
+        const rent = form.querySelector('input[name="islemTipi"]:checked')?.value === 'Kiralik';
+        hint.textContent = nf.format(area / 1000) + ' dönüm' + (price > 0 ? (rent ? ' · dönüm başına yıllık ' + nf.format(price / area * 1000) + ' TL' : ' · m² fiyatı ' + nf.format(price / area) + ' TL') : '');
     }
 
     // Ürün seçeneklerini kategoriye göre doldurur ve formu uyarlar.
@@ -114,6 +116,7 @@ window.ListingCategory = (() => {
         if (form.dataset.categoryBound) return;
         form.dataset.categoryBound = 'true';
         form.elements.namedItem('birim')?.addEventListener('change', () => labels(form));
+        for (const radio of form.querySelectorAll('input[name="islemTipi"]')) radio.addEventListener('change', () => labels(form));
         for (const name of ['miktarKg', 'kilogramFiyati']) form.elements.namedItem(name)?.addEventListener('input', () => areaHint(form));
     }
 

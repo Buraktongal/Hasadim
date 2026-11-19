@@ -19,8 +19,18 @@
         ]]
     ];
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
+    // Mobilde menü yana kaymaz: "Hesabım" düğmesine basınca alt alta liste açılır.
     for (const nav of document.querySelectorAll('[data-account-nav]')) {
-        nav.replaceChildren(node('p', 'Hesabım', 'account-nav-title'));
+        const currentLabel = groups.flatMap(g => g[1]).find(([href]) => href === location.pathname)?.[1] || 'Menü';
+        const toggle = node('button', undefined, 'account-nav-toggle');
+        toggle.type = 'button';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.append(node('span', 'Hesabım', 'account-nav-toggle-label'), node('strong', currentLabel), node('span', '▾', 'account-nav-caret'));
+        toggle.onclick = () => {
+            const open = nav.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', String(open));
+        };
+        nav.replaceChildren(toggle, node('p', 'Hesabım', 'account-nav-title'));
         for (const [title, links] of groups) {
             nav.append(node('p', title, 'account-nav-group'));
             for (const [href, label, counter] of links) {

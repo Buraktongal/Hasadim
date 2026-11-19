@@ -94,7 +94,7 @@ public record SavedSearchFilters(
     decimal? MinFiyat, decimal? MaxFiyat, string? Q)
 {
     private static readonly string[] Keys =
-        ["q", "kategori", "meyveTuru", "cesit", "il", "ilce", "minFiyat", "maxFiyat", "minMiktar", "maxMiktar",
+        ["q", "kategori", "islemTipi", "meyveTuru", "cesit", "il", "ilce", "minFiyat", "maxFiyat", "minMiktar", "maxMiktar",
          "ambalaj", "teslimat", "imarDurumu", "tapuDurumu", "sort"];
 
     public static SavedSearchFilters Parse(string? query)
@@ -230,7 +230,7 @@ public class EngagementService(
         (!l.ExpiresAt.HasValue || l.ExpiresAt > DateTime.UtcNow);
 
     public static string Price(decimal amount, string unit) =>
-        amount.ToString("N2", Tr) + " TL" + unit switch { "m2" => "", "balya" => "/balya", _ => "/kg" };
+        amount.ToString(unit == "m2" ? "N0" : "N2", Tr) + " TL" + unit switch { "m2" => "", "balya" => "/balya", _ => "/kg" };
 
     // ---- Teklifler ----
 

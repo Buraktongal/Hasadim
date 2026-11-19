@@ -39,7 +39,16 @@
                 <p>Görünüm, dil ve bildirim tercihlerini yönet; gerekirse hesabını sil.</p>
             </header>
             <p id="settingsStatus" role="status" aria-live="polite"></p>
-            <section class="account-panel" aria-labelledby="appearanceTitle">
+            <nav id="settingsMenu" class="settings-menu" aria-label="Ayar bölümleri">
+                <a href="#gorunum" data-settings-link="gorunum"><span class="settings-icon" aria-hidden="true">🎨</span><span class="settings-text"><strong>Görünüm</strong><small data-summary="gorunum">Cihaza göre</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="#dil" data-settings-link="dil"><span class="settings-icon" aria-hidden="true">🌐</span><span class="settings-text"><strong>Dil / Language</strong><small data-summary="dil">Türkçe</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="#bildirim-ayarlari" data-settings-link="bildirim-ayarlari" data-auth-only hidden><span class="settings-icon" aria-hidden="true">🔔</span><span class="settings-text"><strong>Bildirim tercihleri</strong><small data-summary="bildirim-ayarlari">Hangi bildirimleri alacağını seç</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="/html/profilim.html"><span class="settings-icon" aria-hidden="true">👤</span><span class="settings-text"><strong>Profil bilgilerim</strong><small>Ad, telefon ve görünürlük</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="/html/engellenenler.html" data-auth-only hidden><span class="settings-icon" aria-hidden="true">🚫</span><span class="settings-text"><strong>Engellenen üyeler</strong><small>Engellediğin üyeleri yönet</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="/html/hesabim.html" data-auth-only hidden><span class="settings-icon" aria-hidden="true">🔒</span><span class="settings-text"><strong>Hesap güvenliği</strong><small>Şifre ve oturumlar</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+                <a href="#hesap-sil" data-settings-link="hesap-sil" class="settings-danger" data-auth-only hidden><span class="settings-icon" aria-hidden="true">🗑️</span><span class="settings-text"><strong>Hesabı sil</strong><small>Hesabını ve ilanlarını kalıcı olarak sil</small></span><span class="settings-arrow" aria-hidden="true">›</span></a>
+            </nav>
+            <section class="account-panel settings-section" id="gorunum" data-settings-section aria-labelledby="appearanceTitle" hidden>
                 <h2 id="appearanceTitle">Görünüm</h2>
                 <p class="muted">Koyu mod gözü yormaz ve gece kullanımında pil tasarrufu sağlar.</p>
                 <label class="switch-row theme-follow"><span><strong>Cihaza göre</strong><small>Telefonun veya bilgisayarın açık/koyu ayarını otomatik izler</small></span><input type="checkbox" id="themeFollow" role="switch"></label>
@@ -48,7 +57,7 @@
                     <label class="choice-card"><input type="radio" name="theme" value="dark"><span class="theme-sample sample-dark" aria-hidden="true"></span><strong>Koyu mod</strong><small>Karanlık ortamlar için</small></label>
                 </div>
             </section>
-            <section class="account-panel" aria-labelledby="languageTitle">
+            <section class="account-panel settings-section" id="dil" data-settings-section aria-labelledby="languageTitle" hidden>
                 <h2 id="languageTitle">Dil / Language</h2>
                 <div class="choice-row" role="radiogroup" aria-labelledby="languageTitle">
                     <label class="choice-card"><input type="radio" name="language" value="tr"><span class="lang-flag" aria-hidden="true">TR</span><strong>Türkçe</strong><small>Varsayılan dil</small></label>
@@ -56,7 +65,7 @@
                 </div>
                 <small class="muted" data-no-i18n>İlan başlıkları ve açıklamaları satıcının yazdığı dilde gösterilir. · Listing titles and descriptions are shown as written by the seller.</small>
             </section>
-            <section class="account-panel" id="bildirim-ayarlari" aria-labelledby="notifyTitle" data-auth-only hidden>
+            <section class="account-panel settings-section" id="bildirim-ayarlari" data-settings-section aria-labelledby="notifyTitle" hidden>
                 <h2 id="notifyTitle">Bildirim tercihleri</h2>
                 <p class="muted">Hangi durumlarda uygulama içi bildirim almak istediğini seç.</p>
                 <form id="notifyForm" class="toggle-list">
@@ -66,7 +75,7 @@
                     <label class="switch-row"><span><strong>Fiyat düşüşleri</strong><small>Favorindeki bir ilanın fiyatı düştüğünde</small></span><input type="checkbox" name="notifyPriceDrops" role="switch"></label>
                 </form>
             </section>
-            <section class="account-panel danger-zone" aria-labelledby="deleteTitle" data-auth-only hidden>
+            <section class="account-panel settings-section danger-zone" id="hesap-sil" data-settings-section aria-labelledby="deleteTitle" hidden>
                 <h2 id="deleteTitle">Hesabı sil</h2>
                 <p>Hesabını sildiğinde <strong>tüm ilanların yayından kalkar</strong>, favorilerin, kayıtlı aramaların, bildirimlerin ve profil bilgilerin kalıcı olarak silinir. Karşı tarafın mesaj geçmişinde adın “Silinmiş üye” olarak görünür. Bu işlem geri alınamaz.</p>
                 <form id="deleteForm" class="stack-form">

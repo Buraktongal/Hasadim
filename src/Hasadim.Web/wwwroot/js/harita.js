@@ -10,7 +10,7 @@
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
     const number = v => new Intl.NumberFormat('tr-TR').format(v);
     const unit = u => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[u] || 'kg';
-    const price = p => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: p.kategori === 'Arazi' ? 0 : 2 }).format(p.kilogramFiyati) + (p.kategori === 'Arazi' ? '' : ' / ' + unit(p.birim));
+    const price = p => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: p.kategori === 'Arazi' ? 0 : 2, maximumFractionDigits: p.kategori === 'Arazi' ? 0 : 2 }).format(p.kilogramFiyati) + (p.kategori === 'Arazi' ? '' : ' / ' + unit(p.birim));
     let data = { iller: [], noktalar: [] };
     let street = null;
     let request = 0;

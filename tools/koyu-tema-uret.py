@@ -40,7 +40,9 @@ html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="
 html[data-theme="dark"] ::placeholder { color: #7d8f81; }
 html[data-theme="dark"] dialog { background: #18221c; color: #e3ebe4; }
 html[data-theme="dark"] .main-category-tile.selected, html[data-theme="dark"] .category-tile.selected,
-html[data-theme="dark"] .choice-card:has(input:checked) { background: #2a2018; }
+html[data-theme="dark"] .choice-card:has(input:checked), html[data-theme="dark"] .deal-option input:checked + span { background: #2a2018; }
+html[data-theme="dark"] .settings-danger .settings-icon { background: #3a1d1a; color: #f2a39b; }
+html[data-theme="dark"] .settings-danger strong { color: #f2a39b; }
 html[data-theme="dark"] .city-cell { background: #1d2a22; color: #8fa293; }
 /* Takvim: hasat dönemi kehribar (çizgili), yoğun hasat parlak yeşil; koyu zeminde net ayrışır. */
 html[data-theme="dark"] .crop-calendar td.season::before,

@@ -49,7 +49,9 @@ public record LandDetails(
     string? Ada,
     string? Parsel,
     bool? Elektrik,
-    bool? YolCephesi
+    bool? YolCephesi,
+    // Satilik (satış) veya Kiralik (yıllık kira).
+    string? IslemTipi = null
 );
 
 public static class ListingCategories
@@ -69,6 +71,7 @@ public static class ListingCategories
     public static readonly string[] Zoning =
         ["İmarsız (tarım arazisi)", "Konut imarlı", "Ticari imarlı", "Sanayi imarlı", "Turizm imarlı", "Belirtilmedi"];
     public static readonly string[] Deed = ["Müstakil tapu", "Hisseli tapu", "Tahsisli", "Zilliyet"];
+    public static readonly string[] LandDeals = ["Satilik", "Kiralik"];
     public static readonly string[] Irrigation = ["Sulu", "Kısmen sulu", "Kuru (yağışa bağlı)"];
 
     // Kategoriye göre izin verilen birimler; ilk değer varsayılandır.
@@ -106,6 +109,7 @@ public class Listing
 
     public string Kategori { get; private set; } = ListingCategories.Meyve;
     public string Birim { get; private set; } = "kg";
+    public string? IslemTipi { get; private set; }
     public string? ImarDurumu { get; private set; }
     public string? TapuDurumu { get; private set; }
     public string? Sulama { get; private set; }
@@ -188,6 +192,7 @@ public class Listing
         Kategori = data.Kategori;
         Birim = UnitOf(data);
         var land = Kategori == ListingCategories.Arazi ? data.Arazi : null;
+        IslemTipi = land is null ? null : Clean(land.IslemTipi) ?? "Satilik";
         ImarDurumu = Clean(land?.ImarDurumu);
         TapuDurumu = Clean(land?.TapuDurumu);
         Sulama = Clean(land?.Sulama);
@@ -315,7 +320,7 @@ public class Listing
     // Kayıtlı alanlardan doğrulama için ilan verisi üretir.
     public ListingData Snapshot() => new(Baslik, MeyveTuru, Cesit, MiktarKg, KilogramFiyati,
         Il, Ilce, Aciklama, Telefon, HasatTarihi, false, Ambalaj, Teslimat, MinAlimKg,
-        Kategori, Birim, new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi),
+        Kategori, Birim, new LandDetails(ImarDurumu, TapuDurumu, Sulama, Ada, Parsel, Elektrik, YolCephesi, IslemTipi),
         Enlem, Boylam);
 
     private static string? Clean(string? value) =>
@@ -374,6 +379,8 @@ public class Listing
         if (land)
         {
             var a = data.Arazi;
+            if (a is not null && !string.IsNullOrWhiteSpace(a.IslemTipi) && !ListingCategories.LandDeals.Contains(a.IslemTipi.Trim()))
+                throw new ArgumentException("Arazi için satılık veya kiralık seç.");
             if (a is null || string.IsNullOrWhiteSpace(a.ImarDurumu) || !ListingCategories.Zoning.Contains(a.ImarDurumu.Trim()))
                 throw new ArgumentException("Arazinin imar durumunu seç.");
             if (string.IsNullOrWhiteSpace(a.TapuDurumu) || !ListingCategories.Deed.Contains(a.TapuDurumu.Trim()))

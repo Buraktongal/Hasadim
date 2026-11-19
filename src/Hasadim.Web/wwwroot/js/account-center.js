@@ -7,7 +7,7 @@
     const page = document.body.dataset.page;
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
     const button = (text, cls, fn) => { const b = node('button', text, cls); b.type = 'button'; b.onclick = fn; return b; };
-    const money = (v, digits = 2) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: digits }).format(v);
+    const money = (v, digits = 2) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v);
     const number = v => new Intl.NumberFormat('tr-TR').format(v);
     const unitOf = u => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[u] || 'kg';
     const when = value => {

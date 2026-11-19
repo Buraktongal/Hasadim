@@ -7,6 +7,7 @@ const date = v => v ? v.slice(0,10).split('-').reverse().join('.') : 'Belirtilme
 // Birim ve kategoriye göre miktar/fiyat metinleri.
 const unitOf = x => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[x?.birim] || 'kg';
 const isLand = x => x?.kategori === 'Arazi';
+const isRent = x => isLand(x) && x?.islemTipi === 'Kiralik';
 const qtyText = x => isLand(x) ? number(x.miktarKg) + ' m² · ' + new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(x.miktarKg / 1000) + ' dönüm' : number(x.miktarKg) + ' ' + unitOf(x);
 const categoryName = id => window.HasadimCatalog?.category(id)?.name || 'Meyve';
 // Sayfalama: sunucudan yalnızca seçili sayfadaki ilanlar istenir.
@@ -278,7 +279,7 @@ function card(x) {
     link.addEventListener('click', event => { event.preventDefault(); openDetail(x.id); });
     title.append(link);
     main.append(
-        el('span', (isLand(x) ? 'Satılık ' + x.meyveTuru.toLocaleLowerCase('tr-TR') : x.meyveTuru) + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
+        el('span', (isLand(x) ? (isRent(x) ? 'Kiralık ' : 'Satılık ') + x.meyveTuru.toLocaleLowerCase('tr-TR') : x.meyveTuru) + (x.cesit ? ' / ' + x.cesit : ''), 'card-tag'),
         title,
         el('p', x.il + ' / ' + x.ilce + ' · ' + qtyText(x), 'card-meta'));
     const badges = el('div', undefined, 'card-badges');
@@ -378,7 +379,7 @@ async function renderDetail(id)
 
         // Başlık satırı
         const head = el('header', undefined, 'detail-head');
-        head.append(el('p', isLand(x) ? categoryName(x.kategori) + ' / ' + x.meyveTuru : x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik),
+        head.append(el('p', isLand(x) ? (isRent(x) ? 'Kiralık arazi' : 'Satılık arazi') + ' / ' + x.meyveTuru : x.meyveTuru + ' / ' + (x.cesit || 'Çeşit belirtilmedi'), 'eyebrow'), el('h2', x.baslik),
             el('p', 'İlan No: ' + x.listingNumber + ' · ' + x.il + ' / ' + x.ilce, 'detail-sub'));
         head.querySelector('h2')?.setAttribute('translate', 'no');
         content.append(head);
@@ -399,7 +400,7 @@ async function renderDetail(id)
         const grid = el('div', undefined, 'detail-grid info-table');
         const yes = v => v === true ? 'Var' : v === false ? 'Yok' : 'Belirtilmedi';
         const info = isLand(x)
-            ? { 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Arazi türü': x.meyveTuru, 'Alan': qtyText(x), 'm² fiyatı': money(x.kilogramFiyati / x.miktarKg), 'İmar durumu': x.imarDurumu || 'Belirtilmedi', 'Tapu durumu': x.tapuDurumu || 'Belirtilmedi', 'Sulama': x.sulama || 'Belirtilmedi', 'Ada / parsel': [x.ada, x.parsel].filter(Boolean).join(' / ') || 'Belirtilmedi', 'Elektrik': yes(x.elektrik), 'Yol cephesi': yes(x.yolCephesi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName }
+            ? { 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'İşlem tipi': isRent(x) ? 'Kiralık (yıllık kira)' : 'Satılık', 'Arazi türü': x.meyveTuru, 'Alan': qtyText(x), [isRent(x) ? 'Dönüm başına yıllık kira' : 'm² fiyatı']: money(isRent(x) ? x.kilogramFiyati / x.miktarKg * 1000 : x.kilogramFiyati / x.miktarKg), 'İmar durumu': x.imarDurumu || 'Belirtilmedi', 'Tapu durumu': x.tapuDurumu || 'Belirtilmedi', 'Sulama': x.sulama || 'Belirtilmedi', 'Ada / parsel': [x.ada, x.parsel].filter(Boolean).join(' / ') || 'Belirtilmedi', 'Elektrik': yes(x.elektrik), 'Yol cephesi': yes(x.yolCephesi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName }
             : { 'İlan numarası': String(x.listingNumber), 'İlan tarihi': date(x.publishedAt || x.olusturulmaTarihi), 'Kategori': categoryName(x.kategori), 'Ürün': x.meyveTuru, 'Çeşit': x.cesit || 'Belirtilmedi', 'Toplam miktar': number(x.miktarKg) + ' ' + unitOf(x), 'Minimum alım': x.minAlimKg ? number(x.minAlimKg) + ' ' + unitOf(x) : 'Belirtilmedi', 'Ambalaj': x.ambalaj || 'Belirtilmedi', 'Teslimat': x.teslimat || 'Belirtilmedi', 'Hasat tarihi': date(x.hasatTarihi), 'Konum': x.il + ' / ' + x.ilce, 'Satıcı': x.ownerName };
         for (const [k, v] of Object.entries(info)) {
             const n = el('div');
@@ -535,7 +536,7 @@ async function openEditor(x) {
     if (x) form.dataset.original = JSON.stringify({ baslik: x.baslik, kategori: x.kategori, birim: x.birim, meyveTuru: x.meyveTuru, cesit: x.cesit, miktarKg: x.miktarKg,
         kilogramFiyati: x.kilogramFiyati, minAlimKg: x.minAlimKg, ambalaj: x.ambalaj, teslimat: x.teslimat, il: x.il, ilce: x.ilce,
         hasatTarihi: x.hasatTarihi ? x.hasatTarihi.slice(0, 10) : '', aciklama: x.aciklama, photoCount: photoCount,
-        imarDurumu: x.imarDurumu, tapuDurumu: x.tapuDurumu, sulama: x.sulama, ada: x.ada, parsel: x.parsel, enlem: x.enlem, boylam: x.boylam });
+        islemTipi: x.islemTipi, imarDurumu: x.imarDurumu, tapuDurumu: x.tapuDurumu, sulama: x.sulama, ada: x.ada, parsel: x.parsel, enlem: x.enlem, boylam: x.boylam });
     else delete form.dataset.original;
     window.ListingPhotos?.render(x, { api, toast, onChange: fresh => { if (isDetailPage()) void renderDetail(fresh.id); } });
 

@@ -316,3 +316,51 @@ a.city-cell:hover { outline: 2px solid var(--t-accent); outline-offset: 1px; }
 }
 .crop-calendar thead th:first-child { position: sticky; left: 0; z-index: 3; text-align: left; padding-left: 12px; }
 .crop-calendar .group-label { position: sticky; left: 12px; }
+
+/* ---------- Hesabım menüsü (mobil): açılır dikey liste ---------- */
+.account-nav-toggle { display: none; }
+@media (max-width: 1000px) {
+    .account-nav { display: grid !important; overflow: visible !important; gap: 2px !important; }
+    .account-nav a, .account-nav-group { display: none; }
+    .account-nav.is-open a { display: flex; white-space: normal; }
+    .account-nav.is-open .account-nav-group { display: block; }
+    .account-nav-toggle {
+        display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border-radius: 10px;
+        background: transparent; color: var(--t-ink); text-align: left; font-size: 15px;
+    }
+    .account-nav-toggle-label { color: var(--t-muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .account-nav-caret { margin-left: auto; transition: transform .2s; }
+    .account-nav.is-open .account-nav-caret { transform: rotate(180deg); }
+}
+
+/* ---------- Ayarlar: alt alta liste, bölümler ayrı açılır ---------- */
+.settings-menu { display: grid; border: 1px solid var(--t-line); border-radius: var(--t-radius); background: var(--t-panel); overflow: hidden; }
+.settings-menu[hidden] { display: none; }
+.settings-menu a {
+    display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 14px 16px;
+    color: var(--t-ink); text-decoration: none; border-bottom: 1px solid var(--t-line);
+}
+.settings-menu a[hidden] { display: none; }
+.settings-menu a:last-child { border-bottom: 0; }
+.settings-menu a:hover { background: var(--t-green-soft); }
+.settings-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--t-green-soft); color: var(--t-green); font-weight: 800; font-size: 16px; }
+.settings-text { display: grid; gap: 2px; min-width: 0; }
+.settings-text strong { font-size: 15px; }
+.settings-text small { color: var(--t-muted); font-size: 13px; }
+.settings-arrow { font-size: 24px; color: var(--t-muted); line-height: 1; }
+.settings-danger strong { color: #b3261e; }
+.settings-danger .settings-icon { background: #fdecea; color: #b3261e; }
+.settings-back { display: inline-flex; margin-bottom: 10px; font-weight: 800; color: var(--t-green); text-decoration: none; }
+.settings-back:hover { text-decoration: underline; }
+.settings-section h2:focus { outline: none; }
+
+/* ---------- Arazi: satılık / kiralık seçimi ---------- */
+.deal-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; padding: 0; border: 0; }
+.deal-switch legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.deal-option { position: relative; display: flex; cursor: pointer; }
+.deal-option input { position: absolute; opacity: 0; }
+.deal-option span { display: grid; gap: 2px; width: 100%; padding: 10px 12px; border: 1px solid var(--t-line); border-radius: 10px; background: var(--t-panel); }
+.deal-option small { color: var(--t-muted); font-weight: 400; }
+.deal-option input:checked + span { border: 2px solid var(--t-accent); background: #fff6ef; }
+.deal-option input:focus-visible + span { outline: 3px solid #d9661f66; outline-offset: 2px; }
+#settingsStatus:empty { display: none; }

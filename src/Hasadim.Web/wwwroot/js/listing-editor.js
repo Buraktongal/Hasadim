@@ -18,7 +18,8 @@ window.ListingEditor = (() => {
         const preview = document.querySelector('#listingPreview');
         preview.replaceChildren(node('p', editing ? 'Değişiklikleri kontrol et' : 'Yayın öncesi kontrol', 'eyebrow'), node('h3', data.get('baslik')));
         const facts = node('dl', undefined, 'preview-facts');
-        const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+        const landPreview = data.get('kategori') === 'Arazi';
+        const money = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: landPreview ? 0 : 2, maximumFractionDigits: landPreview ? 0 : 2 });
         const nf = new Intl.NumberFormat('tr-TR');
         const land = data.get('kategori') === 'Arazi';
         const u = unitText(form);
@@ -28,7 +29,8 @@ window.ListingEditor = (() => {
         const rows = land ? [
             ['Kategori', category + ' / ' + data.get('meyveTuru')],
             ['Alan', nf.format(Number(data.get('miktarKg'))) + ' m² (' + nf.format(Number(data.get('miktarKg')) / 1000) + ' dönüm)'],
-            ['Satış fiyatı', money.format(Number(data.get('kilogramFiyati')))],
+            [data.get('islemTipi') === 'Kiralik' ? 'Yıllık kira' : 'Satış fiyatı', money.format(Number(data.get('kilogramFiyati'))) + (data.get('islemTipi') === 'Kiralik' ? ' / yıl' : '')],
+            ['İşlem tipi', data.get('islemTipi') === 'Kiralik' ? 'Kiralık' : 'Satılık'],
             ['İmar / tapu', (data.get('imarDurumu') || '—') + ' · ' + (data.get('tapuDurumu') || '—')],
             ['Konum', data.get('il') + ' / ' + data.get('ilce')],
             ['Harita', pin],
@@ -64,7 +66,7 @@ window.ListingEditor = (() => {
     function changes(before, data, form) {
         const land = data.get('kategori') === 'Arazi';
         const u = unitText(form);
-        const money = value => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value) + (land ? '' : ' / ' + u);
+        const money = value => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: land ? 0 : 2, maximumFractionDigits: land ? 0 : 2 }).format(value) + (land ? (data.get('islemTipi') === 'Kiralik' ? ' / yıl' : '') : ' / ' + u);
         const kg = value => new Intl.NumberFormat('tr-TR').format(value) + ' ' + u;
         const text = value => (value === null || value === undefined || value === '') ? '—' : String(value);
         const short = value => { const t = text(value); return t.length > 90 ? t.slice(0, 87) + '…' : t; };
@@ -91,6 +93,8 @@ window.ListingEditor = (() => {
         }
         add(land ? 'Alan' : 'Toplam miktar', num(before.miktarKg), num(after('miktarKg')), v => v === null ? '—' : kg(v));
         if (land) {
+            const deal = v => v === 'Kiralik' ? 'Kiralık' : v ? 'Satılık' : '—';
+            add('İşlem tipi', deal(before.islemTipi), deal(after('islemTipi')), text);
             add('İmar durumu', text(before.imarDurumu), text(after('imarDurumu')), text);
             add('Tapu durumu', text(before.tapuDurumu), text(after('tapuDurumu')), text);
             add('Sulama', text(before.sulama), text(after('sulama')), text);

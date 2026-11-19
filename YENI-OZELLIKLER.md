@@ -6,12 +6,13 @@
   - Yem: yonca, saman, fiğ ve yulaf otu balyası, mısır silajı, korunga. Satış birimi **balya** veya kg seçilebilir.
   - Bal: bal (çam, çiçek, kestane…), polen, propolis, arı sütü, balmumu.
   - Kuruyemiş: ceviz, fındık, Antep fıstığı, badem, kestane, yer fıstığı, kuru kayısı, kuru incir, kuru üzüm.
-- **Arazi ilanı** ayrı alanlarla girilir:
+- **Arazi ilanı** satılık veya **kiralık** olabilir (kiralıkta fiyat yıllık kira bedelidir; pazar yerinde "İşlem tipi" filtresi var). Ayrı alanlarla girilir:
   - Alan (m², dönüm karşılığı otomatik) ve toplam satış fiyatı (m² fiyatı otomatik).
   - İmar ve tapu durumu (zorunlu), sulama, ada/parsel, elektrik, yol cephesi.
   - Ürün alanları (ambalaj, minimum alım, hasat tarihi) arazide kullanılmaz.
 - İlan verirken (isteğe bağlı) **haritada konum** işaretlenebilir.
-- Veritabanı güncellemesi: `012_CategoriesEngagement.sql`. API geliştirme ortamında açılınca kendiliğinden uygulanır.
+- Arazi tutarları kuruşsuz gösterilir (ör. ₺4.750.000).
+- Veritabanı güncellemeleri: `012_CategoriesEngagement.sql`, `013_LandRental.sql`. API geliştirme ortamında açılınca kendiliğinden uygulanır.
 
 ## Ürün takvimi
 `/html/urun-takvimi.html`: ürünlerin hasat ve yoğun hasat aylarını gösteren tablo. Bu ay hasatta olan ürünler üstte listelenir. Ürüne basınca o ürünün ilanları açılır.
@@ -47,6 +48,7 @@ Pazar yerinde filtre seçildikten sonra **☆ Bu aramayı kaydet** düğmesi gö
 - Engeller **Engellenen üyeler** sayfasından kaldırılır.
 
 ## Ayarlar
+Ayarlar alt alta bir liste olarak görünür; bir bölüme basınca o bölüm ayrı açılır (← Ayarlar ile listeye dönülür). Mobilde Hesabım menüsü yana kaymaz, "Hesabım" düğmesiyle alt alta açılır.
 - **Tema:** Cihaza göre, açık veya koyu.
 - **Dil:** Türkçe veya English.
 - Bildirim tercihleri ve gizlilik bağlantıları.

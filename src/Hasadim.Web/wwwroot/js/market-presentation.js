@@ -20,12 +20,15 @@ window.MarketPresentation = (() => {
     const land = x => x?.kategori === 'Arazi';
     // Ürünlerde birim fiyat, arazide toplam fiyat (ve m² fiyatı) gösterilir.
     function price(x) {
-        const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY', maximumFractionDigits: land(x) ? 0 : 2}).format(value);
-        const suffix = land(x) ? '' : ' / ' + unit(x);
+        const currency = value => new Intl.NumberFormat('tr-TR', {style:'currency', currency:'TRY', minimumFractionDigits: land(x) ? 0 : 2, maximumFractionDigits: land(x) ? 0 : 2}).format(value);
+        const rent = land(x) && x.islemTipi === 'Kiralik';
+        const suffix = land(x) ? (rent ? ' / yıl' : '') : ' / ' + unit(x);
         const root = node('div', undefined, 'listing-price');
         const current = node('p', currency(x.kilogramFiyati) + suffix, 'price');
         root.append(current);
-        if (land(x) && x.miktarKg > 0) root.append(node('span', new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(x.kilogramFiyati / x.miktarKg) + ' / m²', 'unit-price'));
+        if (land(x) && x.miktarKg > 0) root.append(node('span', rent
+            ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(x.kilogramFiyati / x.miktarKg * 1000) + ' / dönüm · yıllık'
+            : new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(x.kilogramFiyati / x.miktarKg) + ' / m²', 'unit-price'));
         if (x.oncekiKilogramFiyati > x.kilogramFiyati && x.kilogramFiyati > 0) {
             const percent = Math.round((1 - x.kilogramFiyati / x.oncekiKilogramFiyati) * 1000) / 10;
             const old = node('del', currency(x.oncekiKilogramFiyati) + suffix);

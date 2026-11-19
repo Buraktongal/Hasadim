@@ -4,7 +4,7 @@
 // arazide toplam fiyat teklifi gönderilir.
 window.OfferDialog = (() => {
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
-    const money = (v, digits = 2) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: digits }).format(v);
+    const money = (v, digits = 2) => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v);
     const unitOf = x => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[x.birim] || 'kg';
 
     function field(label, input, hint) {
@@ -26,13 +26,13 @@ window.OfferDialog = (() => {
         close.type = 'button'; close.setAttribute('aria-label', 'Kapat');
         close.onclick = () => dialog.close();
         head.append(title, close);
-        const context = node('p', x.baslik + ' · İlan fiyatı: ' + money(x.kilogramFiyati, land ? 0 : 2) + (land ? '' : ' / ' + u), 'muted');
+        const context = node('p', x.baslik + ' · İlan fiyatı: ' + money(x.kilogramFiyati, land ? 0 : 2) + (land ? (x.islemTipi === 'Kiralik' ? ' / yıl' : '') : ' / ' + u), 'muted');
         const form = node('form');
         const amount = node('input');
         amount.type = 'number'; amount.name = 'amount'; amount.required = true; amount.step = '0.01'; amount.min = '0.01';
         amount.max = land ? '10000000000' : '1000000'; amount.inputMode = 'decimal';
         amount.value = String(land ? Math.round(x.kilogramFiyati * 0.95) : Math.round(x.kilogramFiyati * 0.95 * 100) / 100);
-        form.append(field(land ? 'Teklif ettiğin toplam fiyat (TL)' : 'Teklif ettiğin fiyat (TL/' + u + ')', amount));
+        form.append(field(land ? (x.islemTipi === 'Kiralik' ? 'Teklif ettiğin yıllık kira (TL)' : 'Teklif ettiğin toplam fiyat (TL)') : 'Teklif ettiğin fiyat (TL/' + u + ')', amount));
         let quantity = null;
         if (!land) {
             quantity = node('input');

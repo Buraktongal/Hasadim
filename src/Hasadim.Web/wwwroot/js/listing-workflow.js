@@ -159,7 +159,7 @@
                 body.minAlimKg = data.get('minAlimKg') ? minimum : null;
                 body.hasatTarihi = data.get('hasatTarihi') || null;
                 // Arazi bilgileri yalnızca arazi kategorisinde gönderilir (gizli alanlar devre dışıdır).
-                for (const key of ['imarDurumu', 'tapuDurumu', 'sulama', 'ada', 'parsel']) body[key] = text(key) || null;
+                for (const key of ['islemTipi', 'imarDurumu', 'tapuDurumu', 'sulama', 'ada', 'parsel']) body[key] = text(key) || null;
                 const land = body.kategori === 'Arazi';
                 body.elektrik = land ? data.has('elektrik') : null;
                 body.yolCephesi = land ? data.has('yolCephesi') : null;

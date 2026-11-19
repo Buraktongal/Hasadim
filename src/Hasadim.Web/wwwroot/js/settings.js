@@ -53,6 +53,7 @@
         const s = current();
         window.HasadimTheme?.set(s.theme);
         syncThemeControls(s.theme);
+        summaries();
         const languageChanged = s.language !== (window.HasadimTheme?.language() || 'tr');
         if (languageChanged) {
             window.HasadimTheme?.setLanguage(s.language);
@@ -65,17 +66,58 @@
         });
     }
 
+    // Ayarlar alt alta bir liste olarak görünür; bir bölüme basınca yalnızca o bölüm
+    // ayrı bir sayfa gibi açılır (adres: ayarlar.html#gorunum). Geri düğmesi listeye döner.
+    const sections = () => Array.from(document.querySelectorAll('[data-settings-section]'));
+    function route() {
+        const id = decodeURIComponent(location.hash.slice(1));
+        const target = sections().find(x => x.id === id && (user || !['bildirim-ayarlari', 'hesap-sil'].includes(x.id)));
+        for (const section of sections()) section.hidden = section !== target;
+        const menu = $('#settingsMenu');
+        if (menu) menu.hidden = Boolean(target);
+        const head = document.querySelector('.account-head');
+        if (head) head.hidden = Boolean(target);
+        if (target) { target.querySelector('h2')?.focus?.(); window.scrollTo?.(0, 0); }
+        summaries();
+    }
+    function addBackButtons() {
+        for (const section of sections()) {
+            if (section.querySelector('.settings-back')) continue;
+            const back = document.createElement('a');
+            back.href = '#';
+            back.className = 'settings-back';
+            back.textContent = '← Ayarlar';
+            back.onclick = event => { event.preventDefault(); history.pushState(null, '', location.pathname); route(); };
+            section.prepend(back);
+            section.querySelector('h2')?.setAttribute('tabindex', '-1');
+        }
+    }
+    function summaries() {
+        const s = current();
+        const set = (key, text) => { const n = document.querySelector(`[data-summary="${key}"]`); if (n) n.textContent = text; };
+        set('gorunum', s.theme === 'system' ? 'Cihaza göre' : s.theme === 'dark' ? 'Koyu mod' : 'Açık mod');
+        set('dil', s.language === 'en' ? 'English' : 'Türkçe');
+        const on = ['notifyMessages', 'notifyOffers', 'notifySavedSearches', 'notifyPriceDrops'].filter(k => s[k]).length;
+        if (user) set('bildirim-ayarlari', on === 4 ? 'Tüm bildirimler açık' : on === 0 ? 'Tüm bildirimler kapalı' : on + ' / 4 bildirim açık');
+    }
+
     async function init() {
+        addBackButtons();
+        window.addEventListener('hashchange', route);
+        window.addEventListener('popstate', route);
+        route();
         fill({ theme: window.HasadimTheme?.get() || 'system', language: window.HasadimTheme?.language() || 'tr' });
         for (const input of document.querySelectorAll('#themeFollow, input[name="theme"], input[name="language"], #notifyForm input')) input.addEventListener('change', save);
         try { user = await api('/api/account/me'); } catch { user = null; }
-        for (const section of document.querySelectorAll('[data-auth-only]')) section.hidden = !user;
+        for (const item of document.querySelectorAll('#settingsMenu [data-auth-only]')) item.hidden = !user;
+        route();
         if (!user) return;
         try {
             const s = await api('/api/me/settings');
             fill(s);
             // Sunucudaki tercih tüm cihazlarda geçerlidir.
             window.HasadimTheme?.set(s.theme);
+            summaries();
             if ((s.language || 'tr') !== (window.HasadimTheme?.language() || 'tr')) {
                 window.HasadimTheme?.setLanguage(s.language || 'tr');
                 window.HasadimI18n?.setLanguage(s.language || 'tr');
