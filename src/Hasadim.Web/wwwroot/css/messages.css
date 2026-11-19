@@ -4,7 +4,8 @@
 .menu-message-count { position: absolute; top: -7px; right: -7px; border: 2px solid #fff; height: 23px; min-width: 23px; }
 .message-alert { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 4vw; background: #e8efdf; border-top: 1px solid #dce5d6; border-bottom: 1px solid #cad9bf; }
 .message-alert a { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: #183e2e; text-decoration: none; font-size: 13px; }
-.message-alert button { border: 0; background: transparent; color: #183e2e; min-width: 44px; min-height: 44px; font-size: 22px; cursor: pointer; }
+.message-alert button { border: 0; background: transparent; color: #183e2e; width: 40px; height: 40px; cursor: pointer; }
+.message-alert button:hover { background: #d5e3cb; }
 .conversation-sidebar { padding: 20px 14px; background: #f7f8f3; border-right: 1px solid #dce5d6; min-width: 0; }
 .conversation-sidebar h3 { margin: 0 8px 16px; }
 .conversation-sidebar input { width: 100%; box-sizing: border-box; margin: 0 0 16px; }

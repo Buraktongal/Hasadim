@@ -89,6 +89,34 @@
         showInfo(city);
     }
 
+    // Üzerine gelinen ilin adı ve ilan sayısı (adı haritaya sığmayan iller dahil).
+    let tooltip = null;
+    function tip(city, event) {
+        const root = $('#cityMap');
+        if (!tooltip) {
+            tooltip = node('div', undefined, 'tr-tooltip');
+            tooltip.setAttribute('aria-hidden', 'true');
+            tooltip.hidden = true;
+            root.append(tooltip);
+        }
+        if (!city) { tooltip.hidden = true; return; }
+        const count = data.iller.find(x => x.il === city)?.count || 0;
+        tooltip.replaceChildren(node('strong', city), node('span', count ? number(count) + ' ilan' : 'İlan yok'));
+        tooltip.hidden = false;
+        const box = root.getBoundingClientRect();
+        let x, y;
+        if (event && event.clientX !== undefined) { x = event.clientX - box.left + root.scrollLeft; y = event.clientY - box.top; }
+        else {
+            const r = shapes.get(city).path.getBoundingClientRect();
+            x = r.left + r.width / 2 - box.left + root.scrollLeft; y = r.top + r.height / 2 - box.top;
+        }
+        // Kenarlarda taşmasın.
+        const w = tooltip.offsetWidth, h = tooltip.offsetHeight;
+        const left = Math.max(root.scrollLeft + 4, Math.min(x - w / 2, root.scrollLeft + root.clientWidth - w - 4));
+        const top = y - h - 14 < 4 ? y + 18 : y - h - 14;
+        tooltip.style.transform = 'translate(' + Math.round(left) + 'px, ' + Math.round(top) + 'px)';
+    }
+
     function buildMap() {
         const geo = window.TurkiyeIller;
         const root = $('#cityMap');
@@ -103,8 +131,11 @@
             group.append(title, path);
             group.addEventListener('click', () => select(city));
             group.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(city); } });
-            group.addEventListener('mouseenter', () => group.classList.add('is-hover'));
-            group.addEventListener('mouseleave', () => group.classList.remove('is-hover'));
+            group.addEventListener('pointerenter', e => { group.classList.add('is-hover'); tip(city, e); });
+            group.addEventListener('pointermove', e => tip(city, e));
+            group.addEventListener('pointerleave', () => { group.classList.remove('is-hover'); tip(); });
+            group.addEventListener('focus', () => tip(city));
+            group.addEventListener('blur', () => tip());
             provinces.append(group);
             // İl adı sığıyorsa (veya ilde ilan varsa) yazılır; diğerlerinin adı üzerine gelince görünür.
             const fits = room * 2.5 >= city.length * 4.6;

@@ -356,6 +356,9 @@ html[data-theme="dark"] .message-alert a {
 html[data-theme="dark"] .message-alert button {
     color: #c3e8d8;
 }
+html[data-theme="dark"] .message-alert button:hover {
+    background: #2d3627;
+}
 html[data-theme="dark"] .conversation-sidebar {
     background: #1e2018;
     border-right: 1px solid #41493b;
@@ -1040,6 +1043,10 @@ html[data-theme="dark"] .danger-zone {
 }
 html[data-theme="dark"] .danger-zone h2 {
     color: #dd8f8a;
+}
+html[data-theme="dark"] .tr-il.is-hover path,
+html[data-theme="dark"] .tr-il:focus-visible path {
+    stroke: #7fc796;
 }
 html[data-theme="dark"] .tr-label.on-strong .tr-name {
     stroke: #caeddacc;

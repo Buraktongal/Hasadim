@@ -207,6 +207,13 @@ a.center-title:hover { text-decoration: underline; }
     --map-badge: #ffffff; --map-badge-ink: #1d4a33; --map-sea: #eef5f7;
 }
 .tr-map { position: relative; border-radius: 12px; background: var(--map-sea); padding: 10px; }
+.tr-tooltip {
+    position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; white-space: nowrap;
+    display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 10px;
+    background: #1d2a22; color: #fff; font-size: 13px; box-shadow: 0 6px 18px #0003;
+}
+.tr-tooltip[hidden] { display: none; }
+.tr-tooltip span { color: #cfe3d4; font-weight: 700; font-size: 12px; }
 .tr-map-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .tr-il { cursor: pointer; outline: none; }
 .tr-il path {
@@ -218,7 +225,7 @@ a.center-title:hover { text-decoration: underline; }
 .tr-il.level-3 path { fill: var(--map-3); }
 .tr-il.level-4 path { fill: var(--map-4); }
 .tr-il.level-5 path { fill: var(--map-5); }
-.tr-il.is-hover path, .tr-il:focus-visible path { filter: brightness(1.08) saturate(1.15); }
+.tr-il.is-hover path, .tr-il:focus-visible path { filter: brightness(1.06) saturate(1.15); stroke: var(--t-green-2); stroke-width: 1.4; }
 .tr-il:focus-visible path, .tr-il.is-selected path { stroke: var(--map-hover); stroke-width: 2.2; }
 .tr-labels { pointer-events: none; }
 .tr-name {
@@ -307,7 +314,14 @@ a.center-title:hover { text-decoration: underline; }
     .city-map-wrap { min-width: 0; }
     /* Telefonda harita yana kaydırılarak gezilir; iller dokunmaya yetecek büyüklükte kalır. */
     .tr-map { padding: 4px; margin: 0 -8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
-    .tr-map-svg { width: 760px; max-width: none; }
+    .tr-tooltip {
+    position: absolute; left: 0; top: 0; z-index: 5; pointer-events: none; white-space: nowrap;
+    display: flex; align-items: baseline; gap: 8px; padding: 6px 10px; border-radius: 10px;
+    background: #1d2a22; color: #fff; font-size: 13px; box-shadow: 0 6px 18px #0003;
+}
+.tr-tooltip[hidden] { display: none; }
+.tr-tooltip span { color: #cfe3d4; font-weight: 700; font-size: 12px; }
+.tr-map-svg { width: 760px; max-width: none; }
             .save-search { margin-left: 0; }
     .main-category-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tool-filters select, .tool-filters input { min-width: 0; width: 100%; }
