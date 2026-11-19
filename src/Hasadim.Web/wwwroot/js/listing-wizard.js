@@ -97,24 +97,84 @@ window.ListingWizard = (() => {
         for (const o of options) {
             const tile = document.createElement('button');
             tile.type = 'button';
-            tile.className = 'category-tile' + (o.value === select.value ? ' selected' : '');
-            tile.setAttribute('aria-pressed', String(o.value === select.value));
+            tile.className = 'category-tile';
+            tile.dataset.fruit = o.value;
             let icon;
             if (window.FruitIcons) icon = window.FruitIcons.node(o.value, 40, 'tile-icon');
             else { icon = document.createElement('span'); icon.className = 'tile-icon'; icon.textContent = window.MarketCatalog?.icon(o.value) || '🌱'; }
             const name = document.createElement('span');
             name.textContent = o.value;
-            tile.append(icon, name);
-            tile.onclick = () => {
-                select.value = o.value;
-                // Çeşit listesi select'in change olayıyla yenilenir.
-                if (typeof select.dispatchEvent === 'function') select.dispatchEvent(new Event('change'));
-                else select.onchange?.();
-                refreshTiles();
-                setError('');
-                form().elements.namedItem('cesit')?.focus?.();
-            };
+            const check = document.createElement('span');
+            check.className = 'tile-check'; check.setAttribute('aria-hidden', 'true');
+            tile.append(icon, name, check);
+            tile.onclick = () => pickFruit(o.value, tile);
             root.append(tile);
+        }
+        syncTiles(false);
+    }
+
+    function pickFruit(value, tile) {
+        const select = form().elements.namedItem('meyveTuru');
+        const changed = select.value !== value;
+        select.value = value;
+        // Çeşit listesi select'in change olayıyla yenilenir (fruit-varieties.js).
+        if (changed && typeof select.dispatchEvent === 'function') select.dispatchEvent(new Event('change'));
+        else { if (changed) select.onchange?.(); syncTiles(true); }
+        setError('');
+        // Seçim animasyonu: kutucuk "pop", ardından çeşit paneli kayarak açılır.
+        tile?.classList.remove('just-picked');
+        void tile?.offsetWidth;
+        tile?.classList.add('just-picked');
+        const panel = $('#varietyPanel');
+        if (panel && !panel.hidden) setTimeout(() => panel.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }), 180);
+    }
+
+    // Seçili kutucuğu işaretler ve çeşit çiplerini çizer.
+    function syncTiles(animate) {
+        const select = form()?.elements.namedItem('meyveTuru');
+        if (!select) return;
+        for (const tile of document.querySelectorAll('#categoryTiles .category-tile')) {
+            const on = tile.dataset.fruit === select.value;
+            tile.classList.toggle('selected', on);
+            tile.setAttribute('aria-pressed', String(on));
+        }
+        renderVarieties(animate);
+    }
+
+    function renderVarieties(animate) {
+        const panel = $('#varietyPanel');
+        const fruit = form()?.elements.namedItem('meyveTuru')?.value;
+        const variety = form()?.elements.namedItem('cesit');
+        if (!panel || !variety) return;
+        panel.hidden = !fruit;
+        if (!fruit) return;
+        const title = panel.querySelector('.variety-title');
+        if (title) title.textContent = fruit + ' çeşidini seç';
+        const chips = panel.querySelector('.variety-chips');
+        chips.replaceChildren();
+        Array.from(variety.options || []).filter(o => o.value).forEach((o, i) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'variety-chip' + (o.value === variety.value ? ' selected' : '');
+            chip.textContent = o.value;
+            chip.setAttribute('aria-pressed', String(o.value === variety.value));
+            chip.style?.setProperty?.('--i', String(i));
+            chip.onclick = () => {
+                variety.value = o.value;
+                if (typeof variety.dispatchEvent === 'function') variety.dispatchEvent(new Event('change'));
+                for (const c of chips.children) {
+                    const on = c === chip;
+                    c.classList.toggle('selected', on);
+                    c.setAttribute('aria-pressed', String(on));
+                }
+                setError('');
+            };
+            chips.append(chip);
+        });
+        if (animate) {
+            panel.classList.remove('is-entering');
+            void panel.offsetWidth;
+            panel.classList.add('is-entering');
         }
     }
 
@@ -133,7 +193,17 @@ window.ListingWizard = (() => {
             const step = stepOf(event.target);
             if (step && step !== current) { current = step; render(); }
         }, true);
-        root.elements.namedItem('meyveTuru')?.addEventListener('change', refreshTiles);
+        // Çeşit listesi önce yenilensin diye çizim bir sonraki adıma bırakılır.
+        root.elements.namedItem('meyveTuru')?.addEventListener('change', () => setTimeout(() => syncTiles(true)));
+        // Çeşit listeden seçilirse çipler de güncellenir.
+        root.elements.namedItem('cesit')?.addEventListener('change', () => {
+            const value = root.elements.namedItem('cesit').value;
+            for (const c of document.querySelectorAll('#varietyPanel .variety-chip')) {
+                const on = c.textContent === value;
+                c.classList.toggle('selected', on);
+                c.setAttribute('aria-pressed', String(on));
+            }
+        });
         // Enter tuşu ara adımlarda formu göndermek yerine ilerletir.
         root.addEventListener('keydown', event => {
             if (event.key !== 'Enter' || current === total) return;

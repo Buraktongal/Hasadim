@@ -34,6 +34,7 @@ function loadPageScript(source) {
         await loadPageScript('/js/market-tools.js');
         await loadPageScript('/js/messages.js');
         await loadPageScript('/js/message-notifications.js');
+        await loadPageScript('/js/searchable-select.js');
         await loadPageScript('/js/app.js');
     } catch (error) {
         console.error(error);

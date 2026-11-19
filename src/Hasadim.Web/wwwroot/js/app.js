@@ -1,6 +1,6 @@
 'use strict';
 const $ = s => document.querySelector(s);
-const fruits = {Elma:'🍎',Armut:'🍐',Portakal:'🍊',Mandalina:'🍊',Limon:'🍋',Üzüm:'🍇',Kiraz:'🍒',Vişne:'🍒',Şeftali:'🍑',Kayısı:'🍑',Erik:'🟣',Nar:'🔴',Çilek:'🍓',Karpuz:'🍉',Kavun:'🍈',Muz:'🍌',İncir:'🌿',Avokado:'🥑',Kivi:'🥝',Diğer:'🌱'};
+const fruits = {Elma: '🍎', Armut: '🍐', Ayva: '🍐', Portakal: '🍊', Mandalina: '🍊', Limon: '🍋', Greyfurt: '🍊', Üzüm: '🍇', Kiraz: '🍒', Vişne: '🍒', Şeftali: '🍑', Nektarin: '🍑', Kayısı: '🍑', Erik: '🟣', Nar: '🔴', Çilek: '🍓', Ahududu: '🍓', Böğürtlen: '🫐', 'Yaban mersini': '🫐', Dut: '🫐', Karpuz: '🍉', Kavun: '🍈', Muz: '🍌', İncir: '🌿', 'Trabzon hurması': '🟠', Avokado: '🥑', Kivi: '🥝', Diğer: '🌱'};
 const money = n => new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:2}).format(n);
 const number = n => new Intl.NumberFormat('tr-TR').format(n);
 const date = v => v ? v.slice(0,10).split('-').reverse().join('.') : 'Belirtilmedi';

@@ -56,3 +56,9 @@ Dört adım: **Kategori** (meyve kutucukları + çeşit) → **İlan detayları*
 - **Footer:** Yeni düzen (Hasadım hakkında · Kategoriler · Hesabım · Yardım ve güvenlik), yasal metinler "Hazırlanıyor" satırı, tüm ana sayfalarda (pazar, ilan, profil, güvenlik, satıcı). Giriş yapmadan "Ücretsiz ilan ver" girişe yönlendirir.
 - **Kapat (×) düğmeleri** tam ortalandı.
 - **Yazım:** Üst küçük başlıklar metinde normal yazılıp CSS ile büyütülüyor; tutarsız büyük harfler, "Farketmez" → "Fark etmez", apostroflar (’), "seçin" → "seç" (sen dili), "Değişikliklerini kaydettiğinde", sayfa başlığı düzeltildi.
+
+## 6. tur düzenlemeleri
+- **Aranabilir seçim kutuları** (`js/searchable-select.js`, kütüphanesiz select2 benzeri): meyve, çeşit, il, ilçe (filtreler, ilan verme, profil). Türkçe harf duyarsız arama ("cilek" → Çilek), eşleşen kısmı vurgular, klavye (↑ ↓ Enter Esc) ve ekran okuyucu desteği. Asıl `<select>` formda kalır; 8'den az seçenekte arama kutusu gizlenir.
+- **Yeni meyveler:** Ayva, Greyfurt, Nektarin, Ahududu, Böğürtlen, Yaban mersini, Dut, Trabzon hurması; mevcut meyvelere yeni çeşitler (ör. Elma: Scarlet Spur, Red Chief, Jonagold, Braeburn, Arapkızı). Hepsine çizilmiş simge eklendi.
+- **İlan ver – meyve seçimi:** Kutucuk seçilince "pop" animasyonu ve onay işareti; ardından "{Meyve} çeşidini seç" paneli kayarak açılır, çeşitler çip olarak sırayla belirir. Hareket azaltma tercihinde animasyonlar kapanır.
+- **Mobil:** İlan verme adımlarında seçili adımın numarası ortalı; meyve kutucukları mobilde 3 sütun.

@@ -44,7 +44,9 @@
 <fieldset class="editor-section wizard-step" data-step="1"><legend>1 · Kategori seç</legend>
 <p class="step-help">Satacağın meyveyi seç. Alıcılar ilanını bu kategoride ve çeşit filtresinde bulur.</p>
 <div id="categoryTiles" class="category-tiles" role="group" aria-label="Meyve türü seçimi"></div>
-<div class="two"><label>Meyve türü<select name="meyveTuru" id="editorFruit" required></select></label><label>Çeşit<select name="cesit" required disabled><option value="">Önce meyve türü seç</option></select></label></div>
+<div id="varietyPanel" class="variety-panel" hidden><p class="variety-title">Çeşidini seç</p><div class="variety-chips" role="group" aria-label="Çeşit seçimi"></div></div>
+<p class="step-help">Listede yoksa aşağıdan arayarak seçebilirsin; çeşidi bilinmiyorsa “Diğer / Belirtilmemiş” seç.</p>
+<div class="two"><label>Meyve türü<select name="meyveTuru" id="editorFruit" required data-searchable></select></label><label>Çeşit<select name="cesit" required disabled data-searchable><option value="">Önce meyve türü seç</option></select></label></div>
 </fieldset>
 <fieldset class="editor-section wizard-step" data-step="2"><legend>2 · İlan detayları</legend>
 <label>İlan başlığı<input name="baslik" required minlength="5" maxlength="150" placeholder="Örn. Korkuteli bahçesinden Deveci armut — 1. sınıf, kasalı"></label>
@@ -55,7 +57,7 @@
 <fieldset class="editor-section wizard-step" data-step="3"><legend>3 · Fiyat, miktar ve teslimat</legend><p class="step-help">Fiyatı kilogram başına, miktarı kilogram olarak gir. Toptan alıcılar en çok bu bilgilere bakar.</p>
 <div class="two"><label>Toplam miktar (kg)<input name="miktarKg" type="number" inputmode="decimal" required min="0.01" max="100000000" step="0.01" placeholder="Örn. 15000"></label><label>Fiyat (TL/kg)<input name="kilogramFiyati" type="number" inputmode="decimal" required min="0.01" max="1000000" step="0.01" placeholder="Örn. 35"></label></div>
 <div class="two"><label>Minimum alım (kg) <span class="muted">(isteğe bağlı)</span><input name="minAlimKg" type="number" min="0.01" max="100000000" step="0.01" inputmode="decimal" placeholder="Örn. 1000"></label><label>Ambalaj <span class="muted">(isteğe bağlı)</span><select name="ambalaj"><option value="">Belirtilmedi</option><option value="Kasa">Kasa</option><option value="Koli">Koli</option><option value="Dökme">Dökme</option><option value="Çuval">Çuval</option><option value="Diğer">Diğer</option></select></label></div>
-<div class="two"><label>Ürünün bulunduğu il<select name="il" required><option value="">İl seç</option></select></label><label>İlçe<select name="ilce" required disabled><option value="">Önce il seç</option></select></label></div>
+<div class="two"><label>Ürünün bulunduğu il<select name="il" required data-searchable><option value="">İl seç</option></select></label><label>İlçe<select name="ilce" required disabled data-searchable><option value="">Önce il seç</option></select></label></div>
 <label>Teslimat <span class="muted">(isteğe bağlı)</span><select name="teslimat"><option value="">Belirtilmedi</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select></label>
 <p class="step-help">İletişim için profilindeki telefon kullanılır. Görünürlüğünü <a href="/html/profilim.html">profilinden yönetebilirsin</a>.</p></fieldset>
 <fieldset class="editor-section wizard-step" data-step="4"><legend>4 · Fotoğraflar ve yayın</legend><p class="step-help">Ürünü yakından, kasada ve bahçede göster. İlk fotoğraf ilanın vitrin fotoğrafı olur.</p>

@@ -15,6 +15,7 @@
     <script src="/js/market-catalog.js" defer></script>
     <script src="/js/confirm-dialog.js" defer></script>
     <script src="/js/site-header.js" defer></script>
+    <script src="/js/searchable-select.js" defer></script>
     <script src="/js/locations.js" defer></script>
     <script src="/js/profile.js" defer></script>
     <script src="/js/navigation.js" defer></script>
@@ -63,8 +64,8 @@
                     <label id="businessField" hidden>Firma adı<input name="businessName" maxlength="150"></label>
                     <small>Hesap türü ve firma adı kullanıcı beyanıdır.</small>
                     <div class="two">
-                        <label>İl<select name="city" required disabled><option value="">İl seç</option></select></label>
-                        <label>İlçe<select name="district" required disabled><option value="">Önce il seç</option></select></label>
+                        <label>İl<select name="city" required disabled data-searchable><option value="">İl seç</option></select></label>
+                        <label>İlçe<select name="district" required disabled data-searchable><option value="">Önce il seç</option></select></label>
                     </div>
                     <label>Hakkımda<textarea name="about" rows="5" maxlength="2000"></textarea></label>
                     <label>Telefon<input name="phone" type="tel" minlength="10" maxlength="25" pattern="[+0-9 ()\-]{10,25}" autocomplete="tel"></label>

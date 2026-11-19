@@ -4,10 +4,7 @@
 // adres çubuğundaki filtreler. İlan verisini app.js yükler.
 window.MarketCatalog = (() => {
     const icons = {
-        Elma: '🍎', Armut: '🍐', Portakal: '🍊', Mandalina: '🍊', Limon: '🍋', Üzüm: '🍇',
-        Kiraz: '🍒', Vişne: '🍒', Şeftali: '🍑', Kayısı: '🍑', Erik: '🟣', Nar: '🔴',
-        Çilek: '🍓', Karpuz: '🍉', Kavun: '🍈', Muz: '🍌', İncir: '🌿', Avokado: '🥑',
-        Kivi: '🥝', Diğer: '🌱'
+        Elma: '🍎', Armut: '🍐', Ayva: '🍐', Portakal: '🍊', Mandalina: '🍊', Limon: '🍋', Greyfurt: '🍊', Üzüm: '🍇', Kiraz: '🍒', Vişne: '🍒', Şeftali: '🍑', Nektarin: '🍑', Kayısı: '🍑', Erik: '🟣', Nar: '🔴', Çilek: '🍓', Ahududu: '🍓', Böğürtlen: '🫐', 'Yaban mersini': '🫐', Dut: '🫐', Karpuz: '🍉', Kavun: '🍈', Muz: '🍌', İncir: '🌿', 'Trabzon hurması': '🟠', Avokado: '🥑', Kivi: '🥝', Diğer: '🌱'
     };
     const barFruits = ['Elma', 'Armut', 'Portakal', 'Mandalina', 'Limon', 'Üzüm', 'Kiraz', 'Şeftali', 'Kayısı', 'Nar', 'Çilek', 'Karpuz', 'Avokado'];
     const filterKeys = ['q', 'meyveTuru', 'cesit', 'il', 'ilce', 'minFiyat', 'maxFiyat', 'minMiktar', 'maxMiktar', 'ambalaj', 'teslimat', 'sort'];

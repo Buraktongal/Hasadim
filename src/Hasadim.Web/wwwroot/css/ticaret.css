@@ -531,3 +531,66 @@ footer.site-footer {
 .site-footer .footer-bottom a { color: var(--t-green-2); font-weight: 700; text-decoration: none; }
 @media (max-width: 960px) { .site-footer .footer-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .site-footer .footer-grid { grid-template-columns: 1fr; gap: 22px; } }
+
+/* ---------- İlan verme: mobilde adım numarası ortalı kalsın ---------- */
+@media (max-width: 700px) {
+    .wizard-step-link.is-current span { display: none; }
+    .wizard-step-link.is-current span.step-no { display: grid; }
+    .wizard-step-link.is-current span:not(.step-no) { display: inline; }
+    .wizard-step-link { justify-content: center; padding: 6px; }
+    .wizard-step-link.is-current { justify-content: flex-start; padding-right: 12px; }
+}
+.step-no { box-sizing: border-box; line-height: 1; }
+
+/* ---------- İlan verme: meyve seçimi animasyonu ---------- */
+.category-tile { position: relative; transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease; }
+.category-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 16px #1d4a3314; }
+.category-tile .tile-icon { transition: transform .2s ease; }
+.category-tile:hover .tile-icon { transform: scale(1.08) rotate(-4deg); }
+.tile-check {
+    position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%;
+    background: #d9661f; opacity: 0; transform: scale(.4); transition: opacity .18s ease, transform .22s cubic-bezier(.3,1.6,.5,1);
+}
+.tile-check::after {
+    content: ""; position: absolute; left: 7px; top: 4px; width: 5px; height: 9px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.category-tile.selected .tile-check { opacity: 1; transform: scale(1); }
+.category-tile.just-picked { animation: tile-pop .38s cubic-bezier(.3,1.5,.5,1); }
+.category-tile.just-picked .tile-icon { animation: icon-bounce .5s ease; }
+@keyframes tile-pop { 0% { transform: scale(1); } 40% { transform: scale(1.07); } 100% { transform: scale(1); } }
+@keyframes icon-bounce { 0% { transform: translateY(0); } 35% { transform: translateY(-6px) rotate(-6deg); } 70% { transform: translateY(1px); } 100% { transform: none; } }
+
+.variety-panel {
+    margin-top: 4px; padding: 14px; border-radius: var(--t-radius);
+    background: #fff8f2; border: 1px solid #f3d2b9;
+}
+.variety-title { margin: 0 0 10px; font-weight: 800; color: var(--t-accent-dark); }
+.variety-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.variety-chip {
+    padding: 8px 14px; border-radius: 999px; background: #fff; border: 1.5px solid #e6d3c4;
+    font-size: 13px; font-weight: 700; color: #3a3029; transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.variety-chip:hover { border-color: var(--t-accent); transform: translateY(-1px); }
+.variety-chip.selected { background: var(--t-accent); border-color: var(--t-accent); color: #fff; }
+.variety-panel.is-entering { animation: panel-in .32s ease-out; }
+.variety-panel.is-entering .variety-chip { animation: chip-in .3s ease-out both; animation-delay: calc(var(--i, 0) * 30ms + 80ms); }
+@keyframes panel-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes chip-in { from { opacity: 0; transform: translateY(6px) scale(.96); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .category-tile, .category-tile .tile-icon, .tile-check, .variety-chip { transition: none; }
+    .category-tile.just-picked, .category-tile.just-picked .tile-icon,
+    .variety-panel.is-entering, .variety-panel.is-entering .variety-chip, .ss-panel { animation: none; }
+}
+
+/* Filtrelerdeki aranabilir kutular daha küçük */
+#filters .ss-button { min-height: 34px; font-size: 13px; border-radius: 8px; border-width: 1px; padding: 0 10px; }
+#filters label > .ss { margin-top: 0; }
+@media (max-width: 520px) {
+    .category-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .category-tile { padding: 10px 4px; font-size: 12px; }
+    .category-tile .fruit-svg.tile-icon { width: 32px; height: 32px; }
+    .tile-check { top: 4px; right: 4px; width: 18px; height: 18px; }
+    .tile-check::after { left: 6px; top: 3px; }
+}

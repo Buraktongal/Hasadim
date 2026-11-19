@@ -1,129 +1,33 @@
-﻿'use strict';
+'use strict';
 
 const fruitVarieties = {
-    'Elma': [
-        'Starking Delicious',
-        'Golden Delicious',
-        'Granny Smith',
-        'Gala',
-        'Fuji',
-        'Pink Lady',
-        'Amasya'
-    ],
-    'Armut': [
-        'Deveci',
-        'Santa Maria',
-        'Ankara',
-        'Williams',
-        'Abate Fetel',
-        'Akça'
-    ],
-    'Portakal': [
-        'Washington Navel',
-        'Valencia',
-        'Yafa',
-        'Navelina'
-    ],
-    'Mandalina': [
-        'Satsuma',
-        'Clementine',
-        'Nova',
-        'Fremont',
-        'W. Murcott'
-    ],
-    'Limon': [
-        'Interdonato',
-        'Lamas',
-        'Kütdiken',
-        'Meyer'
-    ],
-    'Üzüm': [
-        'Sultani Çekirdeksiz',
-        'Alphonse Lavallée',
-        'Red Globe',
-        'Italia',
-        'Crimson Seedless',
-        'Razakı'
-    ],
-    'Kiraz': [
-        '0900 Ziraat',
-        'Regina',
-        'Kordia',
-        'Bing',
-        'Early Burlat'
-    ],
-    'Vişne': [
-        'Kütahya',
-        'Montmorency'
-    ],
-    'Şeftali': [
-        'Redhaven',
-        'Cresthaven',
-        'J.H. Hale',
-        'Springcrest',
-        'Dixired'
-    ],
-    'Kayısı': [
-        'Hacıhaliloğlu',
-        'Kabaaşı',
-        'Hasanbey',
-        'Şekerpare',
-        'Iğdır'
-    ],
-    'Erik': [
-        'Papaz',
-        'Can',
-        'Black Diamond',
-        'Angeleno',
-        'Santa Rosa',
-        'Stanley'
-    ],
-    'Nar': [
-        'Hicaznar',
-        'Wonderful',
-        'Silifke Aşısı'
-    ],
-    'Çilek': [
-        'Albion',
-        'San Andreas',
-        'Camarosa',
-        'Festival',
-        'Sweet Charlie'
-    ],
-    'Karpuz': [
-        'Crimson Sweet',
-        'Charleston Gray',
-        'Sugar Baby'
-    ],
-    'Kavun': [
-        'Kırkağaç',
-        'Hasanbey',
-        'Hıdır',
-        'Galia'
-    ],
-    'Muz': [
-        'Dwarf Cavendish',
-        'Grand Nain',
-        'Azman'
-    ],
-    'İncir': [
-        'Bursa Siyahı',
-        'Sarılop',
-        'Göklop'
-    ],
-    'Avokado': [
-        'Hass',
-        'Fuerte',
-        'Bacon',
-        'Zutano',
-        'Reed',
-        'Ettinger'
-    ],
-    'Kivi': [
-        'Hayward',
-        'Bruno',
-        'Allison'
-    ],
+    'Elma': ['Starking Delicious', 'Golden Delicious', 'Granny Smith', 'Gala', 'Fuji', 'Pink Lady', 'Amasya', 'Scarlet Spur', 'Red Chief', 'Jonagold', 'Braeburn', 'Arapkızı', 'Fuji Kiku'],
+    'Armut': ['Deveci', 'Santa Maria', 'Ankara', 'Williams', 'Abate Fetel', 'Akça', 'Coscia', 'Kieffer', 'Conference', 'Packham’s Triumph'],
+    'Ayva': ['Ekmek', 'Eşme', 'Limon', 'Şeker', 'Kalecik'],
+    'Portakal': ['Washington Navel', 'Valencia', 'Yafa', 'Navelina', 'Moro (Kan portakalı)', 'Lane Late', 'Fukumoto'],
+    'Mandalina': ['Satsuma', 'Clementine', 'Nova', 'Fremont', 'W. Murcott', 'Okitsu', 'Ortanique', 'Robinson'],
+    'Limon': ['Interdonato', 'Lamas', 'Kütdiken', 'Meyer', 'Enterdonat', 'Yediveren'],
+    'Greyfurt': ['Star Ruby', 'Rio Red', 'Marsh Seedless', 'Redblush'],
+    'Üzüm': ['Sultani Çekirdeksiz', 'Alphonse Lavallée', 'Red Globe', 'Italia', 'Crimson Seedless', 'Razakı', 'Hönüsü', 'Trakya İlkeren', 'Yalova İncisi', 'Müşküle', 'Superior Seedless'],
+    'Kiraz': ['0900 Ziraat', 'Regina', 'Kordia', 'Bing', 'Early Burlat', 'Lambert', 'Sweetheart', 'Napolyon'],
+    'Vişne': ['Kütahya', 'Montmorency', 'Erdi Botermo', 'Meteor'],
+    'Şeftali': ['Redhaven', 'Cresthaven', 'J.H. Hale', 'Springcrest', 'Dixired', 'Glohaven', 'Monroe', 'Elegant Lady'],
+    'Nektarin': ['Fantasia', 'Venus', 'Big Top', 'Stark Red Gold', 'Caldesi'],
+    'Kayısı': ['Hacıhaliloğlu', 'Kabaaşı', 'Hasanbey', 'Şekerpare', 'Iğdır', 'Çataloğlu', 'Soğancı', 'Alyanak'],
+    'Erik': ['Papaz', 'Can', 'Black Diamond', 'Angeleno', 'Santa Rosa', 'Stanley', 'Anna Späth', 'Black Amber', 'Fortune'],
+    'Nar': ['Hicaznar', 'Wonderful', 'Silifke Aşısı', 'Katırbaşı', 'Ernar', 'Lefan'],
+    'Çilek': ['Albion', 'San Andreas', 'Camarosa', 'Festival', 'Sweet Charlie', 'Rubygem', 'Monterey', 'Fortuna'],
+    'Ahududu': ['Heritage', 'Tulameen', 'Polka', 'Kiwigold', 'Rubin'],
+    'Böğürtlen': ['Chester', 'Loch Ness', 'Navaho', 'Arapaho', 'Bursa 2'],
+    'Yaban mersini': ['Bluecrop', 'Duke', 'Legacy', 'Brigitta', 'Jersey'],
+    'Dut': ['Beyaz dut', 'Kara dut', 'Mor dut'],
+    'Karpuz': ['Crimson Sweet', 'Charleston Gray', 'Sugar Baby', 'Starbrite', 'Diyarbakır karpuzu'],
+    'Kavun': ['Kırkağaç', 'Hasanbey', 'Hıdır', 'Galia', 'Ananas', 'Topatan', 'Kırkağaç 637'],
+    'Muz': ['Dwarf Cavendish', 'Grand Nain', 'Azman', 'Williams'],
+    'İncir': ['Bursa Siyahı', 'Sarılop', 'Göklop', 'Siyah orak', 'Sarı Zeybek'],
+    'Trabzon hurması': ['Fuyu', 'Hachiya', 'Rojo Brillante', 'Trabzon yerli'],
+    'Avokado': ['Hass', 'Fuerte', 'Bacon', 'Zutano', 'Reed', 'Ettinger', 'Pinkerton'],
+    'Kivi': ['Hayward', 'Bruno', 'Allison', 'Matua', 'Tomuri'],
     'Diğer': []
 };
 

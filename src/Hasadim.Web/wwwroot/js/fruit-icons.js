@@ -107,6 +107,53 @@ window.FruitIcons = (() => {
                 return ['ellipse', { cx: (16 + Math.cos(a) * 5.4).toFixed(2), cy: (16.5 + Math.sin(a) * 5.4).toFixed(2), rx: .5, ry: .9, fill: '#2b2420', transform: `rotate(${(i * 36 + 90)} ${(16 + Math.cos(a) * 5.4).toFixed(2)} ${(16.5 + Math.sin(a) * 5.4).toFixed(2)})` }];
             })
         ],
+        Ayva: [
+            ['path', { d: 'M16 8.6c-2.4 0-4 1.6-4.6 3.8-.5 1.8-2 2.6-3.4 4.2-1.8 2-2.4 4.6-1.6 7 1.1 3.3 4.7 5.2 9.6 5.2s8.5-1.9 9.6-5.2c.8-2.4.2-5-1.6-7-1.4-1.6-2.9-2.4-3.4-4.2-.6-2.2-2.2-3.8-4.6-3.8z', fill: '#e9c83c' }],
+            ['path', { d: 'M12.4 15.5c1.2 1 2.4 1.4 3.6 1.4s2.4-.4 3.6-1.4', fill: 'none', stroke: '#cfa823', 'stroke-width': '1.1', 'stroke-linecap': 'round' }],
+            shine(11, 20, 1.5, 2.6), stem('M16 9c0-1.8.4-3.3 1.4-4.7'), leaf
+        ],
+        Greyfurt: [
+            ['circle', { cx: 16, cy: 17.5, r: 11, fill: '#f6a35a' }],
+            ['circle', { cx: 16, cy: 17.5, r: 8.6, fill: '#f37b67' }],
+            ...Array.from({ length: 8 }, (_, i) => {
+                const a = i / 8 * Math.PI * 2;
+                return ['path', { d: `M16 17.5L${(16 + Math.cos(a) * 8.6).toFixed(2)} ${(17.5 + Math.sin(a) * 8.6).toFixed(2)}`, stroke: '#ffd2c2', 'stroke-width': '1.1' }];
+            }),
+            ['circle', { cx: 16, cy: 17.5, r: 1.6, fill: '#ffd2c2' }]
+        ],
+        Nektarin: round('#e8584b', '#f7b24a'),
+        Ahududu: [
+            ...[[12, 14], [16, 13], [20, 14], [10.5, 18], [14.5, 17.6], [18.5, 17.6], [22, 18], [12.5, 22], [16.5, 21.8], [20, 22], [14.5, 25.6], [18, 25.6]]
+                .map(([cx, cy]) => ['circle', { cx, cy, r: 2.6, fill: '#d63b55', stroke: '#b42c45', 'stroke-width': '.5' }]),
+            ['path', { d: 'M10.5 11c2 .4 3.6-.1 5.5-1.9 1.9 1.8 3.5 2.3 5.5 1.9-1.4 1.4-3.4 2-5.5 2s-4.1-.6-5.5-2z', fill: '#4f9a45' }],
+            ['path', { d: 'M16 9V5.5', fill: 'none', stroke: '#4f9a45', 'stroke-width': '1.6', 'stroke-linecap': 'round' }]
+        ],
+        Böğürtlen: [
+            ...[[12, 14], [16, 13], [20, 14], [10.5, 18], [14.5, 17.6], [18.5, 17.6], [22, 18], [12.5, 22], [16.5, 21.8], [20, 22], [14.5, 25.6], [18, 25.6]]
+                .map(([cx, cy]) => ['circle', { cx, cy, r: 2.6, fill: '#3b2a4f', stroke: '#24182f', 'stroke-width': '.5' }]),
+            shine(13.2, 13, .7, 1), shine(17.2, 12, .7, 1),
+            ['path', { d: 'M10.5 11c2 .4 3.6-.1 5.5-1.9 1.9 1.8 3.5 2.3 5.5 1.9-1.4 1.4-3.4 2-5.5 2s-4.1-.6-5.5-2z', fill: '#4f9a45' }]
+        ],
+        'Yaban mersini': [
+            ...[[11, 19, 6], [21, 18, 5.6], [16, 24.5, 5.2]].flatMap(([cx, cy, r]) => [
+                ['circle', { cx, cy, r, fill: '#4f5fa8' }],
+                ['circle', { cx, cy: cy - r + 1.6, r: 1.3, fill: '#2f3b74' }],
+                ['circle', { cx: cx - r / 2.4, cy: cy - 1, r: 1, fill: '#fff', 'fill-opacity': '.3' }]
+            ]),
+            ['path', { d: 'M16 12.5c2.4-3.2 6-4.4 9-3.6-1.6 3-5.4 4.4-9 3.6z', fill: '#5f9e4b' }]
+        ],
+        Dut: [
+            ['path', { d: 'M11.5 9.5c2.8-1.4 6.2-1.4 9 0 2.2 4.6 2.2 12.4-.6 17.2-2.2 1.6-5.6 1.6-7.8 0-2.8-4.8-2.8-12.6-.6-17.2z', fill: '#4b2348' }],
+            ...[[13.5, 12], [18.5, 12], [16, 15], [13, 17.5], [19, 17.5], [16, 20.5], [13.6, 23.2], [18.4, 23.2]]
+                .map(([cx, cy]) => ['circle', { cx, cy, r: 1.9, fill: '#642f5f' }]),
+            ['path', { d: 'M16 9.2V4.5', fill: 'none', stroke: '#5b7d33', 'stroke-width': '1.6', 'stroke-linecap': 'round' }]
+        ],
+        'Trabzon hurması': [
+            ['ellipse', { cx: 16, cy: 19, rx: 10.5, ry: 9, fill: '#f08a24' }],
+            shine(11.4, 17, 1.6, 2.4),
+            ['path', { d: 'M16 11.5l-3.8-2.6 1.2 3.8-4 .4 3.6 1.6M16 11.5l3.8-2.6-1.2 3.8 4 .4-3.6 1.6', fill: '#4f7f39', stroke: '#4f7f39', 'stroke-width': '1.4', 'stroke-linejoin': 'round' }],
+            ['circle', { cx: 16, cy: 11.6, r: 1.6, fill: '#3f6a2e' }]
+        ],
         Diğer: [
             ['path', { d: 'M16 28V15', fill: 'none', stroke: '#4f8a3e', 'stroke-width': '1.8', 'stroke-linecap': 'round' }],
             ['path', { d: 'M16 16c-1-5-5.4-7.6-10-7 .6 4.8 5 7.8 10 7z', fill: '#6aaa52' }],
