@@ -52,6 +52,7 @@ html[data-theme="dark"] .calendar-legend i.season {
 html[data-theme="dark"] .crop-calendar td.peak::before,
 html[data-theme="dark"] .calendar-legend i.peak { background: #4fd17f; box-shadow: 0 0 0 1px #8ff0b0 inset; }
 html[data-theme="dark"] .crop-calendar td.this-month { background: #e2762f1f; }
+html[data-theme="dark"] .crop-calendar thead th.this-month { background: #3a2617; color: #f6a868; }
 html[data-theme="dark"] .sample-light { background: linear-gradient(180deg, #fff 0 34%, #f3f5f1 34%); border-color: #3a4a40; }
 html[data-theme="dark"] .sample-dark { background: linear-gradient(180deg, #1b241e 0 34%, #0b110d 34%); border-color: #3a4a40; }
 html[data-theme="dark"] .crop-calendar .group-row th { background: #22332a; color: #a5d9b3; }
