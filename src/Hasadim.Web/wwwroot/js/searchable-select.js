@@ -62,6 +62,20 @@ window.SearchableSelect = (() => {
         // tarayıcı doğrulaması ona odak verebilir; odak hemen görünen düğmeye aktarılır.
         select.tabIndex = -1;
         select.addEventListener('focus', () => button.focus());
+        // Kutu bir <label> içinde. Düğmeye veya listedeki bir seçeneğe tıklamak, etiketin varsayılan
+        // davranışıyla gizli <select>'i de etkinleştirip tarayıcının kendi (eski görünümlü) listesini
+        // açabiliyordu. Kutu içindeki tıklamalarda etiket davranışı iptal edilir.
+        wrap.addEventListener('click', e => { if (e.target !== select) e.preventDefault(); });
+        // Etiket yazısına tıklanınca da yerel liste yerine bizim kutumuz odaklanır.
+        const ownerLabel = select.closest('label');
+        ownerLabel?.addEventListener('click', e => {
+            if (wrap.contains(e.target)) return;
+            e.preventDefault();
+            if (!select.disabled) button.focus();
+        });
+        // Gizli <select> yine de fare/klavye olayı alırsa yerel listeyi açmasına izin verme.
+        for (const type of ['mousedown', 'pointerdown', 'touchstart']) select.addEventListener(type, e => { e.preventDefault(); button.focus(); }, { passive: false });
+        select.addEventListener('keydown', e => { if (['ArrowDown', 'ArrowUp', 'Enter', ' ', 'F4'].includes(e.key) || (e.altKey && e.key === 'ArrowDown')) { e.preventDefault(); button.focus(); open(); } });
 
         let items = [], active = -1;
 
