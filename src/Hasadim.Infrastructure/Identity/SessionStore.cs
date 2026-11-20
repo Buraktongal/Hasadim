@@ -20,6 +20,7 @@ public class SessionStore(SqlConnectionFactory factory)
             : ua.Contains("SamsungBrowser") ? "Samsung Internet" : ua.Contains("Firefox/") ? "Firefox"
             : ua.Contains("Chrome/") || ua.Contains("CriOS") ? "Chrome" : ua.Contains("Safari/") ? "Safari"
             : ua.Contains("okhttp") || ua.Contains("Expo") ? "Hasadım uygulaması" : "Tarayıcı";
+        if (ua.StartsWith("HasadimMobile/", StringComparison.Ordinal)) browser = "Hasadım uygulaması";
         string os = ua.Contains("iPhone") ? "iPhone" : ua.Contains("iPad") ? "iPad" : ua.Contains("Android") ? "Android"
             : ua.Contains("Windows") ? "Windows" : ua.Contains("Mac OS X") || ua.Contains("Macintosh") ? "macOS"
             : ua.Contains("Linux") ? "Linux" : "bilinmeyen cihaz";
@@ -100,7 +101,10 @@ public class SessionStore(SqlConnectionFactory factory)
         await using var c = await factory.Open(ct);
         return (await c.QueryAsync<SessionView>(new CommandDefinition("""
             SELECT Id, Method, Device, CreatedAt, LastSeenAt FROM dbo.UserSessions
-            WHERE UserId = @user AND EndedAt IS NULL AND LastSeenAt > DATEADD(minute, -30, SYSUTCDATETIME())
+            WHERE UserId = @user AND EndedAt IS NULL
+              AND (LastSeenAt > DATEADD(minute, -30, SYSUTCDATETIME())
+                   -- Mobil uygulama oturumları yenileme anahtarı geçerli olduğu sürece açıktır.
+                   OR EXISTS(SELECT 1 FROM dbo.MobileTokens t WHERE t.SessionId = dbo.UserSessions.Id AND t.RefreshExpiresAt > SYSUTCDATETIME()))
             ORDER BY LastSeenAt DESC;
             """, new { user }, cancellationToken: ct))).ToList();
     }

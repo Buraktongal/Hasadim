@@ -122,3 +122,41 @@ Hesaplar ve şifreler aynı kaldı.
 
 ## İlan detayında konum kartı
 - Başlıkta "İlçe, İl", altında konumun satıcı tarafından mı işaretlendiği yoksa yaklaşık mı olduğu; altta harita ve "Haritada aç" / "Yol tarifi" düğmeleri.
+
+## Mobil uygulama (mobile/)
+Expo (iOS + Android). Ayrıntılı kurulum için `mobile/README.md` dosyasına bak. Uygulama web'deki bütün özellikleri içerir ve verileri aynı API'den alır. Ortak veriler (katalog, ürün simgeleri, il/ilçe, il sınırları, İngilizce sözlük) web dosyalarından `tools/mobil-veri-uret.js` ile aktarılır; böylece tek bir kaynak vardır.
+
+### Sunucu tarafı: mobil giriş
+- **Uçlar:** `POST /api/mobile/auth/{login | two-factor | external | phone | refresh | logout}`.
+- **Anahtarlar:** çerez yerine iki anahtar kullanılır:
+  - **erişim anahtarı:** 15 dakika geçerli, `Authorization: Bearer hsa_…` başlığıyla gönderilir;
+  - **yenileme anahtarı:** 30 gün geçerli, oturum en fazla 90 gün sürer.
+- **Saklama:** anahtarlar 256 bit rastgele üretilir. Veritabanında (`MobileTokens`, migration 015) yalnızca SHA-256 özetleri tutulur.
+- **Doğrulama:** aynı denetleyiciler hem çerezle hem anahtarla çalışır. Hangisinin kullanılacağını bir yönlendirme şeması belirler: Bearer başlığı varsa anahtar, yoksa çerez.
+- **Oturum kaydı:** her mobil giriş `UserSessions` tablosunda ayrı bir oturumdur. "Hesap güvenliği" sayfasında "Hasadım uygulaması · Android/iPhone" olarak görünür ve oradan kapatılabilir.
+- **CSRF:** jeton istenmeyen istekler yalnızca şunlardır:
+  - Bearer ile kimliği doğrulanmış istekler;
+  - `[MobileEndpoint]` işaretli uçlara (giriş, kayıt, şifremi unuttum, SMS kodu) `X-Hasadim-Client: mobile` başlığıyla ve çerezsiz gelen istekler.
+- **Web aracı:** `Authorization`, `X-Hasadim-Client` ve `User-Agent` başlıklarını API'ye iletir. Web oturumlarında cihaz adı da artık doğru görünür.
+
+### Güvenlik: hangi riske karşı ne yapıldı
+| Risk | Önlem |
+| --- | --- |
+| Telefon çalınır veya yedeği alınır | Yenileme anahtarı iOS Anahtar Zinciri / Android Keystore'da `WHEN_UNLOCKED_THIS_DEVICE_ONLY` olarak saklanır: cihaz kilitliyken okunamaz, yedekle başka cihaza geçmez. Android'de `allowBackup: false`. Erişim anahtarı yalnızca bellektedir. İsteğe bağlı **uygulama kilidi** açılışta ve 1 dakikadan uzun arka planda kalınca Face ID / parmak izi ister, uygulama değiştiricide ekranı gizler. |
+| Anahtar çalınır | Erişim anahtarı 15 dakikada geçersizleşir. Yenileme anahtarı her kullanımda değişir; eski bir yenileme anahtarı tekrar gelirse çalınma sayılır, oturum tamamen kapatılır ve kullanıcı yeniden giriş yapar. Oturum Hesap güvenliği sayfasından da uzaktan kapatılabilir. |
+| Şifre değişikliği veya sıfırlama sonrası eski oturum | Anahtar, verildiği andaki güvenlik damgasına bağlıdır. Şifre değişince, sıfırlanınca veya "tüm oturumları kapat" seçilince bütün mobil oturumlar geçersizleşir. |
+| Kaba kuvvet ve kod deneme | Mobil uçlar da `auth` hız sınırının içindedir. 5 hatalı şifre girilince hesap 15 dakika kilitlenir. Hatalı iki adımlı doğrulama kodları da kilit sayacına eklenir. Başarısız denemeler giriş hareketlerine yazılır. |
+| İki adımlı doğrulamanın atlanması | Şifre doğru olsa bile anahtar verilmez. Yalnızca 5 dakika geçerli, şifreli ve imzalı bir bilet verilir. Bilet, kullanıcının güvenlik damgasına bağlıdır. |
+| Google / Apple kimliğinin taklidi | Kimlik jetonu sunucuda doğrulanır: imza, yayıncı, alıcı (istemci kimliği), süre ve tek kullanımlık nonce. Uygulamada istemci sırrı (client secret) yoktur. Doğrulanmamış bir e-posta hesabına sosyal giriş bağlanmaz. |
+| Ağ dinleme (MITM) | Yayın sürümünde yalnızca HTTPS kullanılır; adres kodda denetlenir. iOS'ta App Transport Security açıktır. Şifresiz http yalnızca geliştirme sırasında yerel ağda kullanılabilir. |
+| Anahtarın başka bir adrese sızması | Anahtar yalnızca yapılandırılmış sunucunun `/api/` yollarına eklenir. Fotoğraflarda ve dış bağlantılarda (OSM, harita) eklenmez. |
+| CSRF / oturum binme | Mobil istekler çerez kullanmaz (`credentials: 'omit'`). Bearer başlığını bir tarayıcı başka bir siteden kendiliğinden gönderemez. Tarayıcıdaki çerezli istekler eskisi gibi CSRF jetonu ister. |
+| Fotoğraflarla konum sızması | Seçilen her fotoğraf yüklemeden önce yeniden kodlanır (JPEG, en fazla 1600 px). EXIF bilgileri (GPS, cihaz, tarih) silinir. |
+| Zararlı yönlendirme ve bağlantılar | Bildirim bağlantıları yalnızca bilinen uygulama ekranlarına çevrilir; tanınmayan veya dış adresler açılmaz. Rota parametreleri (GUID) denetlenir. |
+| Gereksiz izinler | Mikrofon, konum ve rehber izinleri derlemede engellenir. Kamera ve galeri yalnızca fotoğraf eklerken istenir. |
+| Kullanıcı içeriğiyle betik çalıştırma | React Native metinleri HTML olarak yorumlamaz; WebView kullanılmaz. Uzaktan kod yüklenmez. |
+
+**Bilinen sınırlar:**
+- **Sertifika sabitleme (pinning):** Expo Go ile kullanılamaz, mağaza sürümünde eklenebilir.
+- **Root / jailbreak tespiti:** yok.
+- **`npm audit` uyarısı:** 3 orta düzey bulgunun kaynağı yalnızca derleme aracındaki `minimatch` (`@expo/fingerprint`). Uygulama paketine girmez.

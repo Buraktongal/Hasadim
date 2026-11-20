@@ -21,10 +21,13 @@ public class EmailRequest{[Required,EmailAddress,StringLength(256)]public string
 public class ResetRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";[Required,StringLength(128,MinimumLength=12)]public string Password{get;set;}="";[Required(ErrorMessage="Yeni şifreyi tekrar yaz."),System.ComponentModel.DataAnnotations.Compare(nameof(Password),ErrorMessage="Şifreler eşleşmiyor.")]public string PasswordConfirm{get;set;}="";}
 public class ConfirmRequest:EmailRequest{[Required,StringLength(4096)]public string Token{get;set;}="";}
 [ApiController,Route("api/account"),EnableRateLimiting("auth")]
-public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms,AccountDeletion deletion,SessionStore sessions):ControllerBase
+public class AccountController(UserManager<AppUser> users,SignInManager<AppUser> signIn,AccountMail mail,RegistrationStore registrations,IConfiguration config,ILogger<AccountController> logger,IWebHostEnvironment env,ExternalTokenValidator external,PhoneChallengeStore phones,ISmsSender sms,AccountDeletion deletion,SessionStore sessions,MobileTokenStore mobileTokens):ControllerBase
 {
  // ---- Hesap güvenliği: durum, açık oturumlar, bağlı hesaplar, giriş hareketleri ----
- async Task<Guid?> CurrentSession()=>SessionCookie.Id((await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme)).Properties);
+ // Bu cihazın oturumu: mobil uygulamada anahtardan, tarayıcıda çerezden okunur.
+ async Task<Guid?> CurrentSession()=>MobileTokenHandler.SessionOf(User)??SessionCookie.Id((await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme)).Properties);
+ // Kullanıcının kendi işlemiyle güvenlik damgası değişince bu mobil cihazın anahtarı yeni damgaya taşınır.
+ async Task RestampMobile(AppUser u){if(MobileTokenHandler.SessionOf(User) is Guid ms)await mobileTokens.Restamp(ms,await users.GetSecurityStampAsync(u),HttpContext.RequestAborted);}
 
  [Authorize,HttpGet("security")]
  public async Task<IActionResult> Security(CancellationToken ct)
@@ -70,7 +73,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   if(!otherWay)return BadRequest(new{mesaj="Bu, hesabına girmenin tek yolu. Önce telefonunu doğrula veya şifre belirle."});
   var result=await users.RemoveLoginAsync(u,login.LoginProvider,login.ProviderKey);
   if(!result.Succeeded)return Errors(result);
-  await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);
+  await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);await RestampMobile(u);
   return Ok(new{mesaj=login.ProviderDisplayName+" bağlantısı kaldırıldı."});
  }
 
@@ -101,7 +104,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  async Task<AppUser> MeUser()=>await users.GetUserAsync(User)??throw new Hasadim.Application.AppException(401,"Giriş yapın.");
  [HttpGet("me")]
  public async Task<IActionResult> Me(){var u=await users.GetUserAsync(User);return Ok(u is null?null:new{u.Id,u.DisplayName,u.Email,u.TwoFactorEnabled,isAdmin=await users.IsInRoleAsync(u,"Admin"),hasPassword=await users.HasPasswordAsync(u)});}
- [HttpPost("register")]
+ [HttpPost("register"),MobileEndpoint]
  public async Task<IActionResult> Register(RegisterRequest r,CancellationToken ct)
  {
   if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yapın."});
@@ -116,7 +119,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   catch{await registrations.Cancel(ticket.Id,CancellationToken.None);return StatusCode(503,new{mesaj="Doğrulama e-postası gönderilemedi. Hesap oluşturulmadı. Daha sonra tekrar dene."});}
   return Ok(new{challengeId=ticket.Id,expiresAt=ticket.ExpiresAt,mesaj="6 haneli kod e-posta adresine gönderildi. Hesabın kodu doğruladığında oluşturulacak."});
  }
- [HttpPost("register/confirm")]
+ [HttpPost("register/confirm"),MobileEndpoint]
  public async Task<IActionResult> CompleteRegistration(CompleteRegistrationRequest r,CancellationToken ct)
  {
   if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yapın."});
@@ -170,7 +173,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  }
 
  // Telefonla giriş 1/2: doğrulanmış numaraya SMS kodu gönderilir.
- [HttpPost("phone/start")]
+ [HttpPost("phone/start"),MobileEndpoint]
  public async Task<IActionResult> PhoneStart(PhoneStartRequest r,CancellationToken ct)
  {
   if(!sms.Enabled)return StatusCode(503,new{mesaj="Telefonla giriş şu anda kullanılamıyor."});
@@ -241,14 +244,14 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   return result.Succeeded?Ok():Unauthorized(new{mesaj="Kod geçersiz veya giriş süresi doldu."});
  }
  [Authorize,HttpPost("logout")]
- public async Task<IActionResult> Logout(){await signIn.SignOutAsync();return Ok();}
+ public async Task<IActionResult> Logout(){if(MobileTokenHandler.SessionOf(User) is Guid ms)await mobileTokens.Revoke(ms,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
  [Authorize,HttpPost("logout-all")]
  public async Task<IActionResult> LogoutAll(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});var res=await users.UpdateSecurityStampAsync(u);if(!res.Succeeded)return Errors(res);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
  [Authorize,HttpPost("change-password")]
  public async Task<IActionResult> Change(ChangePasswordRequest r){var u=await MeUser();var result=await users.ChangePasswordAsync(u,r.Password,r.NewPassword);if(!result.Succeeded)return Errors(result);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
- [HttpPost("forgot-password")]
+ [HttpPost("forgot-password"),MobileEndpoint]
  public async Task<IActionResult> Forgot(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&u.EmailConfirmed&&mail.Enabled){var t=await users.GeneratePasswordResetTokenAsync(u);await mail.Send(u.Email!,"Hasadım şifre yenileme",mail.Link("sifre-yenile.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa şifre yenileme bağlantısı gönderildi."});}
- [HttpPost("resend-confirmation")]
+ [HttpPost("resend-confirmation"),MobileEndpoint]
  public async Task<IActionResult> Resend(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&!u.EmailConfirmed&&mail.Enabled){var t=await users.GenerateEmailConfirmationTokenAsync(u);await mail.Send(u.Email!,"Hasadım e-posta doğrulama",mail.Link("eposta-dogrula.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa doğrulama bağlantısı gönderildi."});}
  [Authorize,HttpPost("me/resend-confirmation")]
  public async Task<IActionResult> ResendMine(CancellationToken ct)
@@ -277,11 +280,11 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   if(!u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten kapalı."});
   var result=await users.SetTwoFactorEnabledAsync(u,false);if(!result.Succeeded)return Errors(result);
   result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);
-  await signIn.RefreshSignInAsync(u);
+  await signIn.RefreshSignInAsync(u);await RestampMobile(u);
   return Ok(new{mesaj="İki adımlı doğrulama kapatıldı."});
  }
  [Authorize,HttpPost("2fa/setup")]
- public async Task<IActionResult> Setup(PasswordRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});if(u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten açık."});var result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);await signIn.RefreshSignInAsync(u);return Ok(new{key=await users.GetAuthenticatorKeyAsync(u),email=u.Email});}
+ public async Task<IActionResult> Setup(PasswordRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});if(u.TwoFactorEnabled)return BadRequest(new{mesaj="İki adımlı doğrulama zaten açık."});var result=await users.ResetAuthenticatorKeyAsync(u);if(!result.Succeeded)return Errors(result);await signIn.RefreshSignInAsync(u);await RestampMobile(u);return Ok(new{key=await users.GetAuthenticatorKeyAsync(u),email=u.Email});}
  [Authorize,HttpPost("2fa/enable")]
- public async Task<IActionResult> Enable(CodeRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(u.TwoFactorEnabled)return BadRequest(new{mesaj="Zaten etkin."});if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code.Replace(" ","")))return BadRequest(new{mesaj="Doğrulama kodu hatalı."});var result=await users.SetTwoFactorEnabledAsync(u,true);if(!result.Succeeded)return Errors(result);var codes=await users.GenerateNewTwoFactorRecoveryCodesAsync(u,10);await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);return Ok(new{codes});}
+ public async Task<IActionResult> Enable(CodeRequest r){if(!TwoFactorSetupAvailable)return SetupClosed();var u=await MeUser();if(u.TwoFactorEnabled)return BadRequest(new{mesaj="Zaten etkin."});if(!await users.VerifyTwoFactorTokenAsync(u,TokenOptions.DefaultAuthenticatorProvider,r.Code.Replace(" ","")))return BadRequest(new{mesaj="Doğrulama kodu hatalı."});var result=await users.SetTwoFactorEnabledAsync(u,true);if(!result.Succeeded)return Errors(result);var codes=await users.GenerateNewTwoFactorRecoveryCodesAsync(u,10);await users.UpdateSecurityStampAsync(u);await signIn.RefreshSignInAsync(u);await RestampMobile(u);return Ok(new{codes});}
 }

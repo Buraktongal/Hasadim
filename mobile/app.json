@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "Hasadım",
+    "slug": "hasadim",
+    "scheme": "hasadim",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F3F5F1",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F9F3"
+    },
+    "ios": {
+      "bundleIdentifier": "com.hasadim.app",
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "config": { "usesNonExemptEncryption": false },
+      "infoPlist": {
+        "NSAppTransportSecurity": { "NSAllowsArbitraryLoads": false }
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyCollectedDataTypes": []
+      }
+    },
+    "android": {
+      "package": "com.hasadim.app",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F9F3",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_CONTACTS",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-secure-store", { "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır." }],
+      ["expo-local-authentication", { "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır." }],
+      ["expo-image-picker", {
+        "photosPermission": "İlanına fotoğraf eklemek için galerine erişim gerekir.",
+        "cameraPermission": "İlanın için fotoğraf çekmek üzere kameraya erişim gerekir.",
+        "microphonePermission": false
+      }],
+      "expo-apple-authentication",
+      "expo-image",
+      "expo-localization",
+      "expo-web-browser"
+    ],
+    "experiments": { "typedRoutes": false },
+    "extra": {
+      "apiBaseUrl": "https://localhost:7106",
+      "googleClientIds": { "ios": "", "android": "", "web": "" }
+    }
+  }
+}

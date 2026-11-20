@@ -1,0 +1,127 @@
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Image, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icon } from '../../components/Icon';
+import { ListingCard } from '../../components/ListingCard';
+import { ProductIcon } from '../../components/ProductIcon';
+import { Button, Chip, Empty, ErrorBox, IconButton, Spinner, toast } from '../../components/ui';
+import { get, post } from '../../lib/api';
+import { useApp } from '../../lib/app-state';
+import { categories, category } from '../../lib/catalog';
+import { useCounts } from '../../lib/counts';
+import { activeFilterCount, qs, useFilters } from '../../lib/filters';
+import { number } from '../../lib/format';
+import { toggleFavorite, useListingPages } from '../../lib/listings';
+import type { CategoryCount } from '../../lib/types';
+import { radius } from '../../lib/theme';
+
+export default function Market() {
+    const { colors: c, t, user } = useApp();
+    const [filters, setFilters] = useFilters();
+    const [text, setText] = useState(filters.q ?? '');
+    const [counts, setCounts] = useState<Record<string, number>>({});
+    const badges = useCounts(Boolean(user));
+    const list = useListingPages(filters);
+
+    useEffect(() => { setText(filters.q ?? ''); }, [filters.q]);
+    const loadCounts = useCallback(() => {
+        get<CategoryCount[]>('/api/meyve-ilanlari/kategoriler').then(rows => {
+            const map: Record<string, number> = {};
+            for (const r of rows) map[r.kategori] = (map[r.kategori] ?? 0) + r.count;
+            setCounts(map);
+        }).catch(() => undefined);
+    }, []);
+    useEffect(loadCounts, [loadCounts]);
+    // İlan verip geri dönünce liste tazelenir.
+    useFocusEffect(useCallback(() => { if (list.items.length) void list.refresh(); }, [])); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const totalAll = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts]);
+    const filterCount = activeFilterCount(filters);
+    const title = filters.kategori ? category(filters.kategori).name + (filters.meyveTuru ? ' · ' + filters.meyveTuru : '') : 'Tüm ilanlar';
+
+    async function saveSearch() {
+        if (!user) { router.push('/giris'); return; }
+        const name = [filters.meyveTuru ?? (filters.kategori ? category(filters.kategori).short : ''), filters.il, filters.q].filter(Boolean).join(' · ') || t('Tüm ilanlar');
+        try {
+            await post('/api/saved-searches', { name: name.slice(0, 80), query: qs(filters), notify: true });
+            toast('Arama kaydedildi. Yeni ilan gelince bildirim alacaksın.');
+        } catch (e) { toast(e instanceof Error ? e.message : 'Arama kaydedilemedi.'); }
+    }
+
+    const header = (
+        <View style={{ gap: 12, paddingBottom: 6 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: c.green, borderRadius: radius.m, backgroundColor: c.input, paddingLeft: 10 }}>
+                    <Icon name="search" color={c.muted} size={19} />
+                    <TextInput value={text} onChangeText={setText} returnKeyType="search" maxLength={150}
+                        onSubmitEditing={() => setFilters({ ...filters, q: text })}
+                        placeholder={t('Ürün, çeşit veya ilan ara')} placeholderTextColor={c.muted}
+                        accessibilityLabel={t('Ürün, çeşit veya ilan ara')}
+                        style={{ flex: 1, height: 44, paddingHorizontal: 8, color: c.ink, fontSize: 15.5 }} />
+                    {text ? <IconButton label="Temizle" size={34} onPress={() => { setText(''); setFilters({ ...filters, q: '' }); }}><Icon name="close" color={c.muted} size={16} /></IconButton> : null}
+                </View>
+                <Pressable accessibilityRole="button" accessibilityLabel={t('Filtreler')} onPress={() => router.push('/filtreler')}
+                    style={{ width: 48, borderRadius: radius.m, backgroundColor: filterCount ? c.green : c.panel, borderWidth: 1, borderColor: filterCount ? c.green : c.line, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="filter" color={filterCount ? c.onGreen : c.green2} size={21} />
+                    {filterCount ? <View style={{ position: 'absolute', top: -5, right: -5, backgroundColor: c.accent, borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '900' }}>{filterCount}</Text></View> : null}
+                </Pressable>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                <Chip label={t('Tümü') + (totalAll ? ' · ' + number(totalAll) : '')} raw active={!filters.kategori} onPress={() => setFilters({ q: filters.q, sort: filters.sort })} />
+                {categories.map(cat => (
+                    <Chip key={cat.id} raw label={t(cat.short) + (counts[cat.id] ? ' · ' + number(counts[cat.id]!) : '')} active={filters.kategori === cat.id}
+                        icon={<ProductIcon name={cat.icon} size={18} />} onPress={() => setFilters({ q: filters.q, sort: filters.sort, kategori: cat.id })} />
+                ))}
+            </ScrollView>
+
+            {!filters.kategori && !filters.q ? (
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                    {([['map', 'Harita', 'İllere göre ilanlar', '/harita'], ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi']] as const).map(([icon, label, sub, href]) => (
+                        <Pressable key={href} onPress={() => router.push(href)} accessibilityRole="button"
+                            style={({ pressed }) => ({ flex: 1, flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: radius.m, backgroundColor: pressed ? c.greenSoft : c.panel, borderWidth: 1, borderColor: c.line })}>
+                            <Icon name={icon} color={c.green2} size={22} />
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ color: c.ink, fontWeight: '800' }}>{t(label)}</Text>
+                                <Text style={{ color: c.muted, fontSize: 12 }} numberOfLines={1}>{t(sub)}</Text>
+                            </View>
+                        </Pressable>
+                    ))}
+                </View>
+            ) : null}
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                    <Text style={{ color: c.ink, fontSize: 19, fontWeight: '800' }} numberOfLines={1}>{t(title)}</Text>
+                    <Text style={{ color: c.muted, fontSize: 13 }}>{list.loading && !list.items.length ? t('Yükleniyor…') : t(number(list.total) + ' ilan bulundu')}</Text>
+                </View>
+                {filterCount || filters.q ? <Button title="☆ Kaydet" kind="secondary" small full={false} onPress={saveSearch} /> : null}
+            </View>
+            {list.error ? <ErrorBox message={list.error} onRetry={list.reload} /> : null}
+        </View>
+    );
+
+    return (
+        <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.bg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line }}>
+                <Image source={require('../../../assets/logo.png')} style={{ width: 120, height: 40, borderRadius: 6 }} resizeMode="contain" accessibilityLabel="Hasadım" />
+                <View style={{ flex: 1 }} />
+                <IconButton label="Bildirimler" badge={badges.notifications} onPress={() => router.push(user ? '/bildirimler' : '/giris')}><Icon name="bell" color={c.green2} /></IconButton>
+            </View>
+            <FlatList
+                data={list.items}
+                keyExtractor={x => x.id}
+                ListHeaderComponent={header}
+                contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 30 }}
+                renderItem={({ item }) => <ListingCard item={item} onFavorite={x => toggleFavorite(x, Boolean(user), fav => list.setItems(all => all.map(i => (i.id === x.id ? { ...i, favorite: fav } : i)))).catch(e => toast(e.message))} />}
+                onEndReached={list.more}
+                onEndReachedThreshold={0.6}
+                refreshControl={<RefreshControl refreshing={list.refreshing} onRefresh={() => { void list.refresh(); loadCounts(); }} tintColor={c.green2} colors={[c.green2]} />}
+                ListEmptyComponent={list.loading ? <View style={{ padding: 40, alignItems: 'center' }}><Spinner size={48} /></View>
+                    : list.error ? undefined : <Empty title="Bu aramaya uygun ilan bulunamadı." text="Filtreleri değiştirerek tekrar dene." action={<View style={{ width: 220 }}><Button title="Filtreleri temizle" kind="secondary" onPress={() => setFilters({})} /></View>} />}
+                ListFooterComponent={list.items.length && list.hasMore ? <View style={{ padding: 16, alignItems: 'center' }}><Spinner size={30} /></View> : undefined}
+            />
+        </SafeAreaView>
+    );
+}

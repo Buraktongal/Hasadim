@@ -16,13 +16,15 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
  if(c.Request.ContentLength>0||c.Request.Headers.ContainsKey("Transfer-Encoding")){
   request.Content=new StreamContent(c.Request.Body);if(c.Request.ContentType is not null)request.Content.Headers.TryAddWithoutValidation("Content-Type",c.Request.ContentType);
  }
- foreach(var h in new[]{"Cookie","X-CSRF-TOKEN","Accept"})if(c.Request.Headers.TryGetValue(h,out var v))request.Headers.TryAddWithoutValidation(h,v.ToArray());
+ // Mobil uygulama: Authorization (Bearer anahtar), istemci başlığı ve cihaz adı için User-Agent da iletilir.
+ foreach(var h in new[]{"Cookie","X-CSRF-TOKEN","Accept","Authorization","X-Hasadim-Client","User-Agent","Accept-Language"})if(c.Request.Headers.TryGetValue(h,out var v))request.Headers.TryAddWithoutValidation(h,v.ToArray());
  request.Headers.TryAddWithoutValidation("X-Forwarded-For",c.Connection.RemoteIpAddress?.ToString());
  try{
   using var response=await clients.CreateClient("api").SendAsync(request,HttpCompletionOption.ResponseHeadersRead,c.RequestAborted);
   c.Response.StatusCode=(int)response.StatusCode;
   if(response.Headers.TryGetValues("Set-Cookie",out var cookies))foreach(var cookie in cookies)c.Response.Headers.Append("Set-Cookie",cookie);
   if(response.Headers.TryGetValues("Retry-After",out var retry))c.Response.Headers["Retry-After"]=retry.ToArray();
+  if(response.Headers.TryGetValues("WWW-Authenticate",out var challenge))c.Response.Headers["WWW-Authenticate"]=challenge.ToArray();
   if(response.Content.Headers.ContentType is not null)c.Response.ContentType=response.Content.Headers.ContentType.ToString();
   await response.Content.CopyToAsync(c.Response.Body,c.RequestAborted);
  }catch(HttpRequestException){c.Response.StatusCode=502;await c.Response.WriteAsJsonAsync(new{mesaj="API bağlantısı kurulamadı. API projesini ve HTTPS sertifikasını kontrol edin."});}

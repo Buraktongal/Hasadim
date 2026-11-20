@@ -57,6 +57,17 @@ builder.Services.ConfigureApplicationCookie(o =>
     };
 });
 builder.Services.Configure<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>(IdentityConstants.TwoFactorUserIdScheme, o => { o.Cookie.HttpOnly = true; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.Cookie.SameSite = SameSiteMode.Strict; o.ExpireTimeSpan = TimeSpan.FromMinutes(5); });
+// Kimlik doğrulama: Bearer başlığı olan istekler mobil anahtar şemasına, diğerleri çereze gider.
+builder.Services.AddAuthentication(o =>
+{
+    o.DefaultScheme = MobileTokenHandler.PolicyScheme;
+    o.DefaultAuthenticateScheme = MobileTokenHandler.PolicyScheme;
+    o.DefaultChallengeScheme = MobileTokenHandler.PolicyScheme;
+    o.DefaultForbidScheme = MobileTokenHandler.PolicyScheme;
+})
+.AddScheme<AuthenticationSchemeOptions, MobileTokenHandler>(MobileTokenHandler.Scheme, null)
+.AddPolicyScheme(MobileTokenHandler.PolicyScheme, "Hasadım", o =>
+    o.ForwardDefaultSelector = c => MobileTokenHandler.HasBearer(c.Request) ? MobileTokenHandler.Scheme : IdentityConstants.ApplicationScheme);
 builder.Services.AddAntiforgery(o => { o.HeaderName = "X-CSRF-TOKEN"; o.Cookie.SecurePolicy = CookieSecurePolicy.Always; o.Cookie.SameSite = SameSiteMode.Strict; });
 builder.Services.AddControllers(o => o.Filters.Add<CsrfFilter>());
 builder.Services.Configure<ForwardedHeadersOptions>(o => o.ForwardedHeaders = ForwardedHeaders.XForwardedFor);

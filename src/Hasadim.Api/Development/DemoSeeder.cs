@@ -207,6 +207,9 @@ public static class DemoSeeder
         DELETE dbo.UserRoles;
         DELETE dbo.UserProfiles;
         DELETE dbo.RegistrationChallenges;
+        DELETE dbo.MobileTokens;
+        DELETE dbo.UserSessions;
+        DELETE dbo.LoginEvents;
         DELETE dbo.Users;
         """;
 
