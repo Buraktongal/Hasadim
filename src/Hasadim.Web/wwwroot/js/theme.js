@@ -64,3 +64,13 @@
         apply
     };
 })();
+
+// Tarih alanları: yalnızca küçük takvim simgesine değil, alanın herhangi bir yerine
+// tıklanınca da takvim açılır (Chrome, Edge, Safari 16+, Firefox 101+).
+document.addEventListener('click', event => {
+    const input = event.target instanceof Element ? event.target.closest('input[type="date"], input[type="month"], input[type="time"], input[type="datetime-local"]') : null;
+    if (!input || input.disabled || input.readOnly || typeof input.showPicker !== 'function') return;
+    if (Date.now() - (Number(input.dataset.pickerAt) || 0) < 400) return;
+    input.dataset.pickerAt = String(Date.now());
+    try { input.showPicker(); } catch { /* bazı tarayıcılar yalnızca simgeden açar */ }
+});

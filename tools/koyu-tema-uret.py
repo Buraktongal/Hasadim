@@ -48,6 +48,11 @@ html[data-theme="dark"] {
     --map-border: #121a15; --map-label: #e3ebe4; --map-badge: #121a15; --map-badge-ink: #e3ebe4; --map-sea: #16201a;
 }
 html[data-theme="dark"] .tr-name { stroke: #121a15b3; }
+html[data-theme="dark"] select:not(.ss-native):not([multiple]) { background-image: url("/images/secim-ok-acik.svg") !important; }
+html[data-theme="dark"] .ss-caret { background-image: url("/images/secim-ok-acik.svg"); }
+html[data-theme="dark"] select:not(.ss-native) option { color: #e3ebe4; background: #18221c; }
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+html[data-theme="dark"] .camera-head { border-color: #2c3a31; }
 html[data-theme="dark"] .tr-label.on-strong .tr-name { fill: #0f1a13; stroke: #e3ebe4aa; }
 html[data-theme="dark"] .tr-badge rect { stroke: #e3ebe455; }
 /* Takvim: hasat dönemi kehribar (çizgili), yoğun hasat parlak yeşil; koyu zeminde net ayrışır. */

@@ -622,3 +622,18 @@ footer.site-footer {
     .pagination > .secondary { padding: 8px 10px; font-size: 13px; }
     .page-number { min-width: 34px; height: 34px; }
 }
+
+/* Kart başlıklarının zemini kartın yuvarlak köşesinden taşmasın. */
+.category-box h3, .filter-heading { border-radius: calc(var(--t-radius) - 1px) calc(var(--t-radius) - 1px) 0 0; }
+#filters > :last-child { border-bottom: 0; border-radius: 0 0 calc(var(--t-radius) - 1px) calc(var(--t-radius) - 1px); }
+.category-item.selected { border-radius: 0; }
+#categoryList { border-radius: 0 0 calc(var(--t-radius) - 1px) calc(var(--t-radius) - 1px); }
+/* Dar ekranda detaylı arama tek sütun (eski iki sütunlu düzen alanları kaydırıyordu). */
+@media (max-width: 860px) {
+    #filters { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    #filters .full { align-self: auto; margin-bottom: 0; }
+    #filters .filter-group .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+/* Aranabilir kutular yerel açılır listelerle aynı yazı ağırlığında. */
+#filters .ss-button { font-weight: 400; }
+#filters .ss-value.is-placeholder { color: inherit; font-weight: 400; }

@@ -30,7 +30,8 @@ const pageScripts = [
     '/js/notification-bell.js',
     '/js/menu-settings.js',
     '/js/sticky-side.js',
-    '/js/app.js'
+    '/js/app.js',
+    '/js/camera-capture.js'
 ];
 
 function loadPageScript(source) {

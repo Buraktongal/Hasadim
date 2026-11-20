@@ -160,3 +160,21 @@ Expo (iOS + Android). Ayrıntılı kurulum için `mobile/README.md` dosyasına b
 - **Sertifika sabitleme (pinning):** Expo Go ile kullanılamaz, mağaza sürümünde eklenebilir.
 - **Root / jailbreak tespiti:** yok.
 - **`npm audit` uyarısı:** 3 orta düzey bulgunun kaynağı yalnızca derleme aracındaki `minimatch` (`@expo/fingerprint`). Uygulama paketine girmez.
+
+## Fotoğraf çekme, galeri izni, tarih ve seçim kutuları
+- **Web – canlı kamera:** ilan verirken "📷 Fotoğraf çek" düğmesi eklendi (`js/camera-capture.js`).
+  - **Bilgisayarda:** kamera görüntüsü pencerede canlı gösterilir; "Çek", "Tekrar çek" ve "Fotoğrafı ekle" adımları var.
+  - **Telefon tarayıcısında:** telefonun kendi kamera ekranı açılır.
+  - **İşleme:** çekilen fotoğraf en fazla 1600 px JPEG'e çevrilir; konum ve cihaz bilgileri silinir.
+  - **İzin:** kamera reddedilirse nasıl izin verileceği yazılır. Pencere kapanınca kamera hemen kapatılır.
+  - **Permissions-Policy:** başlığı eklendi: kamera yalnızca bu sitede, mikrofon/konum/ödeme kapalı.
+- **Mobil – galeri izni:** galeriden seçim artık izin istemiyor; sistemin fotoğraf seçicisi kullanılıyor ve uygulama yalnızca seçilen fotoğrafları görüyor.
+  - Kamera izni yalnızca "Kamera"ya dokununca isteniyor.
+  - İzin kalıcı reddedildiyse "Ayarları aç" seçeneği çıkıyor.
+  - Android'de gereksiz depolama ve medya izinleri derlemede engellendi.
+- **Tarih alanları:** yalnızca takvim simgesine değil, alanın her yerine tıklanınca takvim açılıyor.
+- **Seçim kutuları:** yerel açılır listeler ile aranabilir listeler artık aynı görünüyor: aynı ok simgesi, zemin ve yazı ağırlığı. Koyu modda da aynı.
+  - Seçeneği olmayan aranabilir liste artık boş görünmüyor, "Seç" yazıyor.
+- **Detaylı arama kutusu:**
+  - Başlık zeminleri yuvarlak köşelerden taşmıyor.
+  - Dar ekranda alanlar tek sütunda; eski iki sütunlu düzen alanları kaydırıyordu.

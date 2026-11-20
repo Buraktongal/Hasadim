@@ -1,13 +1,13 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/Icon';
 import { MiniMap, CITY_CENTERS, TURKEY } from '../components/MiniMap';
 import { Photo } from '../components/Photo';
 import { ProductIcon } from '../components/ProductIcon';
-import { Button, Card, Chip, ErrorBox, Field, H2, Header, Loading, Notice, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt } from '../components/ui';
+import { Button, Card, Chip, ErrorBox, Field, H2, Header, Loading, Notice, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
 import { api, del, get, post } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { categories, category, cities, DELIVERY, DEED, districts, IRRIGATION, PACKAGING, varieties, ZONING } from '../lib/catalog';
@@ -49,6 +49,7 @@ export default function ListingEditor() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(editing);
     const set = (patch: Partial<Form>) => setF(p => ({ ...p, ...patch }));
+    const confirm = useConfirm();
 
     useEffect(() => {
         if (!editing || !user) return;
@@ -109,7 +110,13 @@ export default function ListingEditor() {
         if (left <= 0) { toast('En fazla 10 fotoğraf yükleyebilirsin.'); return; }
         try {
             const r = await pickPhotos(source, left);
-            if (typeof r === 'string') toast(r); else setPhotos(p => [...p, ...r].slice(0, MAX_PHOTOS));
+            if ('photos' in r) setPhotos(p => [...p, ...r.photos].slice(0, MAX_PHOTOS));
+            else if ('denied' in r) {
+                // İzin daha önce kalıcı reddedildiyse sistem tekrar sormaz; Ayarlar'a yönlendir.
+                if (!r.canAskAgain && await confirm.ask('Kamera izni gerekli', t('Fotoğraf çekmek için Ayarlar’dan Hasadım’a kamera izni vermelisin. İstersen galeriden fotoğraf seçebilirsin.'), 'Ayarları aç'))
+                    await Linking.openSettings();
+                else if (r.canAskAgain) toast('Kamera izni verilmedi. Galeriden fotoğraf seçebilirsin.');
+            } else toast(r.error);
         } catch { toast('Fotoğraf hazırlanamadı. Başka bir fotoğraf dene.'); }
     }
 
@@ -253,7 +260,7 @@ export default function ListingEditor() {
                         <View style={{ flex: 1 }}><Button title="Kamera" kind="secondary" icon={<Icon name="camera" color={c.green2} size={19} />} onPress={() => addPhotos('camera')} /></View>
                         <View style={{ flex: 1 }}><Button title="Galeri" kind="secondary" icon={<Icon name="image" color={c.green2} size={19} />} onPress={() => addPhotos('library')} /></View>
                     </View>
-                    <Txt muted size={12.5}>{t('En az 1, en fazla 10 fotoğraf.') + ' ' + photoCount + ' / ' + MAX_PHOTOS + '. ' + t('Fotoğraflardaki konum ve cihaz bilgileri yüklemeden önce silinir.')}</Txt>
+                    <Txt muted size={12.5}>{t('En az 1, en fazla 10 fotoğraf.') + ' ' + photoCount + ' / ' + MAX_PHOTOS + '. ' + t('Fotoğraflardaki konum ve cihaz bilgileri yüklemeden önce silinir.') + ' ' + t('Galeriden seçerken uygulama yalnızca seçtiğin fotoğrafları görür.')}</Txt>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                         {existing?.photos?.map((p, i) => (
                             <View key={p.id}>
@@ -300,6 +307,7 @@ export default function ListingEditor() {
                     {step < 3 ? <Button title="Devam et" onPress={next} /> : <Button title={editing ? 'Değişiklikleri kaydet' : 'Yayınla'} kind="accent" busy={busy} onPress={publish} />}
                 </View>
             </View>
+            {confirm.node}
         </View>
     );
 }

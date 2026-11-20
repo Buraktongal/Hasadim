@@ -127,3 +127,52 @@ dialog { border-radius: var(--radius-l); }
 label > .ss { margin-top: 6px; }
 .ss.ss-up .ss-panel { top: auto; bottom: calc(100% + 6px); }
 .ss-option.is-placeholder[aria-selected="true"] { font-weight: 600; color: #7d8a79; } .ss-option.is-placeholder::after { content: none !important; }
+
+/* ---------- Açılır listeler: tarayıcı ne olursa olsun aynı görünüm ----------
+   Yerel <select> ve aranabilir seçim kutusu (ss) aynı ok simgesini, köşeyi ve zemini kullanır. */
+select:not(.ss-native):not([multiple]) {
+    -webkit-appearance: none; appearance: none;
+    background-image: url("/images/secim-ok.svg") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 16px 16px !important;
+    padding-right: 34px !important;
+    text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+    cursor: pointer; line-height: 1.2;
+}
+select:not(.ss-native):disabled { cursor: not-allowed; opacity: .75; }
+select:not(.ss-native):hover:not(:disabled) { border-color: #9fb69a; }
+select:not(.ss-native):focus-visible { outline: 3px solid #d9661f33; outline-offset: 0; border-color: #d9661f; }
+select:not(.ss-native) option { color: #1f2a22; background: #fff; }
+.ss-button { background: #fff; }
+.ss-caret {
+    width: 16px; height: 16px; margin: 0; border: 0; transform: none;
+    background: url("/images/secim-ok.svg") center / 16px 16px no-repeat;
+}
+.ss.is-open .ss-caret { transform: rotate(180deg); margin-top: 0; }
+.ss.is-disabled .ss-caret { opacity: .6; }
+
+/* Tarih alanı: alanın tamamı tıklanabilir (takvim js/theme.js ile açılır). */
+input[type="date"], input[type="month"], input[type="time"] { cursor: pointer; }
+input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .75; }
+
+/* ---------- İlan fotoğrafı: galeriden seç / kamerayla çek ---------- */
+.photo-sources { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+.photo-sources .photo-drop { margin: 0; }
+.camera-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; white-space: nowrap; min-height: 48px; }
+@media (max-width: 520px) { .photo-sources { grid-template-columns: 1fr; } }
+.camera-dialog {
+    width: min(720px, calc(100vw - 24px)); padding: 0; border: 0; border-radius: 18px; overflow: hidden;
+    background: #fff; color: #1f2a22; box-shadow: 0 24px 60px #0005;
+}
+.camera-dialog::backdrop { background: #0c1a12b3; }
+.camera-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 12px 18px; border-bottom: 1px solid #dfe5dc; }
+.camera-stage { position: relative; background: #0d140f; aspect-ratio: 4 / 3; display: grid; place-items: center; }
+.camera-stage video, .camera-stage img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.camera-stage video[hidden], .camera-stage img[hidden] { display: none; }
+.camera-status { position: absolute; inset: auto 16px 16px; margin: 0; padding: 10px 14px; border-radius: 10px; background: #000a; color: #fff; font-weight: 600; text-align: center; }
+.camera-status[hidden] { display: none; }
+.camera-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 14px; }
+.camera-actions [hidden] { display: none; }
+.camera-shutter { display: inline-flex; align-items: center; gap: 10px; min-width: 140px; justify-content: center; }
+.camera-shutter span { width: 18px; height: 18px; border-radius: 50%; border: 3px solid currentColor; box-shadow: inset 0 0 0 3px #d9661f; }

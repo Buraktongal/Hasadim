@@ -68,7 +68,8 @@ window.SearchableSelect = (() => {
         function paint() {
             const selected = select.options[select.selectedIndex];
             const placeholder = !selected || selected.value === '';
-            current.textContent = selected ? selected.textContent : '';
+            // Seçenek yoksa (ör. önce kategori seçilmeli) boş kalmasın.
+            current.textContent = selected ? selected.textContent : (select.dataset.placeholder || 'Seç');
             current.classList.toggle('is-placeholder', placeholder);
             button.disabled = select.disabled;
             wrap.classList.toggle('is-disabled', select.disabled);

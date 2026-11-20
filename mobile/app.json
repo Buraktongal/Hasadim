@@ -17,9 +17,13 @@
       "bundleIdentifier": "com.hasadim.app",
       "supportsTablet": true,
       "usesAppleSignIn": true,
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
-        "NSAppTransportSecurity": { "NSAllowsArbitraryLoads": false }
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -39,7 +43,10 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.READ_CONTACTS",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -49,22 +56,41 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-secure-store", { "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır." }],
-      ["expo-local-authentication", { "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır." }],
-      ["expo-image-picker", {
-        "photosPermission": "İlanına fotoğraf eklemek için galerine erişim gerekir.",
-        "cameraPermission": "İlanın için fotoğraf çekmek üzere kameraya erişim gerekir.",
-        "microphonePermission": false
-      }],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Hasadım, uygulama kilidini açmak için Face ID kullanır."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Seçtiğin fotoğrafları ilanına eklemek için kullanılır.",
+          "cameraPermission": "İlanın için fotoğraf çekmek üzere kameraya erişim gerekir.",
+          "microphonePermission": false
+        }
+      ],
       "expo-apple-authentication",
       "expo-image",
       "expo-localization",
       "expo-web-browser"
     ],
-    "experiments": { "typedRoutes": false },
+    "experiments": {
+      "typedRoutes": false
+    },
     "extra": {
       "apiBaseUrl": "https://localhost:7106",
-      "googleClientIds": { "ios": "", "android": "", "web": "" }
+      "googleClientIds": {
+        "ios": "",
+        "android": "",
+        "web": ""
+      }
     }
   }
 }
