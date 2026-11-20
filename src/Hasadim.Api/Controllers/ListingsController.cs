@@ -1,3 +1,4 @@
+using Hasadim.Api.Security;
 using System.Text;
 using System.Text.Json;
 using Hasadim.Application;
@@ -71,6 +72,7 @@ public class ListingsController(
 
     [Authorize]
     [HttpPost("with-photos")]
+    [RequireHuman("listing")]
     [RequestSizeLimit(MaxUploadSize)]
     public async Task<IActionResult> CreateWithPhotos(
         [FromForm] string listing,

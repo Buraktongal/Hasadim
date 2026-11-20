@@ -1,4 +1,5 @@
 import { API_BASE, API_BASE_ERROR, USER_AGENT } from './config';
+import { askHuman, type HumanChallenge, humanPurpose, normalizeAnswer, solve } from './human';
 import { secureDelete, secureGet, secureSet } from './storage';
 
 // Sunucu istemcisi.
@@ -57,11 +58,12 @@ export function imageSource(path?: string | null) {
     return undefined;
 }
 
-async function send(path: string, init: RequestInit & { json?: unknown }, auth: boolean) {
+async function send(path: string, init: RequestInit & { json?: unknown; extra?: Record<string, string> }, auth: boolean) {
     const headers: Record<string, string> = {
         Accept: 'application/json',
         'X-Hasadim-Client': 'mobile',
-        'User-Agent': USER_AGENT
+        'User-Agent': USER_AGENT,
+        ...init.extra
     };
     let body = init.body;
     if (init.json !== undefined) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(init.json); }
@@ -119,14 +121,47 @@ export function refreshSession(): Promise<boolean> {
     return refreshing;
 }
 
-export async function api<T = unknown>(path: string, options: { method?: string; json?: unknown; body?: FormData; auth?: boolean } = {}): Promise<T> {
+type ApiOptions = { method?: string; json?: unknown; body?: FormData; auth?: boolean };
+
+// Korunan isteklerde (giriş, kayıt, SMS, şifre sıfırlama, ilan verme, geri bildirim) robot doğrulaması eklenir.
+// Sunucu 428 döndürürse (bilet geçersiz, kod yanlış veya görsel kod gerekli) yeni biletle en fazla 3 kez tekrar denenir.
+async function sendHuman(path: string, options: ApiOptions, auth: boolean, purpose: string): Promise<Response> {
+    let message: string | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+        const challenge = async () => {
+            const r = await send('/api/human/challenge?purpose=' + purpose, {}, auth);
+            if (!r.ok) throw await readError(r);
+            return (await r.json()) as HumanChallenge;
+        };
+        let c = await challenge();
+        let answer = '';
+        if (c.image) {
+            let current = c;
+            const typed = await askHuman(c.image, message, async () => { current = await challenge(); return current.image ?? ''; });
+            if (typed === null) throw new ApiError(0, 'Güvenlik doğrulaması tamamlanmadı.', 'human_cancelled');
+            c = current;
+            answer = normalizeAnswer(typed);
+        }
+        const nonce = await solve(c.salt, c.difficulty);
+        const extra: Record<string, string> = { 'X-Human-Token': c.token, 'X-Human-Nonce': String(nonce) };
+        if (answer) extra['X-Human-Answer'] = answer;
+        const r = await send(path, { method: options.method, json: options.json, body: options.body, extra }, auth);
+        if (r.status !== 428) return r;
+        message = (await readError(r)).message;
+    }
+    throw new ApiError(428, 'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.', 'human_required');
+}
+
+export async function api<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
     const auth = options.auth !== false;
+    const purpose = humanPurpose(options.method, path);
+    const go = () => purpose ? sendHuman(path, options, auth, purpose) : send(path, { method: options.method, json: options.json, body: options.body }, auth);
     // Süresi dolmak üzere olan anahtarı istekten önce yenile.
     if (auth && accessToken && accessExpires - Date.now() < 60_000) await refreshSession();
     if (auth && !accessToken && (await secureGet(REFRESH_KEY))) await refreshSession();
-    let r = await send(path, { method: options.method, json: options.json, body: options.body }, auth);
+    let r = await go();
     if (r.status === 401 && auth && accessToken !== null) {
-        if (await refreshSession()) r = await send(path, { method: options.method, json: options.json, body: options.body }, auth);
+        if (await refreshSession()) r = await go();
     }
     if (!r.ok) throw await readError(r);
     if (r.status === 204) return undefined as T;

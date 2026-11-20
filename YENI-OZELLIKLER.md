@@ -178,3 +178,41 @@ Expo (iOS + Android). Ayrıntılı kurulum için `mobile/README.md` dosyasına b
 - **Detaylı arama kutusu:**
   - Başlık zeminleri yuvarlak köşelerden taşmıyor.
   - Dar ekranda alanlar tek sütunda; eski iki sütunlu düzen alanları kaydırıyordu.
+
+## Yönetim paneli (`/html/yonetim.html`)
+Sitenin geri kalanından ayrı bir çalışma ekranı. Hesap menüsünde yalnızca yöneticilere "Yönetim paneli" bağlantısı görünür (eski `/?view=admin` adresi buraya yönlenir).
+- **Özet:** üye, ilan, inceleme bekleyen ilan, açık şikâyet, yeni geri bildirim, askıdaki hesap, son 24 saatteki hatalı giriş ve mesaj sayıları.
+- **Geri bildirimler:** durum, tür ve bölüme göre süzme, arama. Bir kayda basınca durum (Yeni → İnceleniyor → Planlandı → Çözüldü / Kapatıldı), kullanıcıya yanıt ve yalnızca yöneticilerin gördüğü iç not girilir. Yanıt yazılınca kullanıcıya bildirim gider.
+- **Kullanıcılar:** ad, e-posta veya telefonla arama; "son 7 gün, doğrulanmamış, askıda, yöneticiler" süzgeçleri. Kullanıcı ayrıntısında son giriş denemeleri, açık oturum, şikâyet sayısı ve işlemler: **askıya al / askıyı kaldır, tüm oturumları kapat, yönetici yap / yetkiyi kaldır**.
+- **İlan onayı** ve **Şikâyetler:** mevcut onay akışı (ilan detayında Onayla / Düzeltme iste), ilanı gizleme ve şikâyeti kapatma.
+- **Denetim kaydı:** hangi yöneticinin ne zaman, hangi IP'den ne yaptığı.
+
+Güvenlik:
+- `/api/admin/*` uçları yalnızca `Admin` rolü **ve tarayıcı oturumu (çerez)** ile çalışır; mobil anahtarla yönetim yapılamaz. Yönetici başına dakikada 120 istek sınırı vardır.
+- Askıya alma, oturum kapatma ve yetki değişikliği için **şifre yeniden sorulur** (10 dakika geçerli, oturuma bağlı). Hatalı şifre denemeleri denetim kaydına yazılır ve hesap kilidi kuralları geçerlidir.
+- Yönetici kendini askıya alamaz, başka bir yöneticiyi askıya alamaz, son yöneticinin yetkisi kaldırılamaz; yetki yalnızca e-postası doğrulanmış hesaba verilir.
+- Askıya alınan hesabın tüm web ve mobil oturumları kapanır; giriş denemesinde "hesap askıya alındı" uyarısı görünür.
+- `AdminAudit` tablosu veritabanı tetikleyicisiyle **değiştirilemez ve silinemez**.
+- Panel sayfası arama motorlarına kapalıdır (`noindex`); tüm metinler `textContent` ile yazılır.
+
+## Öneri ve geri bildirim kutusu
+- Web: `/html/geri-bildirim.html` (Hesabım menüsü, üst menü ve alt bilgide bağlantı). Mobil: Hesap → **Öneri ve geri bildirim**.
+- Tür (Öneri / Hata bildirimi / Diğer), uygulamanın bölümü (pazar, ilan verme, mesajlar, harita, mobil uygulama…), başlık ve açıklama girilir. Web'de geldiği sayfa isteğe bağlı eklenir; cihaz/tarayıcı bilgisi otomatik kaydedilir.
+- Kullanıcı gönderdiklerini, durumlarını ve ekibin yanıtlarını aynı sayfada görür; yanıt gelince bildirim alır.
+- Sınırlar: 24 saatte 3 bildirimden sonra görsel kod sorulur, 24 saatte en fazla 10 bildirim gönderilir.
+
+## Robot / insan doğrulaması
+Dış hizmet (Google reCAPTCHA vb.) kullanılmaz; kişisel veri üçüncü tarafa gitmez.
+1. **Görünmez iş kanıtı:** korunan her istekten önce cihaz, sunucunun verdiği tuzla küçük bir SHA-256 bulmacası çözer (insan için ~0,1–1 sn, binlerce istek gönderen bot için pahalı). Bilet şifreli, 5 dakika geçerli ve **tek kullanımlıktır**.
+2. **Görsel kod:** yalnızca çizgilerden oluşan, bozulmuş 5 karakterlik kod (yazı tipi kullanılmaz, OCR'ı zorlaştırır). Şu durumlarda sorulur:
+   - **Kayıt, SMS kodu, şifre sıfırlama / doğrulama e-postası:** her zaman.
+   - **Giriş:** aynı adresten 2 hatalı denemeden sonra (her zaman sormak için `Security:Human:LoginAlwaysImage=true`).
+   - **İlan verme:** 24 saatte **5 ilandan sonra** her yeni ilanda.
+   - **Geri bildirim:** 24 saatte 3 bildirimden sonra.
+3. **Kesin sınırlar:** 24 saatte en fazla 20 ilan, 2 dakikada en fazla 3 ilan; aşılırsa doğrulamadan bağımsız olarak reddedilir. Hatalı denemeler arttıkça bulmaca zorlaşır.
+
+Ayarlar (`appsettings.json`, isteğe bağlı): `Security:Human:Difficulty` (varsayılan 16 bit; 8–22), `Security:Human:LoginAlwaysImage`.
+Not: kendi sunucumuzda üretilen görsel kod, gelişmiş bir saldırganı tek başına durduramaz; asıl koruma iş kanıtı + hız sınırları + tek kullanımlık bilet birleşimidir. Saldırı görülürse Cloudflare Turnstile gibi bir hizmet aynı noktaya (`RequireHuman`) eklenebilir.
+
+Veritabanı: `016_AdminFeedbackHuman.sql` (Feedback, AdminAudit, UserSuspensions, HumanRedemptions).
+Yeni API uçları: `GET /api/human/challenge`, `POST /api/feedback`, `GET /api/feedback/mine`, `GET/POST/PUT /api/admin/{me,step-up,stats,users,users/{id}/…,feedback,audit}`.

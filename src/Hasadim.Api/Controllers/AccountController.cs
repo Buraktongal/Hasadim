@@ -104,7 +104,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  async Task<AppUser> MeUser()=>await users.GetUserAsync(User)??throw new Hasadim.Application.AppException(401,"Giriş yapın.");
  [HttpGet("me")]
  public async Task<IActionResult> Me(){var u=await users.GetUserAsync(User);return Ok(u is null?null:new{u.Id,u.DisplayName,u.Email,u.TwoFactorEnabled,isAdmin=await users.IsInRoleAsync(u,"Admin"),hasPassword=await users.HasPasswordAsync(u)});}
- [HttpPost("register"),MobileEndpoint]
+ [HttpPost("register"),MobileEndpoint,RequireHuman("register")]
  public async Task<IActionResult> Register(RegisterRequest r,CancellationToken ct)
  {
   if(User.Identity?.IsAuthenticated==true)return BadRequest(new{mesaj="Önce çıkış yapın."});
@@ -136,6 +136,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  // Ortak oturum açma kontrolleri (kilit, e-posta doğrulaması, 2FA).
  async Task<IActionResult?> CannotSignIn(AppUser u)
  {
+  if(await users.IsLockedOutAsync(u)&&u.LockoutEnd>DateTimeOffset.UtcNow.AddYears(50))return Unauthorized(new{mesaj="Bu hesap Hasadım yönetimi tarafından askıya alındı."});
   if(await users.IsLockedOutAsync(u))return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene."});
   if(!await signIn.CanSignInAsync(u))return Unauthorized(new{mesaj="Giriş için önce e-posta adresini doğrulamalısın."});
   if(u.TwoFactorEnabled)return Unauthorized(new{mesaj="Bu hesapta iki adımlı doğrulama açık. E-posta ve şifrenle giriş yap."});
@@ -173,7 +174,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  }
 
  // Telefonla giriş 1/2: doğrulanmış numaraya SMS kodu gönderilir.
- [HttpPost("phone/start"),MobileEndpoint]
+ [HttpPost("phone/start"),MobileEndpoint,RequireHuman("phone")]
  public async Task<IActionResult> PhoneStart(PhoneStartRequest r,CancellationToken ct)
  {
   if(!sms.Enabled)return StatusCode(503,new{mesaj="Telefonla giriş şu anda kullanılamıyor."});
@@ -224,7 +225,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   return Ok(new{mesaj="Telefonun doğrulandı. Artık telefon numaranla da giriş yapabilirsin."});
  }
 
- [HttpPost("login")]
+ [HttpPost("login"),RequireHuman("login")]
  public async Task<IActionResult> Login(LoginRequest r)
  {
   const string failed="E-posta veya şifre hatalı. Şifrede büyük/küçük harf ve Türkçe karakterlere (ı/i, ö/o) dikkat et.";
@@ -232,6 +233,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
   if(u is null){LogLogin(r.Email,"kullanıcı bulunamadı");return Unauthorized(new{mesaj=failed});}
   var result=await signIn.PasswordSignInAsync(u,r.Password,false,true);
   if(result.RequiresTwoFactor)return Ok(new{requiresTwoFactor=true});
+  if(result.IsLockedOut&&u.LockoutEnd>DateTimeOffset.UtcNow.AddYears(50)){LogLogin(r.Email,"hesap askıda");return Unauthorized(new{mesaj="Bu hesap Hasadım yönetimi tarafından askıya alındı. Ayrıntı için destek ekibiyle iletişime geç."});}
   if(result.IsLockedOut){LogLogin(r.Email,"hesap kilitli");await sessions.Failed(u.Id,Request.Headers.UserAgent.ToString(),"Hesap geçici olarak kilitlendi",HttpContext.RequestAborted);return Unauthorized(new{mesaj="Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene veya şifreni yenile."});}
   if(result.IsNotAllowed){LogLogin(r.Email,"e-posta doğrulanmamış");return Unauthorized(new{mesaj="Giriş için önce e-posta adresini doğrulamalısın."});}
   if(!result.Succeeded){LogLogin(r.Email,"şifre hatalı");await sessions.Failed(u.Id,Request.Headers.UserAgent.ToString(),"Hatalı şifre",HttpContext.RequestAborted);return Unauthorized(new{mesaj=failed});}
@@ -249,9 +251,9 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  public async Task<IActionResult> LogoutAll(PasswordRequest r){var u=await MeUser();if(!await users.CheckPasswordAsync(u,r.Password))return BadRequest(new{mesaj="Şifre hatalı."});var res=await users.UpdateSecurityStampAsync(u);if(!res.Succeeded)return Errors(res);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
  [Authorize,HttpPost("change-password")]
  public async Task<IActionResult> Change(ChangePasswordRequest r){var u=await MeUser();var result=await users.ChangePasswordAsync(u,r.Password,r.NewPassword);if(!result.Succeeded)return Errors(result);await sessions.EndAll(u.Id,null,HttpContext.RequestAborted);await signIn.SignOutAsync();return Ok();}
- [HttpPost("forgot-password"),MobileEndpoint]
+ [HttpPost("forgot-password"),MobileEndpoint,RequireHuman("forgot")]
  public async Task<IActionResult> Forgot(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&u.EmailConfirmed&&mail.Enabled){var t=await users.GeneratePasswordResetTokenAsync(u);await mail.Send(u.Email!,"Hasadım şifre yenileme",mail.Link("sifre-yenile.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa şifre yenileme bağlantısı gönderildi."});}
- [HttpPost("resend-confirmation"),MobileEndpoint]
+ [HttpPost("resend-confirmation"),MobileEndpoint,RequireHuman("forgot")]
  public async Task<IActionResult> Resend(EmailRequest r,CancellationToken ct){var u=await users.FindByEmailAsync(r.Email.Trim());if(u is not null&&!u.EmailConfirmed&&mail.Enabled){var t=await users.GenerateEmailConfirmationTokenAsync(u);await mail.Send(u.Email!,"Hasadım e-posta doğrulama",mail.Link("eposta-dogrula.html",u.Email!,t),ct);}return Ok(new{mesaj="Uygun bir hesap varsa doğrulama bağlantısı gönderildi."});}
  [Authorize,HttpPost("me/resend-confirmation")]
  public async Task<IActionResult> ResendMine(CancellationToken ct)

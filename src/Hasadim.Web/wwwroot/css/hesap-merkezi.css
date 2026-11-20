@@ -582,3 +582,38 @@ body[data-view="messages"] #siteLayout .topbar.market-header { border-bottom: 1p
     .security-checklist li, .session-item, .method-item, .login-history li { grid-template-columns: 36px minmax(0, 1fr); }
     .security-checklist li > a, .session-item > button, .method-item > :nth-child(n+3), .login-history time { grid-column: 2; justify-self: start; }
 }
+
+/* ---------- Öneri ve geri bildirim ---------- */
+.feedback-form { display: grid; gap: 14px; }
+.feedback-form label { display: grid; gap: 6px; font-weight: 700; }
+.feedback-form textarea { resize: vertical; min-height: 140px; font: inherit; padding: 10px 12px; border: 1px solid var(--t-line); border-radius: 10px; }
+.feedback-kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
+.feedback-kinds legend { font-weight: 800; margin-bottom: 8px; padding: 0; }
+.feedback-kind {
+    position: relative; display: grid !important; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; row-gap: 2px;
+    padding: 12px; border: 2px solid var(--t-line); border-radius: 14px; cursor: pointer; background: var(--t-panel); font-weight: 400 !important;
+}
+.feedback-kind input { position: absolute; opacity: 0; pointer-events: none; }
+.feedback-kind .fk-icon { grid-row: span 2; font-size: 24px; line-height: 1; align-self: center; }
+.feedback-kind strong { font-size: 15px; }
+.feedback-kind small { color: var(--t-muted); font-size: 12.5px; }
+.feedback-kind:has(input:checked) { border-color: var(--t-accent); background: #fff6ee; }
+.feedback-kind:has(input:focus-visible) { outline: 3px solid #d9661f55; outline-offset: 2px; }
+.feedback-form label.feedback-page { display: flex; flex-direction: row; justify-content: flex-start; align-items: center; gap: 8px; font-weight: 500; font-size: 13px; text-align: left; }
+.feedback-form label.feedback-page[hidden] { display: none; }
+.feedback-form .feedback-page input { width: 18px; height: 18px; min-height: 0; margin: 0; flex: none; }
+.feedback-page code { font-size: 12px; background: var(--t-green-soft); padding: 1px 6px; border-radius: 6px; }
+.feedback-privacy { margin: 0; font-size: 12.5px; }
+.feedback-card { display: grid; gap: 6px; }
+.feedback-card-head { display: flex; align-items: center; gap: 8px; }
+.feedback-card-head strong { flex: 1; min-width: 0; }
+.feedback-card p { margin: 0; }
+.feedback-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback-reply { margin-top: 4px; padding: 10px 12px; border-radius: 10px; background: var(--t-green-soft); border-left: 3px solid var(--t-green-2); }
+.feedback-reply p { margin: 4px 0 0; white-space: pre-wrap; }
+.status-pill { flex: none; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; background: #eef1ec; color: #5d6b59; }
+.status-new { background: #fff1e6; color: #b9520f; }
+.status-review { background: #e8f0fb; color: #2c5aa0; }
+.status-planned { background: #f3ebfb; color: #6b3fa0; }
+.status-done { background: #e6f4ea; color: #1d6b3a; }
+@media (max-width: 700px) { .feedback-kinds { grid-template-columns: minmax(0, 1fr); } }

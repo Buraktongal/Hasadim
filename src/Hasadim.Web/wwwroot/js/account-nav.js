@@ -15,7 +15,8 @@
             ['/html/profilim.html', 'Profil bilgilerim'],
             ['/html/ayarlar.html', 'Ayarlar'],
             ['/html/engellenenler.html', 'Engellenen üyeler'],
-            ['/html/hesabim.html', 'Hesap güvenliği']
+            ['/html/hesabim.html', 'Hesap güvenliği'],
+            ['/html/geri-bildirim.html', 'Öneri ve geri bildirim']
         ]]
     ];
     const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };

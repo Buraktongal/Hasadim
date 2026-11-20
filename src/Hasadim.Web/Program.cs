@@ -19,7 +19,7 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
   request.Content=new StreamContent(c.Request.Body);if(c.Request.ContentType is not null)request.Content.Headers.TryAddWithoutValidation("Content-Type",c.Request.ContentType);
  }
  // Mobil uygulama: Authorization (Bearer anahtar), istemci başlığı ve cihaz adı için User-Agent da iletilir.
- foreach(var h in new[]{"Cookie","X-CSRF-TOKEN","Accept","Authorization","X-Hasadim-Client","User-Agent","Accept-Language"})if(c.Request.Headers.TryGetValue(h,out var v))request.Headers.TryAddWithoutValidation(h,v.ToArray());
+ foreach(var h in new[]{"Cookie","X-CSRF-TOKEN","Accept","Authorization","X-Hasadim-Client","User-Agent","Accept-Language","X-Human-Token","X-Human-Nonce","X-Human-Answer"})if(c.Request.Headers.TryGetValue(h,out var v))request.Headers.TryAddWithoutValidation(h,v.ToArray());
  request.Headers.TryAddWithoutValidation("X-Forwarded-For",c.Connection.RemoteIpAddress?.ToString());
  try{
   using var response=await clients.CreateClient("api").SendAsync(request,HttpCompletionOption.ResponseHeadersRead,c.RequestAborted);

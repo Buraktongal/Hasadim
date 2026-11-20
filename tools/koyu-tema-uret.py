@@ -13,7 +13,7 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "src" / "Hasadim.Web" / "wwwroot" / "css"
 SOURCES = ["styles.css", "tema.css", "market-presentation.css", "market-header.css", "messages.css", "market-experience.css",
            "listing-form.css", "listing-editor.css", "listing-workflow.css", "profile.css", "auth-experience.css", "hesap.css",
-           "ticaret.css", "hesap-merkezi.css"]
+           "ticaret.css", "hesap-merkezi.css", "yonetim.css"]
 PREFIX = 'html[data-theme="dark"]'
 
 HEADER = """@charset "UTF-8";
@@ -68,6 +68,14 @@ html[data-theme="dark"] .sample-light { background: linear-gradient(180deg, #fff
 html[data-theme="dark"] .sample-dark { background: linear-gradient(180deg, #1b241e 0 34%, #0b110d 34%); border-color: #3a4a40; }
 html[data-theme="dark"] .crop-calendar .group-row th { background: #22332a; color: #a5d9b3; }
 html[data-theme="dark"] .map-price-pin { background: #18221c; color: #e3ebe4; }
+/* Yönetim paneli ve doğrulama penceresi */
+html[data-theme="dark"] .admin-body { background: #0f1612; color: #e3ebe4; }
+html[data-theme="dark"] .admin-top { background: #0b120e; }
+html[data-theme="dark"] .admin-nav button[aria-current] { background: #2b6a48; color: #fff; }
+html[data-theme="dark"] .admin-stat strong { color: #a5d9b3; }
+html[data-theme="dark"] .admin-stat.alert strong { color: #f6a868; }
+html[data-theme="dark"] .human-image img { background: #f6f3e8; }
+html[data-theme="dark"] .status-pill { filter: brightness(.9); }
 """
 
 # Yazı rengi olarak kullanıldığında açılacak marka değişkenleri.

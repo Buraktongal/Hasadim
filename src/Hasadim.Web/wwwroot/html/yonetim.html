@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="no-referrer">
+    <meta name="theme-color" content="#16301f">
+    <title>Yönetim paneli — Hasadım</title>
+    <script src="/js/theme.js"></script>
+    <script src="/js/yukleme.js"></script>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css"><link rel="stylesheet" href="/css/yukleme.css">
+    <link rel="stylesheet" href="/css/ticaret.css"><link rel="stylesheet" href="/css/yonetim.css">
+    <link rel="stylesheet" href="/css/tema-koyu.css">
+    <script src="/js/confirm-dialog.js" defer></script>
+    <script src="/js/hasadim-api.js" defer></script>
+    <script src="/js/yonetim.js" defer></script>
+</head>
+<body data-page="admin" class="admin-body">
+<header class="admin-top">
+    <a class="admin-brand" href="/html/yonetim.html"><img src="/images/hasadim-logo.png" alt="" width="30" height="30"><span>Hasadım <strong>Yönetim</strong></span></a>
+    <div class="admin-top-right">
+        <span class="admin-stepup" id="stepUpBadge" hidden>🔓 Hassas işlemler açık · <span data-stepup-left></span></span>
+        <span class="admin-me" id="adminMe"></span>
+        <a class="secondary admin-site" href="/">Siteye dön</a>
+    </div>
+</header>
+
+<div class="admin-shell" id="adminShell" hidden>
+    <nav class="admin-nav" aria-label="Yönetim bölümleri">
+        <button type="button" data-tab="overview" aria-current="page"><span aria-hidden="true">📊</span>Özet</button>
+        <button type="button" data-tab="feedback"><span aria-hidden="true">💬</span>Geri bildirimler <b class="admin-count" data-count="feedback" hidden></b></button>
+        <button type="button" data-tab="users"><span aria-hidden="true">👥</span>Kullanıcılar</button>
+        <button type="button" data-tab="listings"><span aria-hidden="true">🧺</span>İlan onayı <b class="admin-count" data-count="listings" hidden></b></button>
+        <button type="button" data-tab="reports"><span aria-hidden="true">🚩</span>Şikâyetler <b class="admin-count" data-count="reports" hidden></b></button>
+        <button type="button" data-tab="audit"><span aria-hidden="true">🧾</span>Denetim kaydı</button>
+    </nav>
+
+    <main class="admin-main" id="adminMain">
+        <!-- Özet -->
+        <section data-panel="overview" aria-labelledby="ovTitle">
+            <div class="admin-head"><div><p class="eyebrow">Genel durum</p><h1 id="ovTitle">Özet</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <div class="admin-stats" id="statsGrid"></div>
+            <div class="admin-note">
+                <h2>Güvenlik notları</h2>
+                <ul>
+                    <li>Bu panel yalnızca yönetici hesabıyla ve tarayıcı oturumuyla açılır; mobil uygulama anahtarıyla yönetim yapılamaz.</li>
+                    <li>Askıya alma, oturum kapatma ve yetki değişikliği için şifren yeniden sorulur (10 dakika geçerli).</li>
+                    <li>Yaptığın her işlem silinemeyen denetim kaydına yazılır.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Geri bildirimler -->
+        <section data-panel="feedback" aria-labelledby="fbTitle" hidden>
+            <div class="admin-head"><div><p class="eyebrow">Öneri kutusu</p><h1 id="fbTitle">Geri bildirimler</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <form class="admin-filters" id="fbFilters">
+                <input type="search" name="q" placeholder="Başlık, metin veya kullanıcı ara" maxlength="100" aria-label="Ara">
+                <select name="status" aria-label="Durum"><option value="">Tüm durumlar</option></select>
+                <select name="kind" aria-label="Tür"><option value="">Tüm türler</option><option value="Oneri">Öneri</option><option value="Hata">Hata</option><option value="Diger">Diğer</option></select>
+                <select name="area" aria-label="Bölüm"><option value="">Tüm bölümler</option></select>
+            </form>
+            <div class="admin-list" id="fbList"></div>
+            <div class="admin-pager" id="fbPager"></div>
+        </section>
+
+        <!-- Kullanıcılar -->
+        <section data-panel="users" aria-labelledby="usTitle" hidden>
+            <div class="admin-head"><div><p class="eyebrow">Üyeler</p><h1 id="usTitle">Kullanıcılar</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <form class="admin-filters" id="usFilters">
+                <input type="search" name="q" placeholder="Ad, e-posta veya telefon ara" maxlength="100" aria-label="Ara">
+                <select name="filter" aria-label="Filtre">
+                    <option value="all">Tüm kullanıcılar</option>
+                    <option value="new">Son 7 günde katılanlar</option>
+                    <option value="unverified">E-postası doğrulanmamış</option>
+                    <option value="suspended">Askıya alınmış</option>
+                    <option value="admins">Yöneticiler</option>
+                </select>
+            </form>
+            <div class="admin-table-wrap"><table class="admin-table" id="usTable">
+                <thead><tr><th>Kullanıcı</th><th>İletişim</th><th>İlan</th><th>Katılım</th><th>Son görülme</th><th>Durum</th></tr></thead>
+                <tbody></tbody>
+            </table></div>
+            <div class="admin-pager" id="usPager"></div>
+        </section>
+
+        <!-- İlan onayı -->
+        <section data-panel="listings" aria-labelledby="lsTitle" hidden>
+            <div class="admin-head"><div><p class="eyebrow">Moderasyon</p><h1 id="lsTitle">İnceleme bekleyen ilanlar</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <p class="muted">İlanı açtığında detay sayfasının altında “Onayla” ve “Düzeltme iste” düğmelerini görürsün.</p>
+            <div class="admin-list" id="lsList"></div>
+            <div class="admin-pager" id="lsPager"></div>
+        </section>
+
+        <!-- Şikâyetler -->
+        <section data-panel="reports" aria-labelledby="rpTitle" hidden>
+            <div class="admin-head"><div><p class="eyebrow">Moderasyon</p><h1 id="rpTitle">Açık şikâyetler</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <div class="admin-list" id="rpList"></div>
+        </section>
+
+        <!-- Denetim kaydı -->
+        <section data-panel="audit" aria-labelledby="auTitle" hidden>
+            <div class="admin-head"><div><p class="eyebrow">Kim, ne zaman, ne yaptı?</p><h1 id="auTitle">Denetim kaydı</h1></div><button type="button" class="secondary" data-refresh>Yenile</button></div>
+            <p class="muted">Bu kayıtlar veritabanı düzeyinde değiştirilemez ve silinemez.</p>
+            <div class="admin-table-wrap"><table class="admin-table" id="auTable">
+                <thead><tr><th>Zaman</th><th>Yönetici</th><th>İşlem</th><th>Hedef</th><th>Ayrıntı</th><th>IP</th></tr></thead>
+                <tbody></tbody>
+            </table></div>
+            <div class="admin-pager" id="auPager"></div>
+        </section>
+    </main>
+</div>
+
+<div class="admin-denied" id="adminDenied" hidden>
+    <h1>Bu sayfa yalnızca yöneticiler içindir</h1>
+    <p id="adminDeniedText">Devam etmek için yönetici hesabınla giriş yap.</p>
+    <a class="primary" id="adminLogin" href="/html/giris.html">Giriş yap</a>
+    <a class="secondary" href="/">Pazar yerine dön</a>
+</div>
+
+<!-- Kullanıcı ayrıntısı -->
+<dialog id="userDrawer" class="admin-drawer" aria-labelledby="udName">
+    <div class="admin-drawer-head">
+        <div><p class="eyebrow">Kullanıcı</p><h2 id="udName"></h2><p class="muted" id="udSub"></p></div>
+        <button type="button" class="close" data-close-dialog aria-label="Kapat">×</button>
+    </div>
+    <div class="admin-drawer-body" id="udBody"></div>
+</dialog>
+
+<!-- Geri bildirim ayrıntısı -->
+<dialog id="fbDrawer" class="admin-drawer" aria-labelledby="fdTitle">
+    <div class="admin-drawer-head">
+        <div><p class="eyebrow" id="fdNo"></p><h2 id="fdTitle"></h2><p class="muted" id="fdSub"></p></div>
+        <button type="button" class="close" data-close-dialog aria-label="Kapat">×</button>
+    </div>
+    <div class="admin-drawer-body">
+        <p class="admin-fb-body" id="fdBody"></p>
+        <dl class="admin-dl" id="fdMeta"></dl>
+        <form id="fdForm" class="admin-form">
+            <label>Durum<select name="status"></select></label>
+            <label><span>Kullanıcıya yanıt <small class="muted">(kullanıcı görür ve bildirim alır)</small></span><textarea name="reply" rows="5" maxlength="2000"></textarea></label>
+            <label><span>İç not <small class="muted">(yalnızca yöneticiler görür)</small></span><textarea name="adminNote" rows="3" maxlength="2000"></textarea></label>
+            <p class="form-error" role="alert"></p>
+            <button type="submit" class="primary">Kaydet</button>
+        </form>
+    </div>
+</dialog>
+
+<!-- Şifreyle yeniden doğrulama -->
+<dialog id="stepUpDialog" class="admin-stepup-dialog" aria-labelledby="suTitle">
+    <form id="stepUpForm" class="admin-form">
+        <p class="eyebrow">Güvenlik</p>
+        <h2 id="suTitle">Şifreni yeniden gir</h2>
+        <p class="muted">Bu hassas bir işlem. Devam etmek için hesap şifreni gir; 10 dakika boyunca tekrar sorulmaz.</p>
+        <label>Şifre<input type="password" name="password" autocomplete="current-password" required maxlength="200"></label>
+        <p class="form-error" role="alert"></p>
+        <div class="admin-actions"><button type="button" class="secondary" data-close-dialog>Vazgeç</button><button type="submit" class="primary">Doğrula</button></div>
+    </form>
+</dialog>
+
+<div id="toast" role="status" hidden></div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#1d4a33">
+    <title>Öneri ve geri bildirim — Hasadım</title>
+    <script src="/js/theme.js"></script>
+    <script src="/js/yukleme.js"></script>
+    <script src="/js/insan-dogrulama.js"></script>
+    <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css"><link rel="stylesheet" href="/css/yukleme.css">
+    <link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/ticaret.css">
+    <link rel="stylesheet" href="/css/hesap.css"><link rel="stylesheet" href="/css/hesap-merkezi.css">
+    <link rel="stylesheet" href="/css/tema-koyu.css">
+    <script src="/js/i18n.js" defer></script>
+    <script src="/js/layout.js" defer></script>
+    <script src="/js/footer.js" defer></script>
+    <script src="/js/fruit-icons.js" defer></script>
+    <script src="/js/fruit-varieties.js" defer></script>
+    <script src="/js/product-catalog.js" defer></script>
+    <script src="/js/market-catalog.js" defer></script>
+    <script src="/js/confirm-dialog.js" defer></script>
+    <script src="/js/notification-bell.js" defer></script>
+    <script src="/js/site-header.js" defer></script>
+    <script src="/js/sticky-side.js" defer></script>
+    <script src="/js/menu-settings.js" defer></script>
+    <script src="/js/hasadim-api.js" defer></script>
+    <script src="/js/account-nav.js" defer></script>
+    <script src="/js/geri-bildirim.js" defer></script>
+    <script src="/js/navigation.js" defer></script>
+</head>
+<body data-page="feedback">
+<div id="siteLayout"></div>
+<main class="account-page">
+    <div class="account-layout">
+        <aside class="account-sidebar">
+            <nav class="account-nav" data-account-nav aria-label="Hesabım menüsü"></nav>
+        </aside>
+        <div class="account-content">
+            <header class="account-head">
+                <p class="eyebrow">Hasadım'ı birlikte geliştirelim</p>
+                <h1>Öneri ve geri bildirim</h1>
+                <p>Bir şey çalışmıyorsa, eksik bir özellik görüyorsan ya da bir fikrin varsa yaz. Her bildirimi Hasadım ekibi okur; yanıt verdiğimizde bildirim alırsın.</p>
+            </header>
+            <section class="account-panel feedback-panel" id="feedbackPanel">
+                <form id="feedbackForm" class="feedback-form" novalidate>
+                    <fieldset class="feedback-kinds">
+                        <legend>Ne hakkında?</legend>
+                        <label class="feedback-kind"><input type="radio" name="kind" value="Oneri" checked><span class="fk-icon" aria-hidden="true">💡</span><strong>Öneri</strong><small>Yeni özellik veya iyileştirme fikri</small></label>
+                        <label class="feedback-kind"><input type="radio" name="kind" value="Hata"><span class="fk-icon" aria-hidden="true">🐞</span><strong>Hata bildirimi</strong><small>Çalışmayan veya yanlış görünen bir şey</small></label>
+                        <label class="feedback-kind"><input type="radio" name="kind" value="Diger"><span class="fk-icon" aria-hidden="true">💬</span><strong>Diğer</strong><small>Soru, şikâyet veya teşekkür</small></label>
+                    </fieldset>
+                    <label>Uygulamanın hangi bölümü?
+                        <select name="area" required>
+                            <option value="">Bölüm seç</option>
+                            <option value="Pazar">Pazar yeri ve arama</option>
+                            <option value="IlanVerme">İlan verme ve düzenleme</option>
+                            <option value="IlanDetayi">İlan detay sayfası</option>
+                            <option value="Mesajlar">Mesajlar</option>
+                            <option value="Teklifler">Teklifler</option>
+                            <option value="Harita">Harita</option>
+                            <option value="UrunTakvimi">Ürün takvimi</option>
+                            <option value="Bildirimler">Bildirimler ve kayıtlı aramalar</option>
+                            <option value="Hesap">Hesap, profil ve ayarlar</option>
+                            <option value="Giris">Giriş ve kayıt</option>
+                            <option value="MobilUygulama">Mobil uygulama</option>
+                            <option value="Diger">Diğer</option>
+                        </select>
+                    </label>
+                    <label>Başlık<input name="title" maxlength="150" required placeholder="Örn. Filtrede ilçe listesi açılmıyor"></label>
+                    <label><span data-body-label>Açıklama</span><textarea name="body" rows="6" maxlength="4000" required placeholder="Ne yaptın, ne bekledin, ne oldu? Mümkünse adım adım yaz."></textarea><small class="muted"><span data-count>0</span> / 4000</small></label>
+                    <label class="feedback-page" data-page-row hidden><input type="checkbox" name="includePage" checked> <span>Geldiğim sayfayı ekle: <code data-page-url></code></span></label>
+                    <p class="muted feedback-privacy">Şifre, kart bilgisi gibi kişisel bilgileri yazma. Bildirimin hesabınla birlikte kaydedilir.</p>
+                    <p class="form-error" role="alert"></p>
+                    <button class="primary" type="submit">Gönder</button>
+                </form>
+                <div id="feedbackLogin" class="tip-panel" hidden>
+                    <p>Geri bildirim göndermek ve yanıtları görmek için giriş yap.</p>
+                    <a class="primary" id="feedbackLoginLink" href="/html/giris.html">Giriş yap</a>
+                </div>
+            </section>
+            <section class="account-panel" aria-labelledby="mineTitle">
+                <h2 id="mineTitle">Gönderdiklerim</h2>
+                <p id="centerStatus" role="status" aria-live="polite">Yükleniyor…</p>
+                <div id="feedbackList" class="center-list"></div>
+            </section>
+        </div>
+    </div>
+</main>
+<div id="siteFooter"></div>
+<div id="toast" role="status" hidden></div>
+</body>
+</html>

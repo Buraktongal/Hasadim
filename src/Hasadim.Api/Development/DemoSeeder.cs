@@ -207,6 +207,12 @@ public static class DemoSeeder
         DELETE dbo.UserRoles;
         DELETE dbo.UserProfiles;
         DELETE dbo.RegistrationChallenges;
+        DELETE dbo.Feedback;
+        DELETE dbo.UserSuspensions;
+        DELETE dbo.HumanRedemptions;
+        DISABLE TRIGGER dbo.TR_AdminAudit_ReadOnly ON dbo.AdminAudit;
+        DELETE dbo.AdminAudit;
+        ENABLE TRIGGER dbo.TR_AdminAudit_ReadOnly ON dbo.AdminAudit;
         DELETE dbo.MobileTokens;
         DELETE dbo.UserSessions;
         DELETE dbo.LoginEvents;

@@ -246,7 +246,29 @@ window.HasadimEn = (() => {
         'Ürün takvimi — Hasadım': 'Crop calendar — Hasadım', 'Harita — Hasadım': 'Map — Hasadım', 'İl haritası': 'Province map', 'Sokak haritası': 'Street map',
         'Haritada ilanlar': 'Listings on the map', 'Tüm ilan türleri': 'All listing types', 'Hasat dönemi': 'Harvest season', 'Yoğun hasat': 'Peak harvest', 'Bu ay': 'This month',
         'Ocak': 'Jan', 'Şubat': 'Feb', 'Mart': 'Mar', 'Nisan': 'Apr', 'Mayıs': 'May', 'Haziran': 'Jun', 'Temmuz': 'Jul', 'Ağustos': 'Aug', 'Eylül': 'Sep', 'Ekim': 'Oct', 'Kasım': 'Nov', 'Aralık': 'Dec',
-        'Şu an hasatta': 'In season now', 'İlanları gör': 'See listings'
+        'Şu an hasatta': 'In season now', 'İlanları gör': 'See listings',
+        // Öneri kutusu ve robot doğrulaması
+        'Öneri ve geri bildirim': 'Suggestions & feedback', 'Öneri ve geri bildirim — Hasadım': 'Suggestions & feedback — Hasadım',
+        "Hasadım'ı birlikte geliştirelim": "Let's improve Hasadım together",
+        'Bir şey çalışmıyorsa, eksik bir özellik görüyorsan ya da bir fikrin varsa yaz. Her bildirimi Hasadım ekibi okur; yanıt verdiğimizde bildirim alırsın.': 'If something is broken, a feature is missing or you have an idea, tell us. The Hasadım team reads every message and you get a notification when we reply.',
+        'Ne hakkında?': 'What is it about?', 'Öneri': 'Suggestion', 'Hata bildirimi': 'Bug report', 'Yeni özellik veya iyileştirme fikri': 'A new feature or an improvement idea',
+        'Çalışmayan veya yanlış görünen bir şey': 'Something broken or displayed wrongly', 'Soru, şikâyet veya teşekkür': 'A question, complaint or thank-you',
+        'Uygulamanın hangi bölümü?': 'Which part of the app?', 'Bölüm seç': 'Choose a section', 'Pazar yeri ve arama': 'Marketplace and search',
+        'İlan verme ve düzenleme': 'Posting and editing listings', 'İlan detay sayfası': 'Listing page', 'Bildirimler ve kayıtlı aramalar': 'Notifications and saved searches',
+        'Hesap, profil ve ayarlar': 'Account, profile and settings', 'Giriş ve kayıt': 'Sign-in and sign-up', 'Mobil uygulama': 'Mobile app',
+        'Başlık': 'Title', 'Açıklama': 'Description', 'Ne oldu?': 'What happened?', 'Örn. Filtrede ilçe listesi açılmıyor': 'E.g. The district list in filters does not open',
+        'Ne yaptın, ne bekledin, ne oldu? Mümkünse adım adım yaz.': 'What did you do, what did you expect, what happened? Step by step if possible.',
+        'Fikrini anlat: neyi, neden ve nasıl iyileştirelim?': 'Tell us your idea: what should we improve, why and how?', 'Mesajını yaz.': 'Write your message.',
+        'Şifre, kart bilgisi gibi kişisel bilgileri yazma. Bildirimin hesabınla birlikte kaydedilir.': 'Do not include passwords, card details or other personal data. Your message is stored with your account.',
+        'Şifre, kart bilgisi gibi kişisel bilgileri yazma. Bildirimin hesabınla ve cihaz bilginle birlikte kaydedilir.': 'Do not include passwords, card details or other personal data. Your message is stored with your account and device info.',
+        'Gönderdiklerim': 'My messages', 'Henüz geri bildirim göndermedin.': 'You have not sent any feedback yet.', 'Henüz geri bildirim göndermedin': 'You have not sent any feedback yet',
+        'Hasadım ekibinin yanıtı': 'Reply from the Hasadım team', 'Yeni': 'New', 'İnceleniyor': 'In review', 'Planlandı': 'Planned', 'Çözüldü': 'Resolved', 'Kapatıldı': 'Closed',
+        'Geri bildirim göndermek ve yanıtları görmek için giriş yap.': 'Sign in to send feedback and see replies.', 'Geldiğim sayfayı ekle:': 'Attach the page I came from:',
+        'Hata bildir veya fikrini paylaş': 'Report a bug or share an idea', 'Gönder': 'Send',
+        'Güvenlik': 'Security', 'Robot olmadığını doğrula': "Confirm you're not a robot", 'Gördüğün kod': 'Code you see', '↻ Yeni kod': '↻ New code', 'Doğrula': 'Verify',
+        'Gördüğün 5 karakteri yaz. Büyük/küçük harf fark etmez.': 'Type the 5 characters you see. Case does not matter.', 'Kodu eksiksiz yaz.': 'Enter the full code.',
+        'Yeni kod alınamadı.': 'Could not get a new code.', 'Doğrulama kodu görseli': 'Verification code image', 'Güvenlik doğrulaması tamamlanmadı.': 'Security check was not completed.',
+        'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel'
     };
 
     const tr = new Intl.NumberFormat('tr-TR');

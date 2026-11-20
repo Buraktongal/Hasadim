@@ -270,6 +270,23 @@ html[data-theme="dark"] .camera-dialog {
 html[data-theme="dark"] .camera-head {
     border-bottom: 1px solid #3f453c;
 }
+html[data-theme="dark"] .human-dialog {
+    background: #161616;
+    color: #d3dfd6;
+}
+html[data-theme="dark"] .human-badge {
+    background: #1d241a url("/images/kalkan.svg") center / 22px no-repeat;
+}
+html[data-theme="dark"] .human-text {
+    color: #b4beb1;
+}
+html[data-theme="dark"] .human-image img {
+    border: 1px solid #3f453c;
+    background: #272418;
+}
+html[data-theme="dark"] .human-error {
+    color: #de9d8f;
+}
 
 /* ---- market-presentation.css ---- */
 html[data-theme="dark"] .card {
@@ -1144,6 +1161,179 @@ html[data-theme="dark"] .session-icon {
 html[data-theme="dark"] .login-history li.is-failed {
     border-color: #573430;
 }
+html[data-theme="dark"] .feedback-kind:has(input:checked) {
+    background: #2a1a0c;
+}
+html[data-theme="dark"] .status-pill {
+    background: #1f231d;
+    color: #b4beb1;
+}
+html[data-theme="dark"] .status-new {
+    background: #2e1b0d;
+    color: #deae8e;
+}
+html[data-theme="dark"] .status-review {
+    background: #121c2a;
+    color: #8cadde;
+}
+html[data-theme="dark"] .status-planned {
+    background: #1d1228;
+    color: #ad8dd2;
+}
+html[data-theme="dark"] .status-done {
+    background: #1a281e;
+    color: #a9e6c0;
+}
+
+/* ---- yonetim.css ---- */
+html[data-theme="dark"] .admin-body {
+    background: #1e221a;
+    color: #d3dfd6;
+}
+html[data-theme="dark"] .admin-brand img {
+    background: #161616;
+}
+html[data-theme="dark"] .admin-stepup {
+    background: #68482433;
+}
+html[data-theme="dark"] .admin-site {
+    border-color: #33333355;
+}
+html[data-theme="dark"] .admin-site:hover {
+    background: #1616161a;
+}
+html[data-theme="dark"] .admin-nav {
+    background: #161616;
+    border-right: 1px solid #3f453c;
+}
+html[data-theme="dark"] .admin-nav button {
+    color: #c4d4ca;
+}
+html[data-theme="dark"] .admin-nav button:hover {
+    background: #1d241a;
+}
+html[data-theme="dark"] .admin-stat {
+    border: 1px solid #3f453c;
+    background: #161616;
+}
+html[data-theme="dark"] .admin-stat-label {
+    color: #b4beb1;
+}
+html[data-theme="dark"] .admin-stat strong {
+    color: #bde5d0;
+}
+html[data-theme="dark"] .admin-stat.alert {
+    border-color: #76553b;
+    background: #281a0c;
+}
+html[data-theme="dark"] .admin-stat.alert strong {
+    color: #deae8e;
+}
+html[data-theme="dark"] .admin-note {
+    background: #1f271d;
+}
+html[data-theme="dark"] .admin-note ul {
+    color: #becdc2;
+}
+html[data-theme="dark"] .admin-row {
+    border: 1px solid #3f453c;
+    background: #161616;
+}
+html[data-theme="dark"] .admin-row-body {
+    color: #becdc2;
+}
+html[data-theme="dark"] .admin-kind {
+    color: #b4beb1;
+}
+html[data-theme="dark"] .kind-hata {
+    color: #de9d8f;
+}
+html[data-theme="dark"] .admin-tag {
+    background: #1a281e;
+    color: #a9e6c0;
+}
+html[data-theme="dark"] .admin-empty {
+    border: 1px dashed #484f45;
+    background: #191e13;
+}
+html[data-theme="dark"] .admin-table-wrap {
+    border: 1px solid #3f453c;
+    background: #161616;
+}
+html[data-theme="dark"] .admin-table th {
+    background: #1c2018;
+    color: #b4beb1;
+}
+html[data-theme="dark"] .admin-table td {
+    border-top: 1px solid #3a4036;
+}
+html[data-theme="dark"] #usTable tbody tr:hover,
+html[data-theme="dark"] #usTable tbody tr:focus-visible {
+    background: #1a2117;
+}
+html[data-theme="dark"] .admin-table tr.warn td {
+    background: #29150c;
+}
+html[data-theme="dark"] .status-pill {
+    background: #1f231d;
+    color: #b4beb1;
+}
+html[data-theme="dark"] .status-new {
+    background: #2e1b0d;
+    color: #deae8e;
+}
+html[data-theme="dark"] .status-review {
+    background: #121c2a;
+    color: #8cadde;
+}
+html[data-theme="dark"] .status-planned {
+    background: #1d1228;
+    color: #ad8dd2;
+}
+html[data-theme="dark"] .status-done {
+    background: #1a281e;
+    color: #a9e6c0;
+}
+html[data-theme="dark"] .status-danger {
+    background: #2d1510;
+    color: #de9d8f;
+}
+html[data-theme="dark"] .status-closed {
+    background: #1f231d;
+    color: #b4beb1;
+}
+html[data-theme="dark"] .admin-drawer {
+    background: #161616;
+}
+html[data-theme="dark"] .admin-drawer-head {
+    border-bottom: 1px solid #3a4036;
+}
+html[data-theme="dark"] .admin-fb-body {
+    background: #1c2018;
+}
+html[data-theme="dark"] .admin-form textarea {
+    border: 1px solid #464d42;
+}
+html[data-theme="dark"] .admin-login {
+    border-top: 1px solid #393e35;
+}
+html[data-theme="dark"] .admin-login.ok .admin-login-mark {
+    color: #a9e6c0;
+}
+html[data-theme="dark"] .admin-login.fail .admin-login-mark {
+    color: #de9d8f;
+}
+html[data-theme="dark"] .admin-denied {
+    background: #161616;
+}
+html[data-theme="dark"] .admin-denied p {
+    color: #b4beb1;
+}
+@media (max-width: 860px) {
+html[data-theme="dark"] .admin-nav {
+    border-bottom: 1px solid #3f453c;
+}
+}
 
 /* ---- elle ince ayar ---- */
 html[data-theme="dark"] body { background: var(--t-bg); color: var(--t-ink); }
@@ -1184,3 +1374,11 @@ html[data-theme="dark"] .sample-light { background: linear-gradient(180deg, #fff
 html[data-theme="dark"] .sample-dark { background: linear-gradient(180deg, #1b241e 0 34%, #0b110d 34%); border-color: #3a4a40; }
 html[data-theme="dark"] .crop-calendar .group-row th { background: #22332a; color: #a5d9b3; }
 html[data-theme="dark"] .map-price-pin { background: #18221c; color: #e3ebe4; }
+/* Yönetim paneli ve doğrulama penceresi */
+html[data-theme="dark"] .admin-body { background: #0f1612; color: #e3ebe4; }
+html[data-theme="dark"] .admin-top { background: #0b120e; }
+html[data-theme="dark"] .admin-nav button[aria-current] { background: #2b6a48; color: #fff; }
+html[data-theme="dark"] .admin-stat strong { color: #a5d9b3; }
+html[data-theme="dark"] .admin-stat.alert strong { color: #f6a868; }
+html[data-theme="dark"] .human-image img { background: #f6f3e8; }
+html[data-theme="dark"] .status-pill { filter: brightness(.9); }

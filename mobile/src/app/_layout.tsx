@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppLock } from '../components/AppLock';
+import { HumanHost } from '../components/HumanHost';
 import { Loading, ToastHost, toast } from '../components/ui';
 import { AppProvider, useApp } from '../lib/app-state';
 
@@ -24,6 +25,7 @@ function Root() {
                 <Stack.Screen name="filtreler" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
                 <Stack.Screen name="giris" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
             </Stack>
+            <HumanHost />
             <ToastHost />
             <AppLock />
         </ThemeProvider>

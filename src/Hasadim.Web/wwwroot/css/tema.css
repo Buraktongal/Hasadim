@@ -176,3 +176,21 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity
 .camera-actions [hidden] { display: none; }
 .camera-shutter { display: inline-flex; align-items: center; gap: 10px; min-width: 140px; justify-content: center; }
 .camera-shutter span { width: 18px; height: 18px; border-radius: 50%; border: 3px solid currentColor; box-shadow: inset 0 0 0 3px #d9661f; }
+
+/* ---------- Robot / insan doğrulaması (js/insan-dogrulama.js) ---------- */
+.human-dialog { width: min(400px, calc(100vw - 24px)); padding: 0; border: 0; border-radius: 18px; background: #fff; color: #1f2a22; box-shadow: 0 24px 60px #0004; }
+.human-dialog::backdrop { background: #0c1a12a6; }
+.human-form { display: grid; gap: 12px; padding: 20px; }
+.human-head { display: flex; align-items: center; gap: 12px; }
+.human-head h2 { margin: 0; font-size: 19px; }
+.human-head .eyebrow { margin: 0; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #d9661f; font-weight: 800; }
+.human-badge { width: 42px; height: 42px; flex: none; border-radius: 50%; background: #eef4ec url("/images/kalkan.svg") center / 22px no-repeat; }
+.human-text { margin: 0; color: #5d6b59; font-size: 14px; }
+.human-image { display: grid; gap: 6px; justify-items: end; }
+.human-image img { width: 100%; height: auto; aspect-ratio: 220 / 80; border-radius: 10px; border: 1px solid #dfe5dc; background: #f6f3e8; }
+.human-refresh { font-size: 13px; padding: 0; }
+.human-form label { display: grid; gap: 6px; font-weight: 700; font-size: 14px; }
+.human-form input { font-size: 22px; letter-spacing: .3em; text-transform: uppercase; text-align: center; font-weight: 800; min-height: 52px; }
+.human-error { margin: 0; min-height: 1em; color: #a13c26; font-size: 13px; font-weight: 700; }
+.human-error:empty { display: none; }
+.human-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }

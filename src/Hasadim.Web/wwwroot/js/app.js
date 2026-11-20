@@ -126,6 +126,8 @@ async function changeView(next, { query = '', filters = null } = {}) {
     if (!Object.hasOwn(titles, next)) next = 'all';
     if (next !== 'all' && !mustLogin()) return;
     if (next === 'admin' && !user?.isAdmin) return;
+    // Yönetim artık ayrı sayfada (html/yonetim.html); eski bağlantılar oraya yönlenir.
+    if (next === 'admin') { location.href = '/html/yonetim.html'; return; }
 
     closeAccountMenu();
     view = next;

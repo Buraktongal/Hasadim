@@ -38,7 +38,8 @@ const icons = {
     moon: <Path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z" />,
     key: <><Circle cx={8} cy={14} r={4} /><Path d="M11 11l8-8M16 6l2.5 2.5M14 8l2 2" /></>,
     info: <><Circle cx={12} cy={12} r={8.5} /><Path d="M12 11v5M12 8h.01" /></>,
-    check: <Path d="M5 12.5l4.5 4.5L19 7.5" />
+    check: <Path d="M5 12.5l4.5 4.5L19 7.5" />,
+    idea: <><Path d="M9 18h6M10 21h4" /><Path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z" /></>
 } as const;
 
 export type IconName = keyof typeof icons;

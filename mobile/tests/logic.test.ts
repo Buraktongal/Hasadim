@@ -2,6 +2,8 @@
 // Saf mantık testleri: node --import tsx --test tests/
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
+import { humanPurpose, leadingZeroBits, normalizeAnswer, sha256, solve } from '../src/lib/human';
 import { conversations } from '../src/lib/conversations';
 import { activeFilterCount, parseQs, qs } from '../src/lib/filters';
 import { discount, money, number, priceText, qtyText, unitPriceText } from '../src/lib/format';
@@ -69,4 +71,29 @@ test('İngilizce çeviri: sözlük ve kalıplar', () => {
     assert.equal(translate('₺120.000 / yıl', 'en'), '₺120.000 / year');
     assert.equal(translate('₺81,80 / kg', 'en'), '₺81,80 / kg', 'kalıp işlevi null dönerse metin bozulmaz');
     assert.equal(translate('Bilinmeyen kullanıcı metni', 'en'), 'Bilinmeyen kullanıcı metni');
+});
+
+// ---------- Robot doğrulaması ----------
+
+test('sha256 Node ile aynı sonucu verir', () => {
+    for (const s of ['', 'abc', 'a'.repeat(55), 'a'.repeat(56), 'a'.repeat(64), '0123456789abcdef:98765']) {
+        const ours = sha256(s).map(x => x.toString(16).padStart(8, '0')).join('');
+        assert.equal(ours, createHash('sha256').update(s).digest('hex'));
+    }
+});
+
+test('iş kanıtı istenen sayıda sıfır bitle çözülür', async () => {
+    const salt = '9f86d081884c7d659a2feaa0c55ad015';
+    const nonce = await solve(salt, 12);
+    assert.ok(leadingZeroBits(sha256(salt + ':' + nonce)) >= 12);
+});
+
+test('korunan istekler ve kod biçimi', () => {
+    assert.equal(humanPurpose('POST', '/api/mobile/auth/login'), 'login');
+    assert.equal(humanPurpose('POST', '/api/meyve-ilanlari/with-photos'), 'listing');
+    assert.equal(humanPurpose('POST', '/api/feedback'), 'feedback');
+    assert.equal(humanPurpose('GET', '/api/feedback'), null);
+    assert.equal(humanPurpose('POST', '/api/account/register/confirm'), null);
+    assert.equal(normalizeAnswer(' k3 rna '), 'K3RNA');
+    assert.equal(normalizeAnswer('ii'), 'II');
 });

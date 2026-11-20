@@ -54,18 +54,21 @@ public class MobileAuthController(
     // Kilit ve e-posta doğrulaması (çerezli girişle aynı kurallar).
     async Task<IActionResult?> Blocked(AppUser u)
     {
+        if (await users.IsLockedOutAsync(u) && u.LockoutEnd > DateTimeOffset.UtcNow.AddYears(50)) return Unauthorized(new { mesaj = "Bu hesap Hasadım yönetimi tarafından askıya alındı." });
         if (await users.IsLockedOutAsync(u)) return Unauthorized(new { mesaj = "Çok fazla hatalı deneme yapıldı. 15 dakika sonra tekrar dene veya şifreni yenile." });
         if (!await signIn.CanSignInAsync(u)) return Unauthorized(new { mesaj = "Giriş için önce e-posta adresini doğrulamalısın." });
         return null;
     }
 
-    [HttpPost("login")]
+    [HttpPost("login"), RequireHuman("login")]
     public async Task<IActionResult> Login(MobileLoginRequest r)
     {
         var u = await users.FindByEmailAsync(r.Email.Trim());
         if (u is null) return Unauthorized(new { mesaj = Failed });
         // lockoutOnFailure: 5 hatalı denemede hesap 15 dakika kilitlenir.
         var result = await signIn.CheckPasswordSignInAsync(u, r.Password, lockoutOnFailure: true);
+        if (result.IsLockedOut && u.LockoutEnd > DateTimeOffset.UtcNow.AddYears(50))
+            return Unauthorized(new { mesaj = "Bu hesap Hasadım yönetimi tarafından askıya alındı. Ayrıntı için destek ekibiyle iletişime geç." });
         if (result.IsLockedOut)
         {
             await sessions.Failed(u.Id, UserAgent, "Hesap geçici olarak kilitlendi", HttpContext.RequestAborted);

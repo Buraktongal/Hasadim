@@ -40,7 +40,7 @@ export default function Account() {
                     <Button title="Kayıt ol" kind="secondary" onPress={() => router.push('/kayit')} />
                 </View>
             </Card>
-            {section('Uygulama', [['settings', 'Ayarlar', 'Görünüm ve dil', '/ayarlar'], ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi']])}
+            {section('Uygulama', [['settings', 'Ayarlar', 'Görünüm ve dil', '/ayarlar'], ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi'], ['idea', 'Öneri ve geri bildirim', 'Hata bildir veya fikrini paylaş', '/geri-bildirim']])}
             <Txt muted size={12} center>{t('Sürüm') + ' ' + APP_VERSION}</Txt>
         </Screen>
     );
@@ -70,7 +70,8 @@ export default function Account() {
                 ['shield', 'Hesap güvenliği', 'Oturumlar, giriş yöntemleri, hareketler', '/guvenlik'],
                 ['ban', 'Engellenenler', 'Engellediğin kullanıcılar', '/engellenenler'],
                 ['settings', 'Ayarlar', 'Görünüm, dil, bildirimler, şifre, uygulama kilidi', '/ayarlar'],
-                ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi']
+                ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi'],
+                ['idea', 'Öneri ve geri bildirim', 'Hata bildir veya fikrini paylaş', '/geri-bildirim']
             ])}
             <Button title="Çıkış yap" kind="danger" icon={<Icon name="logout" color={c.danger} size={18} />}
                 onPress={async () => { if (await confirm.ask('Çıkış yap', t('Hesabından çıkış yapmak istediğine emin misin?'), 'Çıkış yap', true)) await signOut(); }} />

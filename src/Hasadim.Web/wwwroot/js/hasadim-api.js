@@ -25,6 +25,7 @@ window.HasadimApi = (() => {
             const error = Error(message || (r.status === 401 ? 'Devam etmek için giriş yap.' : r.status === 403 ? 'Bu işlem için yetkin yok.'
                 : r.status === 404 ? 'Kayıt bulunamadı.' : r.status === 429 ? 'Çok fazla istek. Bir dakika sonra tekrar dene.' : 'İşlem tamamlanamadı.'));
             error.status = r.status;
+            if (result?.code) error.code = result.code;
             throw error;
         }
         return result;

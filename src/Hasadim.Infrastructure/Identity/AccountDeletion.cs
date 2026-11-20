@@ -27,6 +27,8 @@ public class AccountDeletion(SqlConnectionFactory factory)
             DELETE dbo.UserSettings WHERE UserId = @user;
             DELETE dbo.UserLogins WHERE UserId = @user;
             DELETE dbo.UserSessions WHERE UserId = @user;
+            DELETE dbo.Feedback WHERE UserId = @user;
+            DELETE dbo.UserSuspensions WHERE UserId = @user;
             DELETE dbo.LoginEvents WHERE UserId = @user;
             DELETE dbo.PhoneChallenges WHERE UserId = @user;
             DELETE dbo.RecoveryCodes WHERE UserId = @user;
