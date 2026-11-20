@@ -585,7 +585,8 @@ footer.site-footer {
 }
 
 /* Filtrelerdeki aranabilir kutular daha küçük */
-#filters .ss-button { min-height: 34px; font-size: 13px; border-radius: 8px; border-width: 1px; padding: 0 10px; }
+#filters .ss-button { height: 34px; min-height: 0; padding: 0 10px 0 8px; font-size: 13px; color: var(--t-ink); border: 1px solid #cfd8cc; border-radius: 8px; background: #fff; }
+#filters .ss.is-disabled .ss-button { background: #f4f6f3; color: #9aa596; }
 #filters label > .ss { margin-top: 0; }
 @media (max-width: 520px) {
     .category-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -635,5 +636,5 @@ footer.site-footer {
     #filters .filter-group .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 }
 /* Aranabilir kutular yerel açılır listelerle aynı yazı ağırlığında. */
-#filters .ss-button { font-weight: 400; }
+#filters .ss-button { font-weight: inherit; }
 #filters .ss-value.is-placeholder { color: inherit; font-weight: 400; }

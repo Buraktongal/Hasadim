@@ -27,7 +27,7 @@ window.SearchableSelect = (() => {
         button.className = 'ss-button';
         button.setAttribute('aria-haspopup', 'listbox');
         button.setAttribute('aria-expanded', 'false');
-        const labelText = select.closest('label')?.childNodes[0]?.textContent?.trim() || select.getAttribute('aria-label') || 'Seçim';
+        const labelText = select.getAttribute('aria-label') || select.closest('label')?.childNodes[0]?.textContent?.trim() || 'Seçim';
         button.setAttribute('aria-label', labelText);
         const current = document.createElement('span'); current.className = 'ss-value';
         const caret = document.createElement('span'); caret.className = 'ss-caret'; caret.setAttribute('aria-hidden', 'true');
@@ -58,8 +58,10 @@ window.SearchableSelect = (() => {
         select.parentNode.insertBefore(wrap, select);
         wrap.append(select, button, panel);
         select.classList.add('ss-native');
+        // Asıl <select> görünmez ama formda kalır. aria-hidden KULLANILMAZ: etiket tıklaması veya
+        // tarayıcı doğrulaması ona odak verebilir; odak hemen görünen düğmeye aktarılır.
         select.tabIndex = -1;
-        select.setAttribute('aria-hidden', 'true');
+        select.addEventListener('focus', () => button.focus());
 
         let items = [], active = -1;
 

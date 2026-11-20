@@ -9,6 +9,17 @@
     const media = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
     const root = document.documentElement;
 
+    // Sayfalar arası geçiş animasyonu (CSS @view-transition) atlanırsa tarayıcı yakalanmamış hata yazar
+    // ("Transition was aborted because of invalid state"). Atlanması zararsızdır; sessizce yut.
+    // Sayfa açılır açılmaz pencere açılacaksa (ör. ?action=new-listing) animasyonu baştan atla.
+    const quiet = vt => { for (const p of [vt?.ready, vt?.finished, vt?.updateCallbackDone]) p?.catch?.(() => { }); };
+    addEventListener('pageswap', e => quiet(e.viewTransition));
+    addEventListener('pagereveal', e => {
+        if (!e.viewTransition) return;
+        quiet(e.viewTransition);
+        if (new URLSearchParams(location.search).has('action')) e.viewTransition.skipTransition();
+    });
+
     function apply(choice = read(THEME, 'system')) {
         const dark = choice === 'dark' || (choice === 'system' && Boolean(media?.matches));
         root.dataset.theme = dark ? 'dark' : 'light';

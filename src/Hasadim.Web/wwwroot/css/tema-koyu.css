@@ -261,7 +261,23 @@ html[data-theme="dark"] select:not(.ss-native) option {
     background: #161616;
 }
 html[data-theme="dark"] .ss-button {
+    color: var(--ink, #caddd0);
     background: #161616;
+    border: 1px solid var(--line, #41493b);
+}
+html[data-theme="dark"] .ss-button:hover {
+    border-color: #566154;
+}
+html[data-theme="dark"] .ss-button:focus-visible,
+html[data-theme="dark"] .ss.is-open .ss-button {
+    background: #161616;
+}
+html[data-theme="dark"] .ss.is-disabled .ss-button {
+    background: #161616;
+    color: var(--ink, #caddd0);
+}
+html[data-theme="dark"] #editorForm .two .ss.is-disabled .ss-button {
+    background-color: #1f221c;
 }
 html[data-theme="dark"] .camera-dialog {
     background: #161616;
@@ -959,6 +975,13 @@ html[data-theme="dark"] .variety-chip {
     background: #161616;
     border: 1.5px solid #534439;
     color: #dad1ca;
+}
+html[data-theme="dark"] #filters .ss-button {
+    border: 1px solid #454c43;
+    background: #161616;
+}
+html[data-theme="dark"] #filters .ss.is-disabled .ss-button {
+    background: #1b1e1a;
 }
 html[data-theme="dark"] .discount-badge,
 html[data-theme="dark"] .listing-item .discount-badge,
