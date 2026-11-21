@@ -666,6 +666,20 @@ html[data-theme="dark"] .auth-divider::before,
 html[data-theme="dark"] .auth-divider::after {
     background: #282c25;
 }
+html[data-theme="dark"] .qr-frame {
+    background: #161616;
+}
+html[data-theme="dark"] .qr-panel[data-state="loading"] .qr-box {
+    background: linear-gradient(90deg, #1f231c, #1a1e16, #1f231c);
+}
+html[data-theme="dark"] .qr-steps {
+    background: #16161612;
+    border: 1px solid #33333322;
+}
+html[data-theme="dark"] .qr-warn {
+    background: #2b1c0c;
+    color: #e4c9a9;
+}
 
 /* ---- hesap.css ---- */
 html[data-theme="dark"] .account-card,

@@ -35,7 +35,6 @@
                 <div class="provider-slot" data-provider="google"></div>
                 <div class="provider-slot" data-provider="apple"></div>
                 <button id="phoneLoginToggle" class="provider-button" type="button" aria-controls="phoneLoginForm" aria-expanded="false">Telefon numarasıyla giriş</button>
-                <button id="qrLoginToggle" class="provider-button qr-toggle" type="button" aria-controls="qrLoginPanel" aria-expanded="false"><span class="qr-toggle-icon" aria-hidden="true"></span>Mobil uygulamayla QR kod okutarak giriş</button>
             </div>
             <p class="auth-divider"><span>veya</span></p>
             <form id="loginForm">
@@ -55,27 +54,6 @@
                 <button class="primary full" type="submit">Doğrula ve giriş yap</button>
                 <button id="phoneRestart" class="textbtn full" type="button">← Numarayı değiştir / yeni kod iste</button>
             </form>
-            <section id="qrLoginPanel" class="qr-panel" hidden aria-labelledby="qrTitle">
-                <div class="qr-panel-head">
-                    <h2 id="qrTitle" tabindex="-1">QR kod ile giriş</h2>
-                    <button type="button" class="textbtn" data-qr-close>← Diğer yöntemler</button>
-                </div>
-                <div class="qr-layout">
-                    <div class="qr-frame">
-                        <div class="qr-box"></div>
-                        <div class="qr-overlay" aria-hidden="true"><span>✓</span></div>
-                        <button type="button" class="secondary qr-retry" data-qr-retry>Yeni kod oluştur</button>
-                    </div>
-                    <ol class="qr-steps">
-                        <li>Telefonunda <strong>Hasadım</strong> uygulamasını aç ve giriş yap.</li>
-                        <li><strong>Hesap</strong> sekmesinde <strong>Bilgisayarda giriş (QR)</strong>’a dokun.</li>
-                        <li>Kamerayı bu koda tut, ardından telefonda <strong>Giriş yap</strong>’a bas.</li>
-                    </ol>
-                </div>
-                <p class="qr-state" data-qr-state role="status" aria-live="polite"></p>
-                <p class="qr-timer" data-qr-timer></p>
-                <p class="qr-warn">🔒 Bu kodu yalnızca kendi açtığın <strong>Hasadım</strong> sayfasında okut. Başkasının gönderdiği bir QR’ı onaylarsan hesabına o kişi girer.</p>
-            </section>
             <form id="twoFactorForm" hidden>
                 <label>Doğrulama kodu<input name="code" required maxlength="100" autocomplete="one-time-code" inputmode="numeric"></label>
                 <label class="check"><input name="recovery" type="checkbox"> Kurtarma kodu kullanıyorum</label>
@@ -84,14 +62,24 @@
             <p id="accountStatus" role="status" class="form-error"></p>
             <p class="auth-switch">Hasadım’da yeni misin? <a data-auth-link href="/html/kayit.html">Ücretsiz hesap oluştur</a></p>
         </main>
-        <aside class="auth-side" aria-label="Hasadım hakkında">
-            <p class="auth-side-eyebrow">Hasadım · Toptan meyve pazarı</p>
-            <h2>Meyvenin tonla alınıp satıldığı ilan pazarı</h2>
-            <ul class="auth-benefits">
-                <li><strong>Ücretsiz ilan ver</strong><span>Ürününü fotoğraf, miktar ve kg fiyatıyla 30 gün yayınla.</span></li>
-                <li><strong>Doğrudan iletişim</strong><span>Alıcı ve satıcı aracı olmadan mesajlaşır.</span></li>
-                <li><strong>Hepsi tek hesapta</strong><span>İlanların, favorilerin ve mesajların bir arada.</span></li>
-            </ul>
+        <aside class="auth-side auth-qr" aria-labelledby="qrTitle">
+            <p class="auth-side-eyebrow">Hızlı giriş</p>
+            <h2 id="qrTitle">Telefonunla QR okutarak gir</h2>
+            <section id="qrLoginPanel" class="qr-panel" data-state="loading">
+                <div class="qr-frame">
+                    <div class="qr-box"></div>
+                    <div class="qr-overlay" aria-hidden="true"><span>✓</span></div>
+                    <button type="button" class="secondary qr-retry" data-qr-retry>Yeni kod oluştur</button>
+                </div>
+                <p class="qr-state" data-qr-state role="status" aria-live="polite">QR kod hazırlanıyor…</p>
+                <p class="qr-timer" data-qr-timer></p>
+                <ol class="qr-steps">
+                    <li>Telefonunda <strong>Hasadım</strong> uygulamasını aç.</li>
+                    <li><strong>Hesap → Bilgisayarda giriş (QR)</strong>’a dokun.</li>
+                    <li>Bu kodu okut ve telefonda <strong>Giriş yap</strong>’a bas.</li>
+                </ol>
+                <p class="qr-warn">🔒 Kodu yalnızca kendi açtığın Hasadım sayfasında okut. Başkasının gönderdiği bir QR’ı onaylarsan hesabına o kişi girer.</p>
+            </section>
         </aside>
     </div>
 </body>

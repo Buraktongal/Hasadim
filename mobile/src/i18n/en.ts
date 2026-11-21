@@ -270,7 +270,7 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'Yeni kod alınamadı.': 'Could not get a new code.', 'Doğrulama kodu görseli': 'Verification code image', 'Güvenlik doğrulaması tamamlanmadı.': 'Security check was not completed.',
         'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel',
         // QR ile giriş
-        'Mobil uygulamayla QR kod okutarak giriş': 'Sign in by scanning a QR code with the mobile app', 'QR kod ile giriş': 'Sign in with QR code', '← Diğer yöntemler': '← Other methods',
+        'Mobil uygulamayla QR kod okutarak giriş': 'Sign in by scanning a QR code with the mobile app', 'QR kod ile giriş': 'Sign in with QR code', 'Hızlı giriş': 'Quick sign-in', 'Telefonunla QR okutarak gir': 'Sign in by scanning with your phone', 'Kodun süresi doldu.': 'The code has expired.', 'Telefonunda <strong>Hasadım</strong> uygulamasını aç.': 'Open the <strong>Hasadım</strong> app on your phone.', '← Diğer yöntemler': '← Other methods',
         'Yeni kod oluştur': 'Generate a new code', 'QR kod hazırlanıyor…': 'Preparing QR code…', 'Telefonunda Hasadım uygulamasını aç ve bu kodu okut.': 'Open the Hasadım app on your phone and scan this code.',
         'Kod okutuldu. Telefonundaki “Giriş yap” düğmesiyle onayla.': 'Code scanned. Confirm with “Sign in” on your phone.', 'Giriş isteği telefondan reddedildi.': 'The sign-in request was declined on the phone.',
         'Giriş yapıldı, yönlendiriliyorsun…': 'Signed in, redirecting…', 'QR ile giriş': 'QR sign-in', 'Bu kodu Hasadım uygulamasıyla okut': 'Scan this code with the Hasadım app',
@@ -280,7 +280,7 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'Kodu çerçevenin içine getir': 'Fit the code inside the frame', 'Kontrol ediliyor…': 'Checking…', 'Başka bir kod okut': 'Scan another code', 'Tamam': 'OK',
         'Bilgisayarda giriş için kimliğini doğrula': 'Verify your identity to sign in on the computer',
         'Bilgisayardaki tarayıcıda giriş yapıldı.': 'Signed in on the computer’s browser.', 'Giriş isteği reddedildi.': 'Sign-in request declined.',
-        'Bilgisayarında Hasadım giriş sayfasını aç, “Mobil uygulamayla QR kod okutarak giriş”i seç ve ekrandaki kodu çerçeveye getir.': 'Open the Hasadım sign-in page on your computer, choose “Sign in by scanning a QR code with the mobile app” and fit the code on screen into the frame.',
+        'Bilgisayarında Hasadım giriş sayfasını aç ve sağ taraftaki QR kodu çerçeveye getir.': 'Open the Hasadım sign-in page on your computer and fit the QR code on the right into the frame.',
         'QR kodu okutmak için Hasadım’ın kameraya erişmesine izin ver. Fotoğraf veya video kaydedilmez.': 'Allow Hasadım to use the camera to scan the QR code. No photo or video is saved.',
         'Bilgisayardaki oturumu Hesap → Güvenlik bölümünden istediğin zaman kapatabilirsin.': 'You can end the computer session any time under Account → Security.',
         'Bilgisayarda QR ile giriş yapmak için önce bu uygulamada giriş yap.': 'Sign in to this app first to sign in on a computer with a QR code.',

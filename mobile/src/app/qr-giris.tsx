@@ -26,7 +26,7 @@ export default function QrLoginScreen() {
     const onScan = useCallback(async (result: BarcodeScanningResult) => {
         if (handled.current) return;
         const code = parseQrLogin(result.data);
-        if (!code) { setError('Bu bir Hasadım giriş kodu değil. Bilgisayarda Hasadım giriş sayfasındaki “QR kod okutarak giriş” kodunu okut.'); return; }
+        if (!code) { setError('Bu bir Hasadım giriş kodu değil. Bilgisayarda Hasadım giriş sayfasının sağındaki QR kodu okut.'); return; }
         handled.current = true;
         setError(null);
         setStage({ kind: 'busy' });
@@ -72,7 +72,7 @@ export default function QrLoginScreen() {
             <View style={{ flex: 1, padding: 14, gap: 14 }}>
                 {stage.kind === 'scan' || stage.kind === 'busy' ? (
                     <>
-                        <Txt muted>Bilgisayarında Hasadım giriş sayfasını aç, “Mobil uygulamayla QR kod okutarak giriş”i seç ve ekrandaki kodu çerçeveye getir.</Txt>
+                        <Txt muted>Bilgisayarında Hasadım giriş sayfasını aç ve sağ taraftaki QR kodu çerçeveye getir.</Txt>
                         {!permission ? null : !permission.granted ? (
                             <Card>
                                 <Icon name="camera" size={30} color={c.green2} />

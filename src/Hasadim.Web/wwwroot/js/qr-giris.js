@@ -1,20 +1,23 @@
 'use strict';
 
-// QR kod ile giriş: bilgisayardaki sayfada QR gösterilir, kullanıcı Hasadım mobil uygulamasında
+// QR kod ile giriş: giriş sayfasının sağ sütununda QR sürekli görünür; kullanıcı Hasadım mobil uygulamasında
 // Hesap → "Bilgisayarda giriş (QR)" ile okutup onaylar. Gizli anahtar HttpOnly çerezde durur;
 // bu dosya yalnızca QR'ı çizer ve durumu sorar. Sunucu: QrLoginController.
 (() => {
-    const toggle = document.querySelector('#qrLoginToggle');
     const panel = document.querySelector('#qrLoginPanel');
-    if (!toggle || !panel || typeof qrcode !== 'function') return;
+    if (!panel || typeof qrcode !== 'function') return;
+    // Telefon ekranında QR gösterilmez (kişi kendi ekranını okutamaz); geniş ekrana geçilirse başlar.
+    const wide = matchMedia('(min-width: 521px)');
+    // Sayfa açık bırakılırsa kod en fazla bu kadar kez kendiliğinden yenilenir; sonra düğmeyle yenilenir.
+    const AUTO_RENEWALS = 5;
+    let renewals = 0;
     const params = new URLSearchParams(location.search);
     const destination = () => window.HasadimReturn?.resolve(params.get('returnUrl')) || '/';
     const box = panel.querySelector('.qr-box');
     const state = panel.querySelector('[data-qr-state]');
     const timer = panel.querySelector('[data-qr-timer]');
-    const others = ['#loginForm', '#authProviders', '.auth-divider', '#phoneLoginForm', '#phoneCodeForm', '#twoFactorForm'].map(s => document.querySelector(s)).filter(Boolean);
     const svgNs = 'http://www.w3.org/2000/svg';
-    let poll = null, tick = null, expiresAt = 0, active = false, hiddenBefore = new Map();
+    let poll = null, tick = null, expiresAt = 0, active = false;
 
     let csrf = null;
     async function call(path) {
@@ -77,7 +80,13 @@
     function countdown() {
         const left = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
         timer.textContent = left ? `Kod ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')} içinde yenilenir` : '';
-        if (!left) start();
+        if (!left) renew();
+    }
+
+    // Süresi dolan kod yenilenir; çok uzun süre açık kalan sayfada sunucuya boşuna istek gitmesin diye sınırlıdır.
+    function renew() {
+        if (++renewals > AUTO_RENEWALS) { stop(); box.replaceChildren(); timer.textContent = ''; setState('idle', 'Kodun süresi doldu.'); call('cancel').catch(() => { }); return; }
+        start();
     }
 
     let checking = false;
@@ -88,35 +97,19 @@
             const r = await call('poll');
             if (r.status === 'scanned') setState('scanned', 'Kod okutuldu. Telefonundaki “Giriş yap” düğmesiyle onayla.');
             else if (r.status === 'rejected') { stop(); setState('rejected', 'Giriş isteği telefondan reddedildi.'); }
-            else if (r.status === 'expired') start();
+            else if (r.status === 'expired') renew();
             else if (r.status === 'signed-in') { stop(); setState('done', 'Giriş yapıldı, yönlendiriliyorsun…'); location.replace(destination()); }
         } catch (e) { stop(); setState('error', e.message); }
         finally { checking = false; }
     }
 
-    function open() {
-        active = true;
-        hiddenBefore = new Map(others.map(el => [el, el.hidden]));
-        others.forEach(el => { el.hidden = true; });
-        panel.hidden = false;
-        toggle.setAttribute('aria-expanded', 'true');
-        panel.querySelector('h2')?.focus();
-        start();
+    function activate() {
+        if (wide.matches && !active) { active = true; renewals = 0; start(); }
+        else if (!wide.matches && active) { active = false; stop(); call('cancel').catch(() => { }); }
     }
-
-    function close() {
-        active = false;
-        stop();
-        panel.hidden = true;
-        hiddenBefore.forEach((was, el) => { el.hidden = was; });
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.focus();
-        call('cancel').catch(() => { });
-    }
-
-    toggle.addEventListener('click', open);
-    panel.querySelector('[data-qr-close]').addEventListener('click', close);
-    panel.querySelector('[data-qr-retry]').addEventListener('click', start);
+    panel.querySelector('[data-qr-retry]').addEventListener('click', () => { renewals = 0; start(); });
+    wide.addEventListener('change', activate);
+    activate();
     // Sekme arka plandayken sorgu durur; geri gelince hemen bakılır.
     document.addEventListener('visibilitychange', () => { if (active && !document.hidden && poll) check(); });
 })();
