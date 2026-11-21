@@ -6,7 +6,7 @@ import { parseQrLogin } from '../src/lib/qr-login';
 import { createHash } from 'node:crypto';
 import { humanPurpose, leadingZeroBits, normalizeAnswer, sha256, solve } from '../src/lib/human';
 import { conversations } from '../src/lib/conversations';
-import { activeFilterCount, parseQs, qs } from '../src/lib/filters';
+import { activeFilterCount, filterTags, parseQs, qs } from '../src/lib/filters';
 import { discount, money, number, priceText, qtyText, unitPriceText } from '../src/lib/format';
 import { translate } from '../src/i18n/translate';
 import { checkBaseUrl } from '../src/lib/url-policy';
@@ -108,4 +108,14 @@ test('yalnızca Hasadım giriş QR biçimi kabul edilir', () => {
     assert.equal(parseQrLogin(`https://hasadim.com/html/qr.html#c=${code}x`), null);
     assert.equal(parseQrLogin('https://ornek.com/'), null);
     assert.equal(parseQrLogin(`javascript:alert(1)//html/qr.html#c=${code}`), null);
+});
+
+test('filtre etiketleri ve sayısı (aralık tek filtre)', () => {
+    const f = { kategori: 'Meyve', meyveTuru: 'Elma', cesit: 'Gala', minFiyat: '10', maxFiyat: '25' };
+    assert.equal(activeFilterCount(f), 4);
+    const tags = filterTags(f, 'kg');
+    assert.deepEqual(tags.map(x => x.key), ['meyveTuru', 'cesit', 'fiyat']);
+    assert.deepEqual(tags[0]!.clear, { meyveTuru: '', cesit: '' });
+    assert.ok(tags[2]!.label.includes('10') && tags[2]!.label.includes('25'));
+    assert.ok(filterTags({ minFiyat: '50' })[0]!.label.includes('ve üstü'));
 });

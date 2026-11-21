@@ -269,6 +269,11 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'Gördüğün 5 karakteri yaz. Büyük/küçük harf fark etmez.': 'Type the 5 characters you see. Case does not matter.', 'Kodu eksiksiz yaz.': 'Enter the full code.',
         'Yeni kod alınamadı.': 'Could not get a new code.', 'Doğrulama kodu görseli': 'Verification code image', 'Güvenlik doğrulaması tamamlanmadı.': 'Security check was not completed.',
         'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel',
+        // Mobil filtreler
+        'Kaldır': 'Remove', 'Seçimi kaldır': 'Clear selection', 'Fiyat aralığı (TL)': 'Price range (TRY)', 'Fiyat aralığı (TL / birim)': 'Price range (TRY / unit)',
+        'En az (₺)': 'Min (₺)', 'En çok (₺)': 'Max (₺)', 'Sınırsız': 'No limit', 'Fiyat aralığını kaldır': 'Clear price range', '+ Fiyat aralığı': '+ Price range',
+        'Tümünü temizle': 'Clear all', '10 ₺ altı': 'Under ₺10', '100 ₺ üstü': 'Over ₺100', '500 bin ₺ altı': 'Under ₺500k', '500 bin – 2 milyon ₺': '₺500k – 2M',
+        '2–10 milyon ₺': '₺2M – 10M', '10 milyon ₺ üstü': 'Over ₺10M',
         // QR ile giriş
         'Mobil uygulamayla QR kod okutarak giriş': 'Sign in by scanning a QR code with the mobile app', 'QR kod ile giriş': 'Sign in with QR code', 'Hızlı giriş': 'Quick sign-in', 'Telefonunla QR okutarak gir': 'Sign in by scanning with your phone', 'Kodun süresi doldu.': 'The code has expired.', 'Telefonunda <strong>Hasadım</strong> uygulamasını aç.': 'Open the <strong>Hasadım</strong> app on your phone.', '← Diğer yöntemler': '← Other methods',
         'Yeni kod oluştur': 'Generate a new code', 'QR kod hazırlanıyor…': 'Preparing QR code…', 'Telefonunda Hasadım uygulamasını aç ve bu kodu okut.': 'Open the Hasadım app on your phone and scan this code.',

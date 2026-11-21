@@ -7,7 +7,7 @@ import { Icon } from '../components/Icon';
 import { MiniMap, CITY_CENTERS, TURKEY } from '../components/MiniMap';
 import { Photo } from '../components/Photo';
 import { ProductIcon } from '../components/ProductIcon';
-import { Button, Card, Chip, ErrorBox, Field, H2, Header, Loading, Notice, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
+import { Button, Card, Chip, ErrorBox, Field, goBack, H2, Header, Loading, Notice, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
 import { api, del, get, post } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { categories, category, cities, DELIVERY, DEED, districts, IRRIGATION, PACKAGING, varieties, ZONING } from '../lib/catalog';
@@ -154,7 +154,7 @@ export default function ListingEditor() {
                 }
                 await api('/api/meyve-ilanlari/' + id, { method: 'PUT', json: { ...body(), version } });
                 toast('İlanın güncellendi. Mevcut yayın süresi korundu.');
-                router.back();
+                goBack();
             }
         } catch (e) { setError(e instanceof Error ? e.message : 'İlan kaydedilemedi.'); }
         finally { setBusy(false); }

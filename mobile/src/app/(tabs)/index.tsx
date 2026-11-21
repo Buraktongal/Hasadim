@@ -10,7 +10,7 @@ import { get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
 import { categories, category } from '../../lib/catalog';
 import { useCounts } from '../../lib/counts';
-import { activeFilterCount, qs, useFilters } from '../../lib/filters';
+import { activeFilterCount, filterTags, qs, useFilters } from '../../lib/filters';
 import { number } from '../../lib/format';
 import { toggleFavorite, useListingPages } from '../../lib/listings';
 import type { CategoryCount } from '../../lib/types';
@@ -75,6 +75,17 @@ export default function Market() {
                         icon={<ProductIcon name={cat.icon} size={18} />} onPress={() => setFilters({ q: filters.q, sort: filters.sort, kategori: cat.id })} />
                 ))}
             </ScrollView>
+
+            {/* Etkin filtreler: her biri × ile tek tek kaldırılır; fiyat aralığı yoksa hızlıca eklemek için kısayol. */}
+            {filters.kategori || filterCount ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                    {filterTags(filters, filters.kategori === 'Arazi' ? 'm²' : filters.kategori === 'Yem' ? 'balya' : 'kg').map(tag => (
+                        <Chip key={tag.key} label={tag.label} active onRemove={() => setFilters({ ...filters, ...tag.clear })} />
+                    ))}
+                    {!filters.minFiyat && !filters.maxFiyat ? <Chip label="+ Fiyat aralığı" onPress={() => router.push('/filtreler')} /> : null}
+                    {filterTags(filters).length > 1 ? <Chip label="Tümünü temizle" onPress={() => setFilters({ q: filters.q, sort: filters.sort, kategori: filters.kategori })} /> : null}
+                </ScrollView>
+            ) : null}
 
             {!filters.kategori && !filters.q ? (
                 <View style={{ flexDirection: 'row', gap: 10 }}>

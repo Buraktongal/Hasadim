@@ -14,6 +14,12 @@ const native = Platform.OS !== 'web';
 // ---------- Metin ----------
 type TxtProps = { children?: ReactNode; style?: TextStyle | TextStyle[]; muted?: boolean; size?: number; weight?: TextStyle['fontWeight']; color?: string; numberOfLines?: number; raw?: boolean; center?: boolean; selectable?: boolean };
 // Txt: Türkçe metni seçili dile çevirir. Kullanıcının yazdığı içerik için raw kullanılır.
+// Geri gidilecek ekran yoksa (uygulama doğrudan bu ekranla açıldıysa) ana sayfaya döner.
+// Doğrudan router.back() çağrısı bu durumda "GO_BACK was not handled" uyarısı verir.
+export function goBack() {
+    if (router.canGoBack()) router.back(); else router.replace('/');
+}
+
 export function Txt({ children, style, muted, size = 15, weight, color, numberOfLines, raw, center, selectable }: TxtProps) {
     const c = useColors();
     const t = useT();
@@ -62,7 +68,7 @@ export function Header({ title, right, back = true, raw }: { title: string; righ
     const c = useColors(); const t = useT(); const insets = useSafeAreaInsets();
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingBottom: 6, paddingTop: 6 + insets.top, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.line, backgroundColor: c.panel }}>
-            {back ? <IconButton label="Geri" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}><Chevron dir="left" color={c.ink} /></IconButton> : <View style={{ width: 8 }} />}
+            {back ? <IconButton label="Geri" onPress={goBack}><Chevron dir="left" color={c.ink} /></IconButton> : <View style={{ width: 8 }} />}
             <Text accessibilityRole="header" style={{ flex: 1, fontSize: 17, fontWeight: '800', color: c.ink }} numberOfLines={1}>{raw ? title : t(title)}</Text>
             {right}
         </View>
@@ -108,13 +114,26 @@ export function IconButton({ label, onPress, children, size = 40, badge }: { lab
     );
 }
 
-export function Chip({ label, active, onPress, icon, raw }: { label: string; active?: boolean; onPress?: () => void; icon?: ReactNode; raw?: boolean }) {
+export function Chip({ label, active, onPress, icon, raw, onRemove }: { label: string; active?: boolean; onPress?: () => void; icon?: ReactNode; raw?: boolean; onRemove?: () => void }) {
     const c = useColors(); const t = useT();
+    const text = raw ? label : t(label);
     return (
-        <Pressable accessibilityRole="button" accessibilityState={{ selected: active }} onPress={onPress}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 36, borderRadius: radius.pill, borderWidth: 1, borderColor: active ? c.green2 : c.line, backgroundColor: active ? c.greenSoft : c.panel }}>
+        <Pressable accessibilityRole="button" accessibilityState={{ selected: active }} onPress={onPress ?? onRemove}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 12, paddingRight: onRemove ? 4 : 12, height: 36, borderRadius: radius.pill, borderWidth: 1, borderColor: active ? c.green2 : c.line, backgroundColor: active ? c.greenSoft : c.panel }}>
             {icon}
-            <Text style={{ color: active ? c.green2 : c.ink, fontWeight: active ? '800' : '600', fontSize: 13.5 }}>{raw ? label : t(label)}</Text>
+            <Text style={{ color: active ? c.green2 : c.ink, fontWeight: active ? '800' : '600', fontSize: 13.5 }}>{text}</Text>
+            {onRemove ? <ClearButton label={t('Kaldır') + ': ' + text} onPress={onRemove} size={26} /> : null}
+        </Pressable>
+    );
+}
+
+// Seçimi kaldıran küçük yuvarlak × düğmesi (filtre etiketleri ve seçim kutuları).
+export function ClearButton({ label, onPress, size = 28 }: { label: string; onPress: () => void; size?: number }) {
+    const c = useColors();
+    return (
+        <Pressable accessibilityRole="button" accessibilityLabel={label} hitSlop={8} onPress={onPress}
+            style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.line : c.bg })}>
+            <Svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24"><Path d="M6 6l12 12M18 6L6 18" stroke={c.muted} strokeWidth={2.6} strokeLinecap="round" /></Svg>
         </Pressable>
     );
 }
@@ -173,6 +192,7 @@ export function Select({ label, value, options, onChange, placeholder = 'Seç', 
             <Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={t(label) + ': ' + (current ?? t(placeholder))} onPress={() => { setQ(''); setOpen(true); }}
                 style={{ minHeight: 46, borderRadius: radius.m, borderWidth: 1, borderColor: c.line, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: disabled ? c.bg : c.input, opacity: disabled ? 0.6 : 1 }}>
                 <Text style={{ flex: 1, color: current ? c.ink : c.muted, fontSize: 15.5 }} numberOfLines={1}>{current ? (raw ? current : t(current)) : t(placeholder)}</Text>
+                {allowEmpty && value && !disabled ? <View style={{ marginRight: 6 }}><ClearButton label={t('Seçimi kaldır') + ': ' + t(label)} onPress={() => onChange('')} /></View> : null}
                 <Chevron dir="down" color={c.muted} />
             </Pressable>
             <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)} presentationStyle="pageSheet">

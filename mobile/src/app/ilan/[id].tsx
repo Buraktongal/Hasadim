@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon';
 import { MiniMap, approximate } from '../../components/MiniMap';
 import { Photo } from '../../components/Photo';
-import { Button, Card, ErrorBox, Eyebrow, Field, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
+import { Button, Card, ErrorBox, Eyebrow, Field, goBack, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
 import { API_BASE } from '../../lib/config';
 import { del, get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
@@ -72,11 +72,11 @@ export default function ListingDetail() {
     async function block() {
         setSheet(null);
         if (!await confirm.ask('Satıcıyı engelle', t('Engellediğin kişi sana mesaj ve teklif gönderemez, ilanlarını görmezsin.'), 'Engelle', true)) return;
-        try { await post('/api/blocks/' + x!.ownerId); toast('Kullanıcı engellendi.'); router.back(); } catch (e) { toast(e instanceof Error ? e.message : 'İşlem tamamlanamadı.'); }
+        try { await post('/api/blocks/' + x!.ownerId); toast('Kullanıcı engellendi.'); goBack(); } catch (e) { toast(e instanceof Error ? e.message : 'İşlem tamamlanamadı.'); }
     }
     async function remove() {
         if (!await confirm.ask('İlanı sil', t('İlan kalıcı olarak silinecek. Bu işlem geri alınamaz.'), 'Sil', true)) return;
-        try { await del('/api/meyve-ilanlari/' + x!.id); toast('İlan silindi.'); router.back(); } catch (e) { toast(e instanceof Error ? e.message : 'İlan silinemedi.'); }
+        try { await del('/api/meyve-ilanlari/' + x!.id); toast('İlan silindi.'); goBack(); } catch (e) { toast(e instanceof Error ? e.message : 'İlan silinemedi.'); }
     }
     async function sold() {
         if (!await confirm.ask('Satıldı olarak işaretle', t('İlan yayından kalkacak ve geçmiş ilanlarına taşınacak.'), 'Satıldı')) return;

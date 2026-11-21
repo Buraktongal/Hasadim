@@ -41,4 +41,27 @@ export function parseQs(query: string): Filters {
     return out;
 }
 
-export const activeFilterCount = (f: Filters) => FILTER_KEYS.filter(k => k !== 'sort' && k !== 'q' && f[k]).length;
+// Fiyat ve miktar aralıkları (en az + en çok) tek filtre sayılır.
+export const activeFilterCount = (f: Filters) =>
+    FILTER_KEYS.filter(k => !['sort', 'q', 'maxFiyat', 'maxMiktar', 'minFiyat', 'minMiktar'].includes(k) && f[k]).length
+    + (f.minFiyat || f.maxFiyat ? 1 : 0) + (f.minMiktar || f.maxMiktar ? 1 : 0);
+
+// Ana ekranda × ile tek tek kaldırılabilen etkin filtre etiketleri.
+export type FilterTag = { key: string; label: string; clear: Filters };
+const money = (v: string) => Number(v).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' ₺';
+function range(lo: string | undefined, hi: string | undefined, fmt: (v: string) => string): string {
+    if (lo && hi) return fmt(lo) + ' – ' + fmt(hi);
+    return lo ? fmt(lo) + ' ve üstü' : '≤ ' + fmt(hi!);
+}
+export function filterTags(f: Filters, unit = ''): FilterTag[] {
+    const out: FilterTag[] = [];
+    const simple: [FilterKey, Filters][] = [
+        ['meyveTuru', { meyveTuru: '', cesit: '' }], ['cesit', { cesit: '' }], ['il', { il: '', ilce: '' }], ['ilce', { ilce: '' }],
+        ['ambalaj', { ambalaj: '' }], ['teslimat', { teslimat: '' }], ['imarDurumu', { imarDurumu: '' }], ['tapuDurumu', { tapuDurumu: '' }]
+    ];
+    for (const [k, clear] of simple) if (f[k]) out.push({ key: k, label: f[k]!, clear });
+    if (f.islemTipi) out.push({ key: 'islemTipi', label: f.islemTipi === 'Kiralik' ? 'Kiralık' : 'Satılık', clear: { islemTipi: '' } });
+    if (f.minFiyat || f.maxFiyat) out.push({ key: 'fiyat', label: 'Fiyat: ' + range(f.minFiyat, f.maxFiyat, money), clear: { minFiyat: '', maxFiyat: '' } });
+    if (f.minMiktar || f.maxMiktar) out.push({ key: 'miktar', label: 'Miktar: ' + range(f.minMiktar, f.maxMiktar, v => Number(v).toLocaleString('tr-TR') + (unit ? ' ' + unit : '')), clear: { minMiktar: '', maxMiktar: '' } });
+    return out;
+}

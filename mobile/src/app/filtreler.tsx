@@ -1,12 +1,21 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
-import { Button, Card, Field, H2, Header, Screen, Segmented, Select } from '../components/ui';
+import { ScrollView, View } from 'react-native';
+import { Button, Card, Chip, Field, goBack, H2, Header, Screen, Segmented, Select, Txt } from '../components/ui';
 import { useApp } from '../lib/app-state';
 import { categories, category, cities, DEED, DELIVERY, districts, PACKAGING, SORTS, varieties, ZONING } from '../lib/catalog';
 import { type Filters, useFilters } from '../lib/filters';
 
 const num = (v: string) => v.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 14);
+
+// Hızlı fiyat aralıkları (TL / birim). Arazi için toplam fiyat aralıkları.
+const PRICE_PRESETS: [string, string, string][] = [['', '10', '10 ₺ altı'], ['10', '25', '10–25 ₺'], ['25', '50', '25–50 ₺'], ['50', '100', '50–100 ₺'], ['100', '', '100 ₺ üstü']];
+const LAND_PRESETS: [string, string, string][] = [['', '500000', '500 bin ₺ altı'], ['500000', '2000000', '500 bin – 2 milyon ₺'], ['2000000', '10000000', '2–10 milyon ₺'], ['10000000', '', '10 milyon ₺ üstü']];
+
+// En az > en çok yazıldıysa ikisi yer değiştirir.
+function ordered(f: Filters, lo: 'minFiyat' | 'minMiktar', hi: 'maxFiyat' | 'maxMiktar'): Filters {
+    const a = Number(f[lo]), b = Number(f[hi]);
+    return f[lo] && f[hi] && a > b ? { ...f, [lo]: f[hi], [hi]: f[lo] } : f;
+}
 
 export default function FiltersScreen() {
     const { t, colors: c } = useApp();
@@ -21,7 +30,7 @@ export default function FiltersScreen() {
             <Header title="Filtreler" right={<Button title="Temizle" kind="plain" small full={false} onPress={() => setF({ q: f.q })} />} />
             <Screen edges={['bottom']} footer={
                 <View style={{ padding: 12, borderTopWidth: 1, borderColor: c.line, backgroundColor: c.panel }}>
-                    <Button title="Sonuçları göster" onPress={() => { apply(f); router.back(); }} />
+                    <Button title="Sonuçları göster" onPress={() => { apply(ordered(ordered(f, 'minFiyat', 'maxFiyat'), 'minMiktar', 'maxMiktar')); goBack(); }} />
                 </View>}>
                 <Card>
                     <H2>Ürün</H2>
@@ -32,6 +41,22 @@ export default function FiltersScreen() {
                         options={f.kategori ? category(f.kategori).products : []} onChange={v => set({ meyveTuru: v, cesit: '' })} />
                     {!land ? <Select label="Çeşit" value={f.cesit ?? ''} allowEmpty emptyLabel="Tüm çeşitler" disabled={!f.meyveTuru || !varieties(f.meyveTuru).length}
                         placeholder="Tüm çeşitler" options={f.meyveTuru ? varieties(f.meyveTuru) : []} onChange={v => set({ cesit: v })} /> : null}
+                </Card>
+
+                <Card>
+                    <H2>{t(land ? 'Fiyat aralığı (TL)' : 'Fiyat aralığı (TL / birim)')}</H2>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                        {(land ? LAND_PRESETS : PRICE_PRESETS).map(([lo, hi, label]) => {
+                            const on = (f.minFiyat ?? '') === lo && (f.maxFiyat ?? '') === hi;
+                            return <Chip key={label} label={label} active={on} onPress={() => set(on ? { minFiyat: '', maxFiyat: '' } : { minFiyat: lo, maxFiyat: hi })} />;
+                        })}
+                    </ScrollView>
+                    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
+                        <View style={{ flex: 1 }}><Field label="En az (₺)" placeholder="0" keyboardType="decimal-pad" value={f.minFiyat ?? ''} onChangeText={v => set({ minFiyat: num(v) })} /></View>
+                        <Txt muted style={{ paddingBottom: 13 }}>–</Txt>
+                        <View style={{ flex: 1 }}><Field label="En çok (₺)" placeholder="Sınırsız" keyboardType="decimal-pad" value={f.maxFiyat ?? ''} onChangeText={v => set({ maxFiyat: num(v) })} /></View>
+                    </View>
+                    {f.minFiyat || f.maxFiyat ? <Button title="Fiyat aralığını kaldır" kind="plain" small full={false} onPress={() => set({ minFiyat: '', maxFiyat: '' })} /> : null}
                 </Card>
 
                 {land ? (
@@ -50,11 +75,6 @@ export default function FiltersScreen() {
                 </Card>
 
                 <Card>
-                    <H2>{t(land ? 'Fiyat (TL)' : 'Fiyat (TL / birim)')}</H2>
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
-                        <View style={{ flex: 1 }}><Field label="En az" keyboardType="decimal-pad" value={f.minFiyat ?? ''} onChangeText={v => set({ minFiyat: num(v) })} /></View>
-                        <View style={{ flex: 1 }}><Field label="En çok" keyboardType="decimal-pad" value={f.maxFiyat ?? ''} onChangeText={v => set({ maxFiyat: num(v) })} /></View>
-                    </View>
                     <H2>{t('Miktar') + ' (' + unit + ')'}</H2>
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                         <View style={{ flex: 1 }}><Field label="En az" keyboardType="decimal-pad" value={f.minMiktar ?? ''} onChangeText={v => set({ minMiktar: num(v) })} /></View>

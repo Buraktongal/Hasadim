@@ -1,10 +1,9 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
-import { Button, Card, ErrorBox, Header, SignInRequired, Txt } from '../components/ui';
+import { Button, Card, ErrorBox, goBack, Header, SignInRequired, Txt } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { post } from '../lib/api';
 import { API_BASE } from '../lib/config';
@@ -128,7 +127,7 @@ export default function QrLoginScreen() {
                             <Txt weight="800" size={18} style={{ textAlign: 'center' }}>{stage.message}</Txt>
                             {stage.approved ? <Txt muted style={{ textAlign: 'center' }}>Bilgisayardaki oturumu Hesap → Güvenlik bölümünden istediğin zaman kapatabilirsin.</Txt> : null}
                         </View>
-                        <Button title="Tamam" onPress={() => router.back()} />
+                        <Button title="Tamam" onPress={() => goBack()} />
                         <Button title="Başka bir kod okut" kind="secondary" onPress={again} />
                     </Card>
                 )}
