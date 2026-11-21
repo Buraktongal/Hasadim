@@ -2,6 +2,7 @@
 // Saf mantık testleri: node --import tsx --test tests/
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { parseQrLogin } from '../src/lib/qr-login';
 import { createHash } from 'node:crypto';
 import { humanPurpose, leadingZeroBits, normalizeAnswer, sha256, solve } from '../src/lib/human';
 import { conversations } from '../src/lib/conversations';
@@ -96,4 +97,15 @@ test('korunan istekler ve kod biçimi', () => {
     assert.equal(humanPurpose('POST', '/api/account/register/confirm'), null);
     assert.equal(normalizeAnswer(' k3 rna '), 'K3RNA');
     assert.equal(normalizeAnswer('ii'), 'II');
+});
+
+// ---------- QR ile web girişi ----------
+
+test('yalnızca Hasadım giriş QR biçimi kabul edilir', () => {
+    const code = 'oBMT_oS0vYGOB-TQANNB_3_IfI04S59fam1SVmVtf1I';
+    assert.equal(parseQrLogin(`https://hasadim.com/html/qr.html#c=${code}`), code);
+    assert.equal(parseQrLogin(`http://localhost:8811/html/qr.html#c=${code}`), code);
+    assert.equal(parseQrLogin(`https://hasadim.com/html/qr.html#c=${code}x`), null);
+    assert.equal(parseQrLogin('https://ornek.com/'), null);
+    assert.equal(parseQrLogin(`javascript:alert(1)//html/qr.html#c=${code}`), null);
 });

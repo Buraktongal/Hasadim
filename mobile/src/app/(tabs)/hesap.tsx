@@ -68,6 +68,7 @@ export default function Account() {
             ])}
             {section('Hesap', [
                 ['shield', 'Hesap güvenliği', 'Oturumlar, giriş yöntemleri, hareketler', '/guvenlik'],
+                ['qr', 'Bilgisayarda giriş (QR)', 'Web sitesine telefonunla QR okutarak gir', '/qr-giris'],
                 ['ban', 'Engellenenler', 'Engellediğin kullanıcılar', '/engellenenler'],
                 ['settings', 'Ayarlar', 'Görünüm, dil, bildirimler, şifre, uygulama kilidi', '/ayarlar'],
                 ['calendar', 'Ürün takvimi', 'Hangi ay ne hasat edilir', '/urun-takvimi'],

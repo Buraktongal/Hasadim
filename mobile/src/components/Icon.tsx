@@ -34,6 +34,8 @@ const icons = {
     send: <Path d="M4 12l16-8-6 16-2.5-6.5z" />,
     edit: <><Path d="M4 20h4L19 9l-4-4L4 16z" /><Path d="M13.5 6.5l4 4" /></>,
     close: <Path d="M6 6l12 12M18 6L6 18" />,
+    monitor: <><Rect x={3} y={4} width={18} height={12} rx={2} /><Path d="M8 20h8M12 16v4" /></>,
+    qr: <><Rect x={3} y={3} width={7} height={7} rx={1.5} /><Rect x={14} y={3} width={7} height={7} rx={1.5} /><Rect x={3} y={14} width={7} height={7} rx={1.5} /><Path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4M20 17v3" /></>,
     globe: <><Circle cx={12} cy={12} r={8.5} /><Path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.5 3.5 8.5s-1 6-3.5 8.5c-2.5-2.5-3.5-5.5-3.5-8.5s1-6 3.5-8.5z" /></>,
     moon: <Path d="M19 14.5A7.5 7.5 0 019.5 5a7.5 7.5 0 109.5 9.5z" />,
     key: <><Circle cx={8} cy={14} r={4} /><Path d="M11 11l8-8M16 6l2.5 2.5M14 8l2 2" /></>,

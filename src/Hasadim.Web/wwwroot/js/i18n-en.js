@@ -268,7 +268,23 @@ window.HasadimEn = (() => {
         'Güvenlik': 'Security', 'Robot olmadığını doğrula': "Confirm you're not a robot", 'Gördüğün kod': 'Code you see', '↻ Yeni kod': '↻ New code', 'Doğrula': 'Verify',
         'Gördüğün 5 karakteri yaz. Büyük/küçük harf fark etmez.': 'Type the 5 characters you see. Case does not matter.', 'Kodu eksiksiz yaz.': 'Enter the full code.',
         'Yeni kod alınamadı.': 'Could not get a new code.', 'Doğrulama kodu görseli': 'Verification code image', 'Güvenlik doğrulaması tamamlanmadı.': 'Security check was not completed.',
-        'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel'
+        'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel',
+        // QR ile giriş
+        'Mobil uygulamayla QR kod okutarak giriş': 'Sign in by scanning a QR code with the mobile app', 'QR kod ile giriş': 'Sign in with QR code', '← Diğer yöntemler': '← Other methods',
+        'Yeni kod oluştur': 'Generate a new code', 'QR kod hazırlanıyor…': 'Preparing QR code…', 'Telefonunda Hasadım uygulamasını aç ve bu kodu okut.': 'Open the Hasadım app on your phone and scan this code.',
+        'Kod okutuldu. Telefonundaki “Giriş yap” düğmesiyle onayla.': 'Code scanned. Confirm with “Sign in” on your phone.', 'Giriş isteği telefondan reddedildi.': 'The sign-in request was declined on the phone.',
+        'Giriş yapıldı, yönlendiriliyorsun…': 'Signed in, redirecting…', 'QR ile giriş': 'QR sign-in', 'Bu kodu Hasadım uygulamasıyla okut': 'Scan this code with the Hasadım app',
+        'Bilgisayarda giriş (QR)': 'Sign in on a computer (QR)', 'Web sitesine telefonunla QR okutarak gir': 'Sign in to the website by scanning a QR code',
+        'Bu bilgisayarda giriş yapılsın mı?': 'Sign in on this computer?', 'Tarayıcı': 'Browser', 'Bağlantı': 'Connection', 'Kod oluşturuldu': 'Code created', 'Site': 'Site',
+        'Giriş yap': 'Sign in', 'Reddet': 'Decline', 'Kamera izni gerekli': 'Camera permission needed', 'Kameraya izin ver': 'Allow camera', 'Ayarları aç': 'Open settings',
+        'Kodu çerçevenin içine getir': 'Fit the code inside the frame', 'Kontrol ediliyor…': 'Checking…', 'Başka bir kod okut': 'Scan another code', 'Tamam': 'OK',
+        'Bilgisayarda giriş için kimliğini doğrula': 'Verify your identity to sign in on the computer',
+        'Bilgisayardaki tarayıcıda giriş yapıldı.': 'Signed in on the computer’s browser.', 'Giriş isteği reddedildi.': 'Sign-in request declined.',
+        'Bilgisayarında Hasadım giriş sayfasını aç, “Mobil uygulamayla QR kod okutarak giriş”i seç ve ekrandaki kodu çerçeveye getir.': 'Open the Hasadım sign-in page on your computer, choose “Sign in by scanning a QR code with the mobile app” and fit the code on screen into the frame.',
+        'QR kodu okutmak için Hasadım’ın kameraya erişmesine izin ver. Fotoğraf veya video kaydedilmez.': 'Allow Hasadım to use the camera to scan the QR code. No photo or video is saved.',
+        'Bilgisayardaki oturumu Hesap → Güvenlik bölümünden istediğin zaman kapatabilirsin.': 'You can end the computer session any time under Account → Security.',
+        'Bilgisayarda QR ile giriş yapmak için önce bu uygulamada giriş yap.': 'Sign in to this app first to sign in on a computer with a QR code.',
+        'Bu kodu yalnızca kendi bilgisayarında açtığın sayfadan okuttuysan onayla. Biri sana kod gönderip “okut” dediyse reddet; onaylarsan hesabına o kişi girer.': 'Only confirm if you scanned this code from a page you opened on your own computer. If someone sent you a code to scan, decline — approving would let them into your account.'
     };
 
     const tr = new Intl.NumberFormat('tr-TR');

@@ -19,7 +19,7 @@ public static class ServiceRegistration
   // Bellek önbelleği sınırlı: çok sayıda farklı IP ile belleği doldurma saldırısı engellenir.
   services.AddMemoryCache(o=>o.SizeLimit=200_000);services.AddSingleton<HumanCheck>();
   services.AddScoped<FeedbackRepository>();services.AddScoped<AdminRepository>();
-  services.AddScoped<PhoneChallengeStore>();services.AddSingleton<ExternalTokenValidator>();
+  services.AddScoped<PhoneChallengeStore>();services.AddScoped<QrLoginStore>();services.AddSingleton<ExternalTokenValidator>();
   services.AddScoped<IUserStore<AppUser>,DapperUserStore>();services.AddScoped<IRoleStore<IdentityRole<Guid>>,DapperRoleStore>();
   services.AddIdentity<AppUser,IdentityRole<Guid>>(o=>{
    o.User.RequireUniqueEmail=true;o.Password.RequiredLength=12;o.Password.RequireNonAlphanumeric=false;

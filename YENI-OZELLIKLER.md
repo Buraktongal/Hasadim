@@ -216,3 +216,21 @@ Not: kendi sunucumuzda üretilen görsel kod, gelişmiş bir saldırganı tek ba
 
 Veritabanı: `016_AdminFeedbackHuman.sql` (Feedback, AdminAudit, UserSuspensions, HumanRedemptions).
 Yeni API uçları: `GET /api/human/challenge`, `POST /api/feedback`, `GET /api/feedback/mine`, `GET/POST/PUT /api/admin/{me,step-up,stats,users,users/{id}/…,feedback,audit}`.
+
+## QR kod ile web girişi
+Bilgisayarda giriş sayfasında **“Mobil uygulamayla QR kod okutarak giriş”** seçilir; telefonda Hasadım uygulamasında **Hesap → Bilgisayarda giriş (QR)** ile kod okutulup onaylanır.
+
+Akış:
+1. Tarayıcı `POST /api/account/qr/start` ile istek açar. QR'da `https://<site>/html/qr.html#c=<kod>` yazar (kod 32 bayt rastgele, 2 dakika geçerli). Tarayıcıya ayrıca yalnızca **HttpOnly `__Host-HasadimQr` çerezinde** duran gizli bir anahtar verilir; sayfa betikleri bu anahtarı okuyamaz.
+2. Telefon `POST /api/mobile/qr/scan` ile kodu gönderir; istek telefondaki kullanıcıya ve o telefon oturumuna bağlanır. Uygulama tarayıcıyı (ör. “Chrome · Windows”), IP'nin bir kısmını, saati ve QR'ın geldiği siteyi gösterir.
+3. Kullanıcı **Giriş yap** derse (cihazda parmak izi/yüz/ekran kilidi varsa önce o sorulur) `POST /api/mobile/qr/decide` çağrılır.
+4. Tarayıcı 2 saniyede bir `POST /api/account/qr/poll` ile sorar; onaylandıysa istek tek seferlik “kullanıldı” yapılır ve çerezli oturum açılır. Oturum Hesap güvenliği sayfasında “QR kod (mobil uygulamadan onay)” olarak görünür.
+
+Güvenlik:
+- Kod ve tarayıcı anahtarı veritabanında yalnızca SHA-256 özetleriyle saklanır; kod tek kullanımlıktır, 2 dakikada geçersiz olur.
+- Onayı yalnızca kodu okutan **mobil uygulama oturumu** verebilir; web çereziyle veya başka bir telefondan onay verilemez.
+- Tarayıcı tarafı CSRF korumalıdır; giriş, kodu açan tarayıcının gizli anahtarı olmadan tamamlanamaz (QR'ın fotoğrafını çeken biri giriş yapamaz).
+- Askıya alınmış, kilitli veya e-postası doğrulanmamış hesaplar QR ile de giremez. Telefondaki oturum zaten (gerekirse iki adımlı doğrulamayla) açıldığı için onay ikinci etken sayılır.
+- Bilinen risk (“QR ele geçirme”): saldırgan kendi tarayıcısındaki QR'ı kurbana okutup onaylatırsa saldırgan girer. Bunu önlemek için onay ekranında tarayıcı/IP/site bilgisi ve açık bir uyarı gösterilir; telefonun kendi kamerasıyla okutulan kod `qr.html` sayfasında aynı uyarıyı verir.
+
+Veritabanı: `017_QrLogin.sql`. Mobil: `expo-camera` eklendi (kamera izni metni güncellendi, mikrofon izni istenmez). Yeni yerel modül olduğu için geliştirme derlemesinin (development build) yeniden alınması gerekir; Expo Go'da doğrudan çalışır.

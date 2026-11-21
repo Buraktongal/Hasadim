@@ -72,8 +72,17 @@
         "expo-image-picker",
         {
           "photosPermission": "Seçtiğin fotoğrafları ilanına eklemek için kullanılır.",
-          "cameraPermission": "İlanın için fotoğraf çekmek üzere kameraya erişim gerekir.",
+          "cameraPermission": "Hasadım, ilanların için fotoğraf çekmek ve bilgisayarda giriş için QR kod okutmak üzere kamerayı kullanır.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Hasadım, ilanların için fotoğraf çekmek ve bilgisayarda giriş için QR kod okutmak üzere kamerayı kullanır.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
         }
       ],
       "expo-apple-authentication",

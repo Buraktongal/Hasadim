@@ -34,6 +34,7 @@ public class SessionStore(SqlConnectionFactory factory)
         "google" => "Google",
         "apple" => "Apple",
         "phone" => "Telefon (SMS)",
+        "qr" => "QR kod (mobil uygulamadan onay)",
         _ => "Giriş"
     };
 
