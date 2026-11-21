@@ -274,6 +274,7 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'En az (₺)': 'Min (₺)', 'En çok (₺)': 'Max (₺)', 'Sınırsız': 'No limit', 'Fiyat aralığını kaldır': 'Clear price range', '+ Fiyat aralığı': '+ Price range',
         'Tümünü temizle': 'Clear all', '10 ₺ altı': 'Under ₺10', '100 ₺ üstü': 'Over ₺100', '500 bin ₺ altı': 'Under ₺500k', '500 bin – 2 milyon ₺': '₺500k – 2M',
         '2–10 milyon ₺': '₺2M – 10M', '10 milyon ₺ üstü': 'Over ₺10M',
+        'Google ile devam et (yakında)': 'Continue with Google (coming soon)', 'Google ile giriş sunucuda ayarlanınca açılacak.': 'Google sign-in will be available once it is set up on the server.',
         // QR ile giriş
         'Mobil uygulamayla QR kod okutarak giriş': 'Sign in by scanning a QR code with the mobile app', 'QR kod ile giriş': 'Sign in with QR code', 'Hızlı giriş': 'Quick sign-in', 'Telefonunla QR okutarak gir': 'Sign in by scanning with your phone', 'Kodun süresi doldu.': 'The code has expired.', 'Telefonunda <strong>Hasadım</strong> uygulamasını aç.': 'Open the <strong>Hasadım</strong> app on your phone.', '← Diğer yöntemler': '← Other methods',
         'Yeni kod oluştur': 'Generate a new code', 'QR kod hazırlanıyor…': 'Preparing QR code…', 'Telefonunda Hasadım uygulamasını aç ve bu kodu okut.': 'Open the Hasadım app on your phone and scan this code.',

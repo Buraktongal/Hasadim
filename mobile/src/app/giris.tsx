@@ -6,7 +6,7 @@ import { Button, Card, ErrorBox, Field, H1, Header, Notice, Screen, Segmented, T
 import { api, get } from '../lib/api';
 import { type TokenResponse, useApp } from '../lib/app-state';
 
-type Providers = { google: { enabled: boolean }; apple: { enabled: boolean }; phone: { enabled: boolean } };
+type Providers = { google: { enabled: boolean; mobile?: boolean }; apple: { enabled: boolean }; phone: { enabled: boolean } };
 const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export default function SignIn() {
@@ -91,7 +91,7 @@ export default function SignIn() {
                             <Button title="Numarayı değiştir" kind="plain" onPress={() => { setChallenge(null); setCode(''); }} />
                         </>}
                     </Card>
-                    {providers ? <SocialSignIn onDone={close} providers={{ google: providers.google.enabled, apple: providers.apple.enabled }} /> : null}
+                    {providers ? <SocialSignIn onDone={close} providers={{ google: providers.google.enabled, googleWeb: Boolean(providers.google.mobile), apple: providers.apple.enabled }} /> : null}
                     <Card>
                         <Txt muted center>Hesabın yok mu?</Txt>
                         <Button title="Kayıt ol" kind="secondary" onPress={() => router.replace('/kayit')} />

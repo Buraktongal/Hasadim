@@ -27,6 +27,8 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
   using var response=await clients.CreateClient("api").SendAsync(request,HttpCompletionOption.ResponseHeadersRead,c.RequestAborted);
   c.Response.StatusCode=(int)response.StatusCode;
   if(response.Headers.TryGetValues("Set-Cookie",out var cookies))foreach(var cookie in cookies)c.Response.Headers.Append("Set-Cookie",cookie);
+  // Yönlendirme yalnızca mobil Google girişinde olur; yalnızca Google'a ve uygulamaya (hasadim://, exp://) giden adresler iletilir.
+  if(response.Headers.Location is { } loc&&(loc.ToString().StartsWith("https://accounts.google.com/",StringComparison.Ordinal)||System.Text.RegularExpressions.Regex.IsMatch(loc.ToString(),"^(hasadim|exps?)://")))c.Response.Headers.Location=loc.ToString();
   if(response.Headers.TryGetValues("Retry-After",out var retry))c.Response.Headers["Retry-After"]=retry.ToArray();
   if(response.Headers.TryGetValues("WWW-Authenticate",out var challenge))c.Response.Headers["WWW-Authenticate"]=challenge.ToArray();
   if(response.Content.Headers.ContentType is not null)c.Response.ContentType=response.Content.Headers.ContentType.ToString();

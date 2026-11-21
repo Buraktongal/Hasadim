@@ -234,3 +234,21 @@ Güvenlik:
 - Bilinen risk (“QR ele geçirme”): saldırgan kendi tarayıcısındaki QR'ı kurbana okutup onaylatırsa saldırgan girer. Bunu önlemek için onay ekranında tarayıcı/IP/site bilgisi ve açık bir uyarı gösterilir; telefonun kendi kamerasıyla okutulan kod `qr.html` sayfasında aynı uyarıyı verir.
 
 Veritabanı: `017_QrLogin.sql`. Mobil: `expo-camera` eklendi (kamera izni metni güncellendi, mikrofon izni istenmez). Yeni yerel modül olduğu için geliştirme derlemesinin (development build) yeniden alınması gerekir; Expo Go'da doğrudan çalışır.
+
+## Mobil uygulamada Google ile giriş
+Expo Go dahil her ortamda çalışan, sunucu üzerinden yürüyen akış:
+1. Uygulama sistem tarayıcısında `GET /api/mobile/auth/google/start` açar (PKCE: yalnızca doğrulayıcının SHA-256 özeti gönderilir).
+2. Google kullanıcıyı `GET /api/mobile/auth/google/callback` adresine döndürür; sunucu kodu gizli anahtarıyla jetona çevirir ve imza/alıcı/nonce doğrular.
+3. Sunucu 2 dakikalık tek kullanımlık bir kodla uygulamaya döner (`hasadim://google-giris`, Expo Go'da `exp://…/--/google-giris`).
+4. Uygulama kodu doğrulayıcıyla `POST /api/mobile/auth/google/finish`'e gönderir ve oturum anahtarlarını alır.
+
+Ayarlar (gizli anahtarı **User Secrets**'a yaz, depoya ekleme):
+- `Auth:Google:WebClientId` — Google Cloud → Kimlik bilgileri → OAuth istemcisi (Web uygulaması).
+- `Auth:Google:ClientSecret` — aynı istemcinin gizli anahtarı (`dotnet user-secrets set "Auth:Google:ClientSecret" "…" --project src/Hasadim.Api`).
+- `Auth:Google:MobileRedirectUri` — `https://<site>/api/mobile/auth/google/callback`; aynı adres Google Cloud'da "Yetkili yönlendirme URI'leri"ne eklenmeli. Geçici tünel adresi her açılışta değiştiği için geliştirmede **kalıcı** bir Dev Tunnel kullan.
+Ayarlanmamışsa uygulamada düğme "Google ile devam et (yakında)" olarak pasif görünür.
+
+## Diğer
+- Web: Apple ile giriş düğmesi şimdilik kaldırıldı (sunucu desteği duruyor).
+- Web: QR ile giriş telefon ve tabletlerde (dokunmatik ekran / mobil tarayıcı) gösterilmez.
+- Web: Menü panelinde alttaki "Hesap, Ayarlar, Çıkış yap" bölümü görünmeyen ikinci sütuna taşıyordu; düzeltildi, panel ekran yüksekliğine sığıyor ve kayıyor.

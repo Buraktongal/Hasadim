@@ -85,3 +85,25 @@ document.addEventListener('click', event => {
     input.dataset.pickerAt = String(Date.now());
     try { input.showPicker(); } catch { /* bazı tarayıcılar yalnızca simgeden açar */ }
 });
+
+// Üst menü (Menü düğmesi) açıldığında panel ekranın altına taşmasın: yüksekliği, panelin başladığı
+// yerden görünür alanın altına kadar sınırlanır ve içi kaydırılır. Telefonlarda tarayıcının alt çubuğu
+// ve "İlan ver" düğmesi son satırları kapatmasın diye bu düğme menü açıkken gizlenir.
+(() => {
+    const fit = menu => {
+        const panel = menu.querySelector('.account-menu-panel');
+        if (!panel || !menu.open) return;
+        const top = panel.getBoundingClientRect().top;
+        const visible = window.visualViewport?.height ?? window.innerHeight;
+        panel.style.maxHeight = Math.max(220, Math.floor(visible - top - 12)) + 'px';
+    };
+    document.addEventListener('toggle', e => {
+        const menu = e.target;
+        if (!(menu instanceof HTMLDetailsElement) || menu.id !== 'accountMenu') return;
+        document.documentElement.classList.toggle('site-menu-open', menu.open);
+        if (menu.open) requestAnimationFrame(() => fit(menu));
+    }, true);
+    const refit = () => { const menu = document.getElementById('accountMenu'); if (menu?.open) fit(menu); };
+    window.addEventListener('resize', refit);
+    window.visualViewport?.addEventListener('resize', refit);
+})();

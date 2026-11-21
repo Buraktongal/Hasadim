@@ -200,3 +200,10 @@
     .auth-qr .qr-frame { grid-row: span 4; }
     .auth-qr .qr-state, .auth-qr .qr-timer { text-align: left; }
 }
+/* Telefon ve tablet gibi dokunmatik cihazlarda QR gösterilmez: kullanıcı zaten telefondadır, kendi ekranını okutamaz. */
+@media (pointer: coarse), (max-width: 520px) {
+    .auth-qr { display: none !important; }
+    .auth-shell:has(.auth-qr) { grid-template-columns: minmax(0, 560px); justify-content: center; }
+}
+.auth-qr[hidden] { display: none !important; }
+.auth-shell:has(.auth-qr[hidden]) { grid-template-columns: minmax(0, 560px); justify-content: center; }

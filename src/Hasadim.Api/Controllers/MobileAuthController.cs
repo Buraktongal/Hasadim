@@ -1,4 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using Hasadim.Api.Security;
 using Hasadim.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -6,11 +10,14 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Hasadim.Api.Controllers;
 
 public class MobileLoginRequest { [Required, EmailAddress, StringLength(256)] public string Email { get; set; } = ""; [Required, StringLength(128)] public string Password { get; set; } = ""; }
 public class MobileTwoFactorRequest { [Required, StringLength(2048)] public string Ticket { get; set; } = ""; [Required, StringLength(100)] public string Code { get; set; } = ""; public bool Recovery { get; set; } }
+public class MobileGoogleFinishRequest { [Required, StringLength(2048)] public string Code { get; set; } = ""; [Required, StringLength(128, MinimumLength = 43)] public string Verifier { get; set; } = ""; }
 public class MobileRefreshRequest { [Required, StringLength(100)] public string RefreshToken { get; set; } = ""; }
 
 // Mobil uygulama girişi. Çerez yerine kısa ömürlü erişim anahtarı + dönen yenileme anahtarı verir.
@@ -25,6 +32,8 @@ public class MobileAuthController(
     ExternalTokenValidator external,
     PhoneChallengeStore phones,
     IDataProtectionProvider protection,
+    IConfiguration config,
+    IMemoryCache cache,
     ILogger<MobileAuthController> logger) : ControllerBase
 {
     const string Failed = "E-posta veya şifre hatalı. Şifrede büyük/küçük harf ve Türkçe karakterlere (ı/i, ö/o) dikkat et.";
@@ -119,6 +128,11 @@ public class MobileAuthController(
     public async Task<IActionResult> External(ExternalLoginRequest r, CancellationToken ct)
     {
         var id = await external.Validate(r.Provider, r.IdToken, r.Nonce, ct);
+        return await SignInExternal(id, r.DisplayName);
+    }
+
+    async Task<IActionResult> SignInExternal(ExternalIdentity id, string? displayName)
+    {
         var u = await users.FindByLoginAsync(id.Provider, id.Subject);
         var created = false;
         if (u is null)
@@ -127,7 +141,7 @@ public class MobileAuthController(
             u = await users.FindByEmailAsync(id.Email);
             if (u is null)
             {
-                var name = (r.DisplayName ?? id.Name ?? id.Email.Split('@')[0]).Trim();
+                var name = (displayName ?? id.Name ?? id.Email.Split('@')[0]).Trim();
                 if (name.Length < 2) name = "Hasadım kullanıcısı";
                 if (name.Length > 100) name = name[..100];
                 u = new AppUser { UserName = id.Email, Email = id.Email, EmailConfirmed = true, DisplayName = name };
@@ -143,6 +157,87 @@ public class MobileAuthController(
         if (await Blocked(u) is { } blocked) return blocked;
         if (u.TwoFactorEnabled) return Unauthorized(new { mesaj = "Bu hesapta iki adımlı doğrulama açık. E-posta ve şifrenle giriş yap." });
         return await Issue(u, id.Provider.ToLowerInvariant(), new { created });
+    }
+
+    // ---------- Google ile giriş (tarayıcı üzerinden; Expo Go dahil her yerde çalışır) ----------
+    // 1) Uygulama sistem tarayıcısında /google/start'ı açar (PKCE: yalnızca doğrulayıcının özeti gönderilir).
+    // 2) Google, kullanıcıyı sunucudaki /google/callback'e döndürür; sunucu kodu gizli anahtarıyla jetona çevirip doğrular.
+    // 3) Sunucu, 2 dakikalık tek kullanımlık bir kodla uygulamaya döner (hasadim:// veya Expo Go'da exp://).
+    // 4) Uygulama bu kodu doğrulayıcıyla birlikte /google/finish'e gönderir ve oturum anahtarlarını alır.
+    //    Kodu yakalayan başka bir uygulama, doğrulayıcıyı bilmediği için kullanamaz.
+    static readonly HttpClient GoogleHttp = new() { Timeout = TimeSpan.FromSeconds(15) };
+    static readonly Regex AppReturn = new(@"^(hasadim|exps?)://[A-Za-z0-9._~:/?#@!$&'()*+,;=%-]{1,280}$", RegexOptions.CultureInvariant);
+    static readonly Regex Challenge = new(@"^[A-Za-z0-9_-]{43}$", RegexOptions.CultureInvariant);
+    ITimeLimitedDataProtector GoogleState => protection.CreateProtector("Hasadim.Mobile.GoogleState.v1").ToTimeLimitedDataProtector();
+    ITimeLimitedDataProtector GoogleCode => protection.CreateProtector("Hasadim.Mobile.GoogleCode.v1").ToTimeLimitedDataProtector();
+    string? GoogleSecret => config["Auth:Google:ClientSecret"] is { Length: > 0 } s ? s : null;
+    string? GoogleRedirect => config["Auth:Google:MobileRedirectUri"] is { Length: > 0 } s ? s : null;
+    public static bool GoogleWebFlowEnabled(IConfiguration c, ExternalTokenValidator e) =>
+        e.WebClientId("Google") is not null && !string.IsNullOrWhiteSpace(c["Auth:Google:ClientSecret"]) && !string.IsNullOrWhiteSpace(c["Auth:Google:MobileRedirectUri"]);
+
+    sealed record GoogleStateData(string Challenge, string Return, string Nonce);
+    sealed record GoogleCodeData(string Id, string Challenge, string Subject, string? Email, bool EmailVerified, string? Name);
+
+    static string BackTo(string returnUrl, string key, string value) =>
+        returnUrl + (returnUrl.Contains('?') ? "&" : "?") + key + "=" + Uri.EscapeDataString(value);
+
+    [HttpGet("google/start")]
+    public IActionResult GoogleStart([FromQuery] string challenge, [FromQuery(Name = "return")] string returnUrl)
+    {
+        if (!GoogleWebFlowEnabled(config, external)) return BadRequest(new { mesaj = "Google ile giriş henüz yapılandırılmadı." });
+        if (!Challenge.IsMatch(challenge ?? "") || !AppReturn.IsMatch(returnUrl ?? "")) return BadRequest(new { mesaj = "Geçersiz istek." });
+        var nonce = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(24));
+        var state = GoogleState.Protect(JsonSerializer.Serialize(new GoogleStateData(challenge, returnUrl, nonce)), TimeSpan.FromMinutes(10));
+        var url = QueryHelpers.AddQueryString("https://accounts.google.com/o/oauth2/v2/auth", new Dictionary<string, string?>
+        {
+            ["client_id"] = external.WebClientId("Google"), ["redirect_uri"] = GoogleRedirect, ["response_type"] = "code",
+            ["scope"] = "openid email profile", ["state"] = state, ["nonce"] = nonce, ["prompt"] = "select_account"
+        });
+        return Redirect(url);
+    }
+
+    [HttpGet("google/callback")]
+    public async Task<IActionResult> GoogleCallback([FromQuery] string? code, [FromQuery] string? state, [FromQuery] string? error, CancellationToken ct)
+    {
+        GoogleStateData? s;
+        try { s = JsonSerializer.Deserialize<GoogleStateData>(GoogleState.Unprotect(state ?? "")); }
+        catch { return BadRequest(new { mesaj = "Giriş isteğinin süresi doldu. Uygulamaya dönüp tekrar dene." }); }
+        if (s is null || !AppReturn.IsMatch(s.Return)) return BadRequest(new { mesaj = "Geçersiz istek." });
+        if (!string.IsNullOrEmpty(error) || string.IsNullOrEmpty(code)) return Redirect(BackTo(s.Return, "error", "Google ile giriş iptal edildi."));
+        try
+        {
+            using var res = await GoogleHttp.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["code"] = code, ["client_id"] = external.WebClientId("Google")!, ["client_secret"] = GoogleSecret!,
+                ["redirect_uri"] = GoogleRedirect!, ["grant_type"] = "authorization_code"
+            }), ct);
+            if (!res.IsSuccessStatusCode) { logger.LogWarning("Google kod değişimi başarısız: {Status}", (int)res.StatusCode); return Redirect(BackTo(s.Return, "error", "Google ile giriş tamamlanamadı.")); }
+            using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync(ct));
+            var idToken = doc.RootElement.TryGetProperty("id_token", out var t) ? t.GetString() : null;
+            if (string.IsNullOrEmpty(idToken)) return Redirect(BackTo(s.Return, "error", "Google ile giriş tamamlanamadı."));
+            var id = await external.Validate("google", idToken, s.Nonce, ct);
+            var data = new GoogleCodeData(Guid.NewGuid().ToString("N"), s.Challenge, id.Subject, id.Email, id.EmailVerified, id.Name);
+            return Redirect(BackTo(s.Return, "code", GoogleCode.Protect(JsonSerializer.Serialize(data), TimeSpan.FromMinutes(2))));
+        }
+        catch (Hasadim.Application.AppException e) { return Redirect(BackTo(s.Return, "error", e.Message)); }
+        catch (HttpRequestException) { return Redirect(BackTo(s.Return, "error", "Google'a ulaşılamadı. Biraz sonra tekrar dene.")); }
+    }
+
+    [HttpPost("google/finish")]
+    public async Task<IActionResult> GoogleFinish(MobileGoogleFinishRequest r)
+    {
+        const string invalid = "Google ile giriş isteğinin süresi doldu. Tekrar dene.";
+        GoogleCodeData? d;
+        try { d = JsonSerializer.Deserialize<GoogleCodeData>(GoogleCode.Unprotect(r.Code)); }
+        catch { return Unauthorized(new { mesaj = invalid }); }
+        if (d is null) return Unauthorized(new { mesaj = invalid });
+        var hash = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(r.Verifier)));
+        if (!CryptographicOperations.FixedTimeEquals(Encoding.ASCII.GetBytes(hash), Encoding.ASCII.GetBytes(d.Challenge))) return Unauthorized(new { mesaj = invalid });
+        // Tek kullanımlık: aynı kod ikinci kez kullanılamaz.
+        var key = "google-code:" + d.Id;
+        if (cache.TryGetValue(key, out _)) return Unauthorized(new { mesaj = invalid });
+        cache.Set(key, true, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3), Size = 1 });
+        return await SignInExternal(new ExternalIdentity("Google", d.Subject, d.Email, d.EmailVerified, d.Name), null);
     }
 
     // Telefonla giriş: kod /api/account/phone/start ile istenir, burada doğrulanır.

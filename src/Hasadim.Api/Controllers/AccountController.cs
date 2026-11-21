@@ -129,7 +129,7 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
  // Giriş ekranında hangi seçeneklerin gösterileceği (gizli bilgi içermez).
  [HttpGet("providers")]
  public IActionResult Providers()=>Ok(new{
-  google=new{enabled=external.Enabled("Google")&&external.WebClientId("Google") is not null,clientId=external.WebClientId("Google")},
+  google=new{enabled=external.Enabled("Google")&&external.WebClientId("Google") is not null,clientId=external.WebClientId("Google"),mobile=MobileAuthController.GoogleWebFlowEnabled(config,external)},
   apple=new{enabled=external.Enabled("Apple")&&external.WebClientId("Apple") is not null&&!string.IsNullOrWhiteSpace(config["Auth:Apple:RedirectUri"]),clientId=external.WebClientId("Apple"),redirectUri=config["Auth:Apple:RedirectUri"]},
   phone=new{enabled=sms.Enabled}});
 

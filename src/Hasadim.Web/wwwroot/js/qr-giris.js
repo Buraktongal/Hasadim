@@ -7,7 +7,9 @@
     const panel = document.querySelector('#qrLoginPanel');
     if (!panel || typeof qrcode !== 'function') return;
     // Telefon ekranında QR gösterilmez (kişi kendi ekranını okutamaz); geniş ekrana geçilirse başlar.
-    const wide = matchMedia('(min-width: 521px)');
+    // Telefon/tablet (dokunmatik ekran veya mobil tarayıcı) ise QR hiç oluşturulmaz.
+    const mobileAgent = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+    const wide = matchMedia('(min-width: 521px) and (pointer: fine)');
     // Sayfa açık bırakılırsa kod en fazla bu kadar kez kendiliğinden yenilenir; sonra düğmeyle yenilenir.
     const AUTO_RENEWALS = 5;
     let renewals = 0;
@@ -104,8 +106,10 @@
     }
 
     function activate() {
-        if (wide.matches && !active) { active = true; renewals = 0; start(); }
-        else if (!wide.matches && active) { active = false; stop(); call('cancel').catch(() => { }); }
+        const show = wide.matches && !mobileAgent;
+        document.querySelector('.auth-qr')?.toggleAttribute('hidden', !show);
+        if (show && !active) { active = true; renewals = 0; start(); }
+        else if (!show && active) { active = false; stop(); call('cancel').catch(() => { }); }
     }
     panel.querySelector('[data-qr-retry]').addEventListener('click', () => { renewals = 0; start(); });
     wide.addEventListener('change', activate);

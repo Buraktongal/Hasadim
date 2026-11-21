@@ -617,3 +617,11 @@ body[data-view="messages"] #siteLayout .topbar.market-header { border-bottom: 1p
 .status-planned { background: #f3ebfb; color: #6b3fa0; }
 .status-done { background: #e6f4ea; color: #1d6b3a; }
 @media (max-width: 700px) { .feedback-kinds { grid-template-columns: minmax(0, 1fr); } }
+
+/* Menü açıkken alttaki "İlan ver" düğmesi menünün son satırlarını kapatmasın. */
+html.site-menu-open #siteLayout .market-header > .header-new-listing { visibility: hidden; }
+#siteLayout .account-dropdown > .account-menu-panel { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+/* Panel tek sütunlu bir flex kutusu. Satır kaydırma (wrap) açık kalınca alttaki öğeler (Hesap, Ayarlar,
+   Çıkış yap…) görünmeyen ikinci bir sütuna taşıyordu; tek sütunda kalsınlar, panel kaysın. */
+#siteLayout .account-dropdown > .account-menu-panel { flex-wrap: nowrap; }
+#siteLayout .account-dropdown > .account-menu-panel > * { flex-shrink: 0; }
