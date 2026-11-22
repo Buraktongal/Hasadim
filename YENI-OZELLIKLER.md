@@ -1,5 +1,11 @@
 # Yeni özellikler (Kasım 2026)
 
+## Veritabanı kilitlenmesi (deadlock) düzeltmesi
+- Hata: `Transaction … was deadlocked … chosen as the deadlock victim` (MobileTokenStore.Validate). Mobil uygulama aynı anda birçok istek gönderiyor; her istek oturumu doğrularken aynı satıra "son görülme" yazıyordu. `UserSessions` tablosunun sıralama anahtarında bu sütun (LastSeenAt) olduğu için her yazımda satır yer değiştiriyor ve eşzamanlı okumalarla ters sırada kilit alınıyordu.
+- `021_OturumKilitlenme.sql`: tablonun anahtarı değişmeyen sütunlara (UserId, Id) alındı.
+- Oturum doğrulama artık yalnızca okuma yapar; kilitlenmede kısa beklemeyle tekrarlanır. "Son görülme" ayrı, aynı oturum için dakikada en fazla bir kez, düşük öncelikle yazılır; kilit çakışmasında sessizce atlanır (yalnızca "Açık oturumlar" listesinde görünen bir bilgi).
+- Uygulama açılışında veritabanında `READ_COMMITTED_SNAPSHOT` açılır (kapalıysa ve yetki varsa): okumalar yazmaları, yazmalar okumaları beklemez.
+
 ## Mobil: fotoğraf ekleme düzeltmesi
 - iPhone, bir alt pencere kapanırken fotoğraf seçici, yeni pencere veya paylaşım menüsü açılmasına izin vermiyor; bu yüzden Profilim'de "Galeriden seç / Fotoğraf çek / Konumunu ayarla / Büyüt / Kaldır" hiçbir şey açmıyordu. Artık pencere kapandıktan sonra açılıyor (`afterModal`). Aynı düzeltme paylaşım, harita seçimi, menüden çıkış ve ilan detayındaki "İlanı bildir / Satıcıyı engelle" için de yapıldı.
 - Profil fotoğrafının kapağa taşan üst yarısı Android'de dokunmaya cevap vermiyordu; dokunma alanı düzeltildi (Profilim ve satıcı profili).

@@ -62,15 +62,17 @@ public class SessionStore(SqlConnectionFactory factory)
         return id;
     }
 
-    // Oturum hâlâ geçerliyse son görülme zamanını (dakikada bir) günceller.
+    // Oturum hâlâ geçerli mi? (Yalnızca okuma; son görülme zamanı ayrı ve gerekirse atlanarak yazılır.)
     public async Task<bool> Touch(Guid id, CancellationToken ct)
     {
-        await using var c = await factory.Open(ct);
-        return await c.ExecuteScalarAsync<int>(new CommandDefinition("""
-            UPDATE dbo.UserSessions SET LastSeenAt = SYSUTCDATETIME()
-            WHERE Id = @id AND EndedAt IS NULL AND LastSeenAt < DATEADD(minute, -1, SYSUTCDATETIME());
-            SELECT COUNT(*) FROM dbo.UserSessions WHERE Id = @id AND EndedAt IS NULL;
-            """, new { id }, cancellationToken: ct)) > 0;
+        var valid = await SqlRetry.OnDeadlock(async () =>
+        {
+            await using var c = await factory.Open(ct);
+            return await c.ExecuteScalarAsync<int>(new CommandDefinition(
+                "SELECT COUNT(*) FROM dbo.UserSessions WHERE Id = @id AND EndedAt IS NULL;", new { id }, cancellationToken: ct)) > 0;
+        });
+        if (valid) await SessionActivity.Touch(factory, id, ct);
+        return valid;
     }
 
     public async Task End(Guid id, CancellationToken ct)

@@ -59,6 +59,9 @@ public class MobileTokenStore(SqlConnectionFactory factory)
     {
         if (!Shaped(accessToken, AccessPrefix)) return null;
         var hash = Hash(accessToken!);
+        // Yalnızca okuma; "son görülme" yazımı ayrı ve gerekirse atlanabilir (SessionActivity). Kilitlenmede okuma tekrarlanır.
+        return await SqlRetry.OnDeadlock<MobileIdentity?>(async () =>
+        {
         await using var c = await factory.Open(ct);
         using var grid = await c.QueryMultipleAsync(new CommandDefinition("""
             DECLARE @session uniqueidentifier, @user uniqueidentifier;
@@ -72,13 +75,13 @@ public class MobileTokenStore(SqlConnectionFactory factory)
             SELECT u.Id AS UserId, @session AS SessionId, u.UserName, s.Method
             FROM dbo.Users u JOIN dbo.UserSessions s ON s.Id = @session WHERE u.Id = @user;
             SELECT r.Name FROM dbo.UserRoles ur JOIN dbo.Roles r ON r.Id = ur.RoleId WHERE ur.UserId = @user;
-            UPDATE dbo.UserSessions SET LastSeenAt = SYSUTCDATETIME()
-            WHERE Id = @session AND LastSeenAt < DATEADD(minute, -1, SYSUTCDATETIME());
             """, new { hash }, cancellationToken: ct));
         var row = await grid.ReadSingleOrDefaultAsync<(Guid UserId, Guid SessionId, string UserName, string Method)>();
         var roles = (await grid.ReadAsync<string>()).ToList();
         if (row.UserId == Guid.Empty) return null;
+        await SessionActivity.Touch(factory, row.SessionId, ct);
         return new MobileIdentity(row.UserId, row.SessionId, row.UserName, row.Method, roles);
+        });
     }
 
     // Yenileme: eski anahtar çifti atomik olarak yenisiyle değiştirilir.

@@ -23,5 +23,10 @@ public class MigrationRunner(SqlConnectionFactory factory)
    await c.ExecuteAsync(new CommandDefinition("INSERT dbo.SchemaVersions(Name,Hash) VALUES(@resource,@hash)",new{resource,hash},tx,cancellationToken:ct));
   }
   tx.Commit();
+  // Okumalar yazmaları beklemesin, yazmalar okumaları beklemesin (READ_COMMITTED_SNAPSHOT): eşzamanlı isteklerde
+  // kilitlenmeleri büyük ölçüde ortadan kaldırır. Yalnızca kapalıysa ve yetki varsa açılır; olmazsa uygulama yine çalışır.
+  try{
+   await c.ExecuteAsync(new CommandDefinition("IF (SELECT is_read_committed_snapshot_on FROM sys.databases WHERE database_id=DB_ID())=0 ALTER DATABASE CURRENT SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK AFTER 5 SECONDS;",commandTimeout:60,cancellationToken:ct));
+  }catch(SqlException){}
  }
 }
