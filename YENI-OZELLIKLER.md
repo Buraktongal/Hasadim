@@ -1,5 +1,16 @@
 # Yeni özellikler (Kasım 2026)
 
+## Web: tüm seçim kutuları aynı görünümde, sıradaki liste kendiliğinden açılır
+- Sitedeki bütün seçim kutuları (sıralama, sayfa başına ilan, harita filtreleri, yönetim, mesaj penceresi…) aranabilir yeni görünümü alır; sonradan eklenen kutular da. İstisna gerekirse `<select data-native>`.
+- Bir liste seçilince aynı formdaki sıradaki liste boşsa ve zorunluysa ya da bu seçimle açıldıysa (kategori → ürün, il → ilçe) kendiliğinden açılır. İstenmeyen yerde `data-no-auto-next`.
+- İlan verirken 1. adımda çeşit seçilince (çeşidi olmayan üründe veya arazide ürün seçilince) 2. adıma kendiliğinden geçilir.
+
+## Harita ve konsol temizliği
+- Harita sayfasındaki **Sokak haritası** sekmesi kaldırıldı; yalnızca il haritası var (eski `?gorunum=sokak` bağlantıları il haritasını açar).
+- Konsoldaki "Transition was aborted… opt-in disabled" hatası: tarayıcının sayfalar arası geçişi kaldırıldı, yerine sayfa içeriği hafifçe belirir.
+- Düğme simgeleri (mesaj, telefon, paylaş, kamera, takvim) CSP'ye takılıyordu; `img/ikon/*.svg` dosyalarına taşındı.
+- Visual Studio'nun Browser Link ve tarayıcı otomatik yenileme betikleri dev tunnel adresinden açılınca hata veriyordu; `launchSettings.json`'da `ASPNETCORE_PREVENTHOSTINGSTARTUP=true` ile kapatıldı (C# Hot Reload çalışmaya devam eder, tarayıcıyı elle yenilemek gerekir).
+
 ## Profil: kapak fotoğrafı, fotoğraf kadrajı ve büyütme
 - Profile **kapak fotoğrafı** eklenebilir (yeşil bandın yerine geçer; JPG/PNG/WebP, en fazla 6 MB). Veritabanı: `019_ProfilKapak.sql`.
 - Kapak ve profil fotoğrafı yüklenirken **sürükleyerek ortalanır**, kaydırıcıyla (web'de fare tekerleğiyle de) yakınlaştırılır; "Ortala" ile sıfırlanır. Kadraj sonradan da değiştirilebilir. API: `POST/DELETE /api/profiles/me/cover`, `PUT /api/profiles/me/frame`, `GET /api/profiles/{id}/cover`.

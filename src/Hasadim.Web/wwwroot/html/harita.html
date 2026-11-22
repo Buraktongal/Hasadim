@@ -23,7 +23,6 @@
     <script src="/js/site-header.js" defer></script>
     <script src="/js/menu-settings.js" defer></script>
     <script src="/js/hasadim-api.js" defer></script>
-    <script src="/js/mini-map.js" defer></script>
     <script src="/js/turkiye-iller.js" defer></script>
     <script src="/js/harita.js" defer></script>
     <script src="/js/navigation.js" defer></script>
@@ -43,12 +42,8 @@
             <a id="mapListLink" class="secondary" href="/html/index.html">Liste olarak gör</a>
         </form>
     </header>
-    <div class="segment-tabs" role="tablist" aria-label="Harita görünümü">
-        <button type="button" role="tab" data-map-tab="il" aria-controls="cityPanel" aria-selected="true">İl haritası</button>
-        <button type="button" role="tab" data-map-tab="sokak" aria-controls="streetPanel" aria-selected="false">Sokak haritası</button>
-    </div>
     <p id="mapStatus" role="status" aria-live="polite"></p>
-    <section id="cityPanel" role="tabpanel" class="map-panel city-panel">
+    <section id="cityPanel" class="map-panel city-panel" aria-label="İl haritası">
         <div class="city-map-wrap">
             <div id="cityMap" class="tr-map"></div>
             <div class="city-map-foot">
@@ -62,13 +57,6 @@
             <h2>En çok ilan olan iller</h2>
             <ol id="topCities" class="top-cities"></ol>
         </aside>
-    </section>
-    <section id="streetPanel" role="tabpanel" class="map-panel" hidden>
-        <div class="street-wrap">
-            <div id="streetMap" class="mini-map street-map" aria-label="İlanların sokak haritası"></div>
-            <div id="mapPopup" class="map-popup" role="dialog" aria-label="Seçilen ilan" hidden></div>
-        </div>
-        <p id="streetNote" class="muted"></p>
     </section>
 </main>
 <div id="siteFooter"></div>

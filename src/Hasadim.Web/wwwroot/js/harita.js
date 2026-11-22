@@ -1,7 +1,7 @@
 'use strict';
 
 // Harita sayfası: il sınırlarıyla çizilmiş Türkiye haritası (renk ilan yoğunluğu) ve
-// OpenStreetMap üzerinde ilan noktaları. Veri: /api/meyve-ilanlari/harita
+// İl haritası (ilan yoğunluğu). Veri: /api/meyve-ilanlari/harita
 (() => {
     const api = window.HasadimApi;
     const $ = s => document.querySelector(s);
@@ -10,7 +10,6 @@
     const unit = u => ({ kg: 'kg', balya: 'balya', m2: 'm²' })[u] || 'kg';
     const price = p => new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: p.kategori === 'Arazi' ? 0 : 2, maximumFractionDigits: p.kategori === 'Arazi' ? 0 : 2 }).format(p.kilogramFiyati) + (p.kategori === 'Arazi' ? '' : ' / ' + unit(p.birim));
     let data = { iller: [], noktalar: [] };
-    let street = null;
     let request = 0;
 
     const form = $('#mapFilters');
@@ -217,59 +216,6 @@
         $('#mapTotal').textContent = number(data.iller.reduce((s, x) => s + x.count, 0)) + ' ilan · ' + data.iller.length + ' il';
     }
 
-    function popup(p) {
-        const box = $('#mapPopup');
-        box.replaceChildren();
-        const close = node('button', '×', 'close');
-        close.type = 'button'; close.setAttribute('aria-label', 'Kapat');
-        close.onclick = () => { box.hidden = true; };
-        const title = node('a', p.baslik, 'popup-title');
-        title.href = '/html/ilan.html?id=' + encodeURIComponent(p.id);
-        title.setAttribute('translate', 'no');
-        const meta = node('p', (window.HasadimCatalog?.category(p.kategori)?.name || '') + ' · ' + p.meyveTuru + ' · ' + p.il + ' / ' + p.ilce, 'muted');
-        const qty = p.kategori === 'Arazi' ? number(p.miktarKg) + ' m²' : number(p.miktarKg) + ' ' + unit(p.birim);
-        box.append(close, title, meta, node('p', price(p) + ' · ' + qty, 'popup-price'),
-            node('small', p.exact ? 'Satıcının işaretlediği konum' : 'Yaklaşık konum (il merkezine yakın)', 'muted'));
-        const open = node('a', 'İlanı incele →', 'primary');
-        open.href = title.href;
-        box.append(open);
-        box.hidden = false;
-    }
-
-    function renderStreet() {
-        const root = $('#streetMap');
-        if (!street) street = window.HasadimMap.create(root, { center: window.HasadimMap.TURKEY.center, zoom: 6 });
-        if (!street) return;
-        const points = data.noktalar.map(p => {
-            const exact = p.enlem !== null && p.enlem !== undefined && p.boylam !== null && p.boylam !== undefined;
-            const at = exact ? [Number(p.enlem), Number(p.boylam)] : window.HasadimMap.approximate(p.id, p.il);
-            return at ? { ...p, lat: at[0], lon: at[1], exact } : null;
-        }).filter(Boolean);
-        street.setPoints(points, p => {
-            const b = node('button', undefined, 'map-price-pin' + (p.exact ? ' exact' : ''));
-            b.type = 'button';
-            if (window.FruitIcons) b.append(window.FruitIcons.node(p.meyveTuru, 18));
-            b.append(node('span', new Intl.NumberFormat('tr-TR', { notation: 'compact', maximumFractionDigits: 1 }).format(p.kilogramFiyati) + ' ₺'));
-            b.setAttribute('aria-label', p.baslik + ', ' + price(p));
-            b.onclick = event => { event.stopPropagation(); popup(p); };
-            return b;
-        });
-        street.fit(points);
-        $('#streetNote').textContent = number(points.length) + ' ilan gösteriliyor' + (data.noktalar.length >= 500 ? ' (en yeni 500 ilan)' : '') + '. Konumu işaretlenmemiş ilanlar il merkezine yakın gösterilir.';
-    }
-
-    function tab(name) {
-        for (const b of document.querySelectorAll('[data-map-tab]')) {
-            const on = b.dataset.mapTab === name;
-            b.setAttribute('aria-selected', String(on));
-            $('#' + b.getAttribute('aria-controls')).hidden = !on;
-        }
-        const url = new URL(location.href);
-        url.searchParams.set('gorunum', name);
-        history.replaceState(null, '', url.pathname + url.search);
-        if (name === 'sokak') setTimeout(renderStreet); else setTimeout(declutter);
-    }
-
     async function load() {
         const mine = ++request;
         $('#mapStatus').textContent = 'Harita yükleniyor…';
@@ -279,7 +225,7 @@
             data = result;
             $('#mapStatus').textContent = '';
             renderCities();
-            if (!$('#streetPanel').hidden) renderStreet();
+            setTimeout(declutter);
             const url = new URL(location.href);
             for (const key of ['kategori', 'meyveTuru']) { const v = form.elements.namedItem(key).value; if (v) url.searchParams.set(key, v); else url.searchParams.delete(key); }
             history.replaceState(null, '', url.pathname + url.search);
@@ -302,7 +248,7 @@
     form.elements.namedItem('kategori').addEventListener('change', () => { fillProducts(); void load(); });
     form.elements.namedItem('meyveTuru').addEventListener('change', () => void load());
     form.onsubmit = e => { e.preventDefault(); void load(); };
-    for (const b of document.querySelectorAll('[data-map-tab]')) b.onclick = () => tab(b.dataset.mapTab);
-    tab(params.get('gorunum') === 'sokak' ? 'sokak' : 'il');
+    // Sokak haritası kaldırıldı; eski ?gorunum=sokak bağlantıları il haritasını açar.
+    if (params.has('gorunum')) { const url = new URL(location.href); url.searchParams.delete('gorunum'); history.replaceState(null, '', url.pathname + url.search); }
     void load();
 })();

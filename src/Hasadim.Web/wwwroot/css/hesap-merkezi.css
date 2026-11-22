@@ -529,18 +529,13 @@ body[data-view="messages"] #siteLayout .topbar.market-header { border-bottom: 1p
 /* ---------- Sayfa ve görünüm geçişleri ---------- */
 .view-enter { animation: hasadim-view-in .32s cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes hasadim-view-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-/* Sayfadan sayfaya geçişte yumuşak kayma (destekleyen tarayıcılarda). */
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: hasadim-page-out .18s ease both; }
-::view-transition-new(root) { animation: hasadim-page-in .28s cubic-bezier(.2, .7, .2, 1) both; }
-@keyframes hasadim-page-out { to { opacity: 0; transform: translateY(-6px); } }
+/* Sayfa açılırken içerik yumuşakça belirir. Tarayıcının sayfalar arası geçişi (@view-transition) kullanılmaz:
+   geçiş, bu stili yüklemeyen bir sayfaya gidilince "Transition was aborted… opt-in disabled" hatası veriyordu. */
+body > main { animation: hasadim-page-in .28s cubic-bezier(.2, .7, .2, 1) backwards; }
 @keyframes hasadim-page-in { from { opacity: 0; transform: translateY(10px); } }
-/* Üst menü geçiş sırasında yerinde kalır; yalnızca içerik kayar. */
-/* Başlık kendi katmanında: açılır menü, kayarak gelen içeriğin üstünde kalır. */
-#siteLayout .topbar.market-header { position: relative; z-index: 70; view-transition-name: site-header; }
-::view-transition-group(site-header) { animation: none; }
+#siteLayout .topbar.market-header { position: relative; z-index: 70; }
 @media (prefers-reduced-motion: reduce) {
-    .view-enter, ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+    .view-enter, body > main { animation: none; }
 }
 
 .menu-sub-form { display: grid; gap: 10px; padding: 4px; }

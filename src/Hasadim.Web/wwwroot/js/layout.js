@@ -17,10 +17,12 @@ window.layoutReady = (async () => {
 
     container.innerHTML = await response.text();
 
-    // Arama önerileri (ürün ve satıcı) her sayfada ortak arama kutusuna eklenir.
-    if (!document.querySelector('script[src="/js/arama-onerileri.js"]')) {
+    // Her sayfada ortak: arama önerileri (ürün ve satıcı) ve özel görünümlü seçim kutuları.
+    for (const src of ['/js/arama-onerileri.js', '/js/searchable-select.js']) {
+        if (document.querySelector('script[src="' + src + '"]')) continue;
+        if (src.includes('searchable') && window.SearchableSelect) continue;
         const script = document.createElement('script');
-        script.src = '/js/arama-onerileri.js';
+        script.src = src;
         script.defer = true;
         document.head.append(script);
     }

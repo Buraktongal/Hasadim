@@ -3,9 +3,11 @@
 // Aranabilir seçim kutusu (select2 benzeri, kütüphanesiz).
 // Asıl <select> formda kalır ve değerin kaynağıdır; üstüne arama yapılabilen
 // bir açılır liste çizilir. Seçenekler veya değer koddan değişse de görünüm
-// kendini günceller. Kullanım: <select data-searchable> veya
-// window.SearchableSelect.enhance(select).
-window.SearchableSelect = (() => {
+// kendini günceller. Sitedeki TÜM tekli <select>'ler bu görünümü alır (sonradan
+// eklenenler dahil); istisna için <select data-native>. Elle: window.SearchableSelect.enhance(select).
+// Bir seçim yapılınca, aynı formdaki sıradaki seçim listesi boşsa ve zorunluysa ya da
+// bu seçimle yeni açıldıysa (il → ilçe gibi) kendiliğinden açılır.
+window.SearchableSelect = window.SearchableSelect || (() => {
     const supported = typeof MutationObserver === 'function' && typeof HTMLSelectElement === 'function';
     const valueDescriptor = supported ? Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value') : null;
     const indexDescriptor = supported ? Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex') : null;
@@ -159,14 +161,18 @@ window.SearchableSelect = (() => {
 
         function choose(option) {
             const changed = select.value !== option.value;
+            const next = changed && option.value !== '' ? nextSelect(select) : null;
+            const wasDisabled = next?.disabled;
             valueDescriptor.set.call(select, option.value);
             paint();
             close();
             if (changed) {
                 select.dispatchEvent(new Event('input', { bubbles: true }));
                 select.dispatchEvent(new Event('change', { bubbles: true }));
+                if (next) openWhenReady(next, wasDisabled);
             }
         }
+        wrap.openList = open;
 
         button.addEventListener('click', () => panel.hidden ? open() : close());
         button.addEventListener('keydown', e => {
@@ -213,6 +219,30 @@ window.SearchableSelect = (() => {
         paint();
     }
 
+    // Aynı form (yoksa aynı pencere/bölüm) içindeki, görünür ve sıradaki seçim listesi.
+    function nextSelect(select) {
+        if (select.hasAttribute('data-no-auto-next')) return null;
+        const scope = select.form || select.closest('dialog, form, fieldset, section') || document;
+        const all = Array.from(scope.querySelectorAll('select')).filter(s => !s.multiple);
+        return all[all.indexOf(select) + 1] || null;
+    }
+    // Sıradaki liste ancak boşsa ve (zorunluysa ya da bu seçimle yeni açıldıysa) açılır. Bağımlı listenin
+    // seçenekleri birkaç an sonra dolabildiği için kısa süre beklenir; arada kullanıcı başka yere geçerse açılmaz.
+    function openWhenReady(next, wasDisabled) {
+        const started = Date.now();
+        const focusAtStart = document.activeElement;
+        const tick = () => {
+            const wrap = next.closest('.ss');
+            if (!wrap?.openList || next.value !== '' || document.querySelector('.ss.is-open')) return;
+            if (document.activeElement !== focusAtStart && !wrap.contains(document.activeElement) && document.activeElement !== document.body) return;
+            const visible = wrap.offsetParent !== null && !next.closest('[hidden]');
+            const ready = visible && !next.disabled && Array.from(next.options).some(o => o.value !== '');
+            if (ready && (next.required || wasDisabled)) { wrap.querySelector('.ss-button')?.focus(); wrap.openList(); return; }
+            if (Date.now() - started < 900) setTimeout(tick, 90);
+        };
+        setTimeout(tick, 120);
+    }
+
     function closeOthers(except) {
         for (const other of document.querySelectorAll('.ss.is-open')) {
             if (other === except) continue;
@@ -224,12 +254,17 @@ window.SearchableSelect = (() => {
 
     function enhanceAll(root = document) {
         if (!supported) return;
-        for (const select of root.querySelectorAll('select[data-searchable]')) enhance(select);
+        const selects = root.matches?.('select') ? [root] : root.querySelectorAll?.('select') || [];
+        for (const select of selects) if (!select.multiple && !(select.size > 1) && !select.hasAttribute('data-native')) enhance(select);
     }
 
     if (supported) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => enhanceAll());
         else enhanceAll();
+        // Sonradan eklenen (ör. ortak menü, pencereler, kodla çizilen formlar) seçim kutuları da aynı görünümü alır.
+        new MutationObserver(list => {
+            for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 && !n.classList?.contains('ss')) enhanceAll(n);
+        }).observe(document.documentElement, { childList: true, subtree: true });
     }
     return { enhance, enhanceAll, fold };
 })();

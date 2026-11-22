@@ -176,6 +176,20 @@ window.ListingWizard = (() => {
         tile?.classList.add('just-picked');
         const panel = $('#varietyPanel');
         if (panel && !panel.hidden) setTimeout(() => panel.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' }), 180);
+        // Çeşit seçilecek bir şey yoksa (arazi veya çeşidi tanımlı olmayan ürün) 1. adım tamamdır: sonraki adıma geç.
+        const land = window.HasadimCatalog?.isLand(form().elements.namedItem('kategori')?.value);
+        if (land || !(window.HasadimCatalog?.varieties(value) || []).length) autoNext(1);
+    }
+
+    // Bir adımın son seçimi yapılınca seçimin işaretlendiği kısa an görünsün, sonra sonraki adıma geçilsin.
+    let advanceTimer = 0;
+    function autoNext(from) {
+        clearTimeout(advanceTimer);
+        advanceTimer = setTimeout(() => {
+            // Sessiz kontrol: eksik alan varsa uyarı balonu çıkarmadan bu adımda kalınır.
+            const ok = fieldsOf(from).every(f => typeof f.checkValidity !== 'function' || f.checkValidity());
+            if (current === from && ok) go(from + 1);
+        }, 420);
     }
 
     // Seçili kutucuğu işaretler ve çeşit çiplerini çizer.
@@ -219,6 +233,7 @@ window.ListingWizard = (() => {
                     c.setAttribute('aria-pressed', String(on));
                 }
                 setError('');
+                autoNext(1);
             };
             chips.append(chip);
         });
