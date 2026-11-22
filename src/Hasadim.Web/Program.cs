@@ -16,8 +16,9 @@ app.Use(async(c,next)=>{
  // Google ve Apple ile giriş için yalnızca resmi betik/çerçeve adreslerine izin verilir.
  c.Response.Headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client https://appleid.cdn-apple.com; style-src 'self' https://accounts.google.com/gsi/style; img-src 'self' blob: https://appleid.cdn-apple.com https://tile.openstreetmap.org; connect-src 'self' https://accounts.google.com/gsi/ https://appleid.apple.com"+devConnect+"; frame-src https://accounts.google.com/gsi/ https://appleid.apple.com https://maps.google.com https://www.google.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://appleid.apple.com";
  // Kamera yalnızca bu sitede (ilan fotoğrafı çekmek için); mikrofon, konum ve ödeme kapalı.
- c.Response.Headers["Permissions-Policy"]="camera=(self), microphone=(), geolocation=(), payment=(), usb=()";
- c.Response.Headers["Cache-Control"]="no-store";await next();
+ c.Response.Headers["Permissions-Policy"]="camera=(self), microphone=(), geolocation=(self), payment=(), usb=()";
+ // Önbellek: API yanıtları kişisel veri içerebilir, hiç saklanmaz. Sayfa ve dosyalar için ayrıntı aşağıda (StaticAssets).
+ c.Response.Headers["Cache-Control"]=c.Request.Path.StartsWithSegments("/api")?"no-store":"no-cache";await next();
 });
 app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c,IHttpClientFactory clients)=>{
  using var request=new HttpRequestMessage(new HttpMethod(c.Request.Method),c.Request.Path.Value+c.Request.QueryString.Value);
@@ -36,6 +37,10 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
   if(response.Headers.TryGetValues("Retry-After",out var retry))c.Response.Headers["Retry-After"]=retry.ToArray();
   if(response.Headers.TryGetValues("WWW-Authenticate",out var challenge))c.Response.Headers["WWW-Authenticate"]=challenge.ToArray();
   if(response.Content.Headers.ContentType is not null)c.Response.ContentType=response.Content.Headers.ContentType.ToString();
+  // İlan ve profil fotoğrafları kimlikle (fotoğraf numarası / ?v=dosya) adreslenir, içerikleri değişmez: tarayıcı bir hafta
+  // saklar, aynı fotoğraf tekrar indirilmez. "private": yalnızca kullanıcının kendi tarayıcısı saklar, ara sunucular saklamaz.
+  if(c.Request.Method=="GET"&&response.IsSuccessStatusCode&&response.Content.Headers.ContentType?.MediaType?.StartsWith("image/")==true&&StaticAssets.IsImmutablePhoto(c.Request))
+   c.Response.Headers["Cache-Control"]="private, max-age=604800, immutable";
   await response.Content.CopyToAsync(c.Response.Body,c.RequestAborted);
  }catch(HttpRequestException){c.Response.StatusCode=502;await c.Response.WriteAsJsonAsync(new{mesaj="API bağlantısı kurulamadı. API projesini ve HTTPS sertifikasını kontrol edin."});}
 });
@@ -52,7 +57,12 @@ foreach (var file in Directory.EnumerateFiles(
         Results.Redirect("/html/" + page + c.Request.QueryString.Value));
 }
 
-app.UseStaticFiles();app.Run();
+// Sayfalardaki /js, /css, /img ve /data adreslerine dosyanın içerik özeti (?v=...) eklenir. Özetli dosyalar tarayıcıda
+// bir yıl saklanır (ör. Türkiye haritası, il-ilçe listesi, ürün kataloğu bir kez iner); dosya değişince özet de değişir
+// ve yeni sürüm hemen iner. Sayfaların kendisi her açılışta kısa bir kontrolle (304) tazelenir.
+app.Use(async(c,next)=>{if(!await StaticAssets.TryServeHtml(c,app.Environment.WebRootPath))await next();});
+app.UseStaticFiles(new StaticFileOptions{OnPrepareResponse=ctx=>ctx.Context.Response.Headers.CacheControl=StaticAssets.CachePolicy(ctx.Context.Request,ctx.File.Name)});
+app.Run();
 
 sealed class QuietDevToolsFilter:IStartupFilter
 {
@@ -69,4 +79,72 @@ sealed class QuietDevToolsFilter:IStartupFilter
   });
   next(app);
  };
+}
+
+static class StaticAssets
+{
+ static readonly System.Collections.Concurrent.ConcurrentDictionary<string,(DateTime Time,long Size,string Hash)> hashes=new();
+ static readonly System.Collections.Concurrent.ConcurrentDictionary<string,(DateTime Time,string Etag,byte[] Body)> pages=new();
+ static readonly System.Text.RegularExpressions.Regex assetRef=new("(?<a>(?:src|href)=\")(?<p>/(?:js|css|img|data)/[A-Za-z0-9_./-]+\\.(?:js|css|svg|png|jpg|webp|json|ico))(?<b>\")",System.Text.RegularExpressions.RegexOptions.Compiled);
+ static readonly System.Text.RegularExpressions.Regex photoPath=new("^/api/(?:meyve-ilanlari/[0-9a-fA-F-]{36}/photos/[0-9a-fA-F-]{36}|profiles/[0-9a-fA-F-]{36}/(?:photo|cover))$",System.Text.RegularExpressions.RegexOptions.Compiled);
+
+ public static bool IsImmutablePhoto(HttpRequest r)
+ {
+  var path=r.Path.Value??"";
+  if(!photoPath.IsMatch(path))return false;
+  // Profil fotoğrafı ve kapak adresi yalnızca dosya sürümüyle (?v=) birlikte değişmez sayılır.
+  return path.Contains("/photos/")||r.Query.ContainsKey("v");
+ }
+
+ public static string CachePolicy(HttpRequest r,string name)
+ {
+  if(r.Query.ContainsKey("v"))return "public, max-age=31536000, immutable";
+  var ext=Path.GetExtension(name).ToLowerInvariant();
+  // Özetsiz görseller bir gün saklanır; sonra kısa bir kontrolle tazelenir. Diğer her şey her seferinde kontrol edilir (304).
+  return ext is ".png" or ".jpg" or ".webp" or ".svg" or ".ico" or ".woff2"?"public, max-age=86400, must-revalidate":"no-cache";
+ }
+
+ static string? Hash(string root,string url)
+ {
+  var full=Path.GetFullPath(Path.Combine(root,url.TrimStart('/')));
+  if(!full.StartsWith(Path.GetFullPath(root),StringComparison.Ordinal)||!File.Exists(full))return null;
+  var info=new FileInfo(full);
+  if(hashes.TryGetValue(full,out var known)&&known.Time==info.LastWriteTimeUtc&&known.Size==info.Length)return known.Hash;
+  var hash=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(full)))[..10].ToLowerInvariant();
+  hashes[full]=(info.LastWriteTimeUtc,info.Length,hash);
+  return hash;
+ }
+
+ // /html/*.html isteklerinde sayfa, varlık adresleri özetlenerek döndürülür (ETag ile; değişmediyse 304).
+ public static async Task<bool> TryServeHtml(HttpContext c,string root)
+ {
+  var path=c.Request.Path.Value??"";
+  if(!HttpMethods.IsGet(c.Request.Method)&&!HttpMethods.IsHead(c.Request.Method))return false;
+  if(!path.StartsWith("/html/",StringComparison.Ordinal)||!path.EndsWith(".html",StringComparison.Ordinal)||path.Contains(".."))return false;
+  var full=Path.GetFullPath(Path.Combine(root,path.TrimStart('/')));
+  if(!full.StartsWith(Path.GetFullPath(root),StringComparison.Ordinal)||!File.Exists(full))return false;
+  var time=File.GetLastWriteTimeUtc(full);
+  if(!pages.TryGetValue(full,out var page)||page.Time!=time)
+  {
+   var html=await File.ReadAllTextAsync(full,c.RequestAborted);
+   html=assetRef.Replace(html,m=>{var h=Hash(root,m.Groups["p"].Value);return h is null?m.Value:m.Groups["a"].Value+m.Groups["p"].Value+"?v="+h+m.Groups["b"].Value;});
+   var body=System.Text.Encoding.UTF8.GetBytes(html);
+   page=(time,"\""+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(body))[..16]+"\"",body);
+   pages[full]=page;
+  }
+  // Sayfadaki dosyalardan biri değişmiş olabilir: önbellekteki sayfa bu dosyaların özetleriyle yeniden doğrulanır.
+  else
+  {
+   var html=System.Text.Encoding.UTF8.GetString(page.Body);
+   foreach(System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(html,"(/(?:js|css|img|data)/[A-Za-z0-9_./-]+)\\?v=([0-9a-f]{10})"))
+    if(Hash(root,m.Groups[1].Value)!=m.Groups[2].Value){pages.TryRemove(full,out _);return await TryServeHtml(c,root);}
+  }
+  c.Response.Headers.ETag=page.Etag;
+  c.Response.Headers.CacheControl="no-cache";
+  if(c.Request.Headers.IfNoneMatch.ToString()==page.Etag){c.Response.StatusCode=304;return true;}
+  c.Response.ContentType="text/html; charset=utf-8";
+  c.Response.ContentLength=page.Body.Length;
+  if(HttpMethods.IsGet(c.Request.Method))await c.Response.Body.WriteAsync(page.Body,c.RequestAborted);
+  return true;
+ }
 }

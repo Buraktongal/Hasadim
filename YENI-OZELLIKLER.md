@@ -1,5 +1,14 @@
 # Yeni özellikler (Kasım 2026)
 
+## Önbellek: sabit dosyalar bir kez iner
+- Daha önce her yanıt `Cache-Control: no-store` ile gidiyordu; her sayfa açılışında tüm betikler, stiller, Türkiye haritası (≈55 KB) ve il-ilçe listesi yeniden indiriliyordu.
+- Artık sayfalardaki `/js`, `/css`, `/img`, `/data` adreslerine dosyanın içerik özeti eklenir (`/js/turkiye-iller.js?v=3fa1c0d2e9`). Özetli dosyalar tarayıcıda **bir yıl** saklanır; dosya değişince özet değişir ve yeni sürüm hemen iner (eski sürümde takılı kalma olmaz).
+- Sayfalar ve özetsiz dosyalar her açılışta kısa bir kontrolle (304, içerik inmez) tazelenir; özetsiz görseller bir gün saklanır.
+- İlan ve profil fotoğrafları içerikleri değişmeyen adreslerle sunulduğu için kullanıcının tarayıcısında bir hafta saklanır (`private`: ara sunucular saklamaz).
+- API yanıtları (ilanlar, mesajlar, harita üzerindeki sayılar…) kişisel/güncel veri olduğu için **hiç saklanmaz**.
+- Mobil uygulamada katalog, il-ilçe ve harita verisi zaten uygulamanın içinde; fotoğraflar cihazda saklanıyor.
+- "Bulunduğum yeri kullan" düğmesi için tarayıcı izin politikasında konum bu siteye açıldı (`geolocation=(self)`).
+
 ## Kasım 2026 — son düzenlemeler
 - **Harita:** İlan konumu artık **Google Haritalar** ile gösterilir (OpenStreetMap karoları bazı adreslerde "Access blocked" veriyordu). Yaklaşık konumda ilçe, işaretli konumda iğne gösterilir. İlan verirken konum: "Bulunduğum yeri kullan", Google Haritalar bağlantısı ya da "38.49, 27.70" gibi koordinat yapıştırarak eklenir; önizleme Google Haritalar'dadır. (Mobilde ilan konumu dokunarak seçilmeye devam eder; açma/yol tarifi Google veya Apple Haritalar'a gider.)
 - **Teslimat:** Yeni seçenek **Kargo**; birden çok seçenek işaretlenebilir (ör. "Yerinden teslim, Kargo"). Filtrede bir seçenek seçilince o seçeneği içeren tüm ilanlar gelir. Veritabanı: `020_TeslimatCoklu.sql`.

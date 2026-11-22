@@ -25,7 +25,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
         else if (mounted) Animated.timing(x, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => { if (finished) setMounted(false); });
     }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const go = (href: string, auth?: boolean) => { onClose(); setTimeout(() => router.push((auth && !user ? '/giris' : href) as never), 160); };
+    const go = (href: string, auth?: boolean) => { onClose(); setTimeout(() => router.push((auth && !user ? '/giris' : href) as never), 280); };
     const sections: [string, Item[]][] = [
         ['Keşfet', [
             { icon: 'market', label: 'Tüm ilanlar', href: '/' },
