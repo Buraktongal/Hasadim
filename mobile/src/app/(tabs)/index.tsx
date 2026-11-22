@@ -18,7 +18,7 @@ import type { CategoryCount } from '../../lib/types';
 import { radius } from '../../lib/theme';
 
 export default function Market() {
-    const { colors: c, t, user } = useApp();
+    const { colors: c, t, user, dark } = useApp();
     const [filters, setFilters] = useFilters();
     const [text, setText] = useState(filters.q ?? '');
     const [counts, setCounts] = useState<Record<string, number>>({});
@@ -28,7 +28,7 @@ export default function Market() {
     const [compact, setCompact] = useState(false);
     const [focused, setFocused] = useState<'top' | 'list' | null>(null);
     const fade = useRef(new Animated.Value(0)).current;
-    useEffect(() => { Animated.timing(fade, { toValue: compact ? 1 : 0, duration: 180, useNativeDriver: true }).start(); }, [compact, fade]);
+    useEffect(() => { Animated.spring(fade, { toValue: compact ? 1 : 0, useNativeDriver: true, speed: 18, bounciness: compact ? 6 : 0 }).start(); }, [compact, fade]);
     const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
         const y = e.nativeEvent.contentOffset.y;
         setCompact(prev => (prev ? y > 90 : y > 140)); // iki eşik: sınırda titremesin
@@ -130,14 +130,16 @@ export default function Market() {
     return (
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.bg }}>
             <View style={{ flex: 1 }}>
-            <View style={{ height: 56, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line, zIndex: 2 }}>
-                <Animated.View pointerEvents={compact ? 'none' : 'auto'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
-                    <Image source={require('../../../assets/logo.png')} style={{ width: 120, height: 40, borderRadius: 6 }} resizeMode="contain" accessibilityLabel="Hasadım" />
+            <View style={{ height: 56, zIndex: 2 }}>
+                {/* Kaydırınca beliren çubuk zemini (en üstteyken logo doğrudan sayfa zemininde durur). */}
+                <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }), shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: compact ? 3 : 0 }} />
+                <Animated.View pointerEvents={compact ? 'none' : 'auto'} accessibilityElementsHidden={compact} importantForAccessibility={compact ? 'no-hide-descendants' : 'auto'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' }), transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }, { scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0.94] }) }] }}>
+                    <Image source={dark ? require('../../../assets/logo-yazi-koyu.png') : require('../../../assets/logo-yazi.png')} style={{ width: 132, height: 34 }} resizeMode="contain" accessibilityLabel="Hasadım" />
                     <View style={{ flex: 1 }} />
                     <IconButton label="Bildirimler" badge={badges.notifications} onPress={() => router.push(user ? '/bildirimler' : '/giris')}><Icon name="bell" color={c.green2} /></IconButton>
                 </Animated.View>
-                {compact ? (
-                    <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }}>
+                {(
+                    <Animated.View pointerEvents={compact ? 'auto' : 'none'} accessibilityElementsHidden={!compact} importantForAccessibility={compact ? 'auto' : 'no-hide-descendants'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }), transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-22, 0] }) }] }}>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 40, borderWidth: 1.5, borderColor: c.green, borderRadius: radius.m, backgroundColor: c.input, paddingLeft: 9 }}>
                             <Icon name="search" color={c.muted} size={17} />
                             <TextInput value={text} onChangeText={setText} returnKeyType="search" maxLength={150} onSubmitEditing={submit}
@@ -150,7 +152,7 @@ export default function Market() {
                         ))}
                         <IconButton label="Filtreler" size={40} badge={filterCount || undefined} onPress={() => router.push('/filtreler')}><Icon name="filter" color={c.green2} size={20} /></IconButton>
                     </Animated.View>
-                ) : null}
+                )}
             </View>
             {compact && focused === 'top' ? (
                 <View style={{ position: 'absolute', left: 10, right: 10, top: 60, zIndex: 5, elevation: 6 }}>

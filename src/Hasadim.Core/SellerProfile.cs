@@ -14,6 +14,9 @@ public class SellerProfile
  public string Phone {get;set;}="";
  public bool ShowPhone {get;set;}=true;
  public string? PhotoFile {get;set;}
+ public string? CoverFile {get;set;}
+ public byte PhotoX {get;set;}=50; public byte PhotoY {get;set;}=50; public short PhotoZoom {get;set;}=100;
+ public byte CoverX {get;set;}=50; public byte CoverY {get;set;}=50; public short CoverZoom {get;set;}=100;
  public DateTime? CreatedAt {get;set;}
  public string Email {get;set;}="";
  public bool EmailConfirmed {get;set;}

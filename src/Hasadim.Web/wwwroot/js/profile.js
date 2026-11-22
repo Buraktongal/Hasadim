@@ -5,17 +5,51 @@ function status(t){$('#status').textContent=t;}
 async function busy(button,fn){button.disabled=true;try{await fn();}catch(e){status(e.message);}finally{button.disabled=false;}}
 function image(p,parent){if(!p.photoUrl)return;const img=node('img');img.src=p.photoUrl;img.alt=p.displayName;img.className='avatar';parent.append(img);}
 let currentProfile = null;
+// Kapak ve profil fotoğrafı önizlemesi; tıklayınca kadraj penceresi açılır.
+function look(p) {
+    const panel = $('#profileLook'); if (!panel || !window.ProfilePhoto) return;
+    panel.hidden = false;
+    $('#plPublic').href = '/html/satici.html?id=' + p.id;
+    const cover = $('#plCover');
+    cover.querySelector('img')?.remove();
+    cover.classList.toggle('has-photo', Boolean(p.coverUrl));
+    if (p.coverUrl) { const img = node('img'); img.src = p.coverUrl; img.alt = ''; img.className = 'sp-cover-img'; window.ProfilePhoto.apply(img, p.coverFrame); cover.prepend(img); }
+    const avatar = $('#plAvatar');
+    avatar.querySelector('img, .pl-initial')?.remove();
+    if (p.photoUrl) { const img = node('img'); img.src = p.photoUrl; img.alt = 'Profil fotoğrafın'; window.ProfilePhoto.apply(img, p.photoFrame); avatar.prepend(img); }
+    else { const i = node('span', (p.displayName || '?').trim().slice(0, 1).toLocaleUpperCase('tr-TR')); i.className = 'pl-initial'; avatar.prepend(i); }
+    $('#plCoverEdit').querySelector('span:last-child').textContent = p.coverUrl ? 'Kapağı düzenle' : 'Kapak fotoğrafı ekle';
+    const open = (target) => {
+        const cover = target === 'cover';
+        window.ProfilePhoto.editor({
+            title: cover ? 'Kapak fotoğrafı' : 'Profil fotoğrafı', shape: cover ? 'cover' : 'avatar',
+            url: cover ? p.coverUrl : p.photoUrl, frame: cover ? p.coverFrame : p.photoFrame,
+            onSave: async ({ file, frame }) => {
+                if (file) { const body = new FormData(); body.append('file', file); await api('/api/profiles/me/' + (cover ? 'cover' : 'photo'), 'POST', body); }
+                else if (!(cover ? p.coverUrl : p.photoUrl)) throw Error('Önce bir fotoğraf seç.');
+                metadata(await api('/api/profiles/me/frame', 'PUT', { target: target, x: frame.x, y: frame.y, zoom: frame.zoom }));
+                status(cover ? 'Kapak fotoğrafı kaydedildi.' : 'Profil fotoğrafı kaydedildi.');
+            },
+            onRemove: (cover ? p.coverUrl : p.photoUrl) ? async () => {
+                metadata(await api('/api/profiles/me/' + (cover ? 'cover' : 'photo'), 'DELETE'));
+                status('Fotoğraf kaldırıldı.');
+            } : null
+        });
+    };
+    $('#plCoverEdit').onclick = () => open('cover');
+    $('#plAvatarEdit').onclick = () => open('photo');
+}
 function metadata(p) {
     currentProfile = p;
     $('#avatar').hidden = !p.photoUrl;
-    if (p.photoUrl) $('#avatar').src = p.photoUrl;
+    if (p.photoUrl) { $('#avatar').src = p.photoUrl; window.ProfilePhoto?.apply($('#avatar'), p.photoFrame); }
     $('#name').textContent = p.displayName;
     $('#summary').textContent = 'Profil tamamlanma: %' + p.completion;
     $('#publicLink').href = '/html/satici.html?id=' + p.id;
     $('#publicLink').hidden = false;
     $('#profileForm').elements.namedItem('version').value = p.version;
     $('#emailInfo').textContent = p.email + ' · ' + (p.emailVerified ? 'E-posta doğrulandı' : 'E-posta doğrulanmadı');
-    $('#deletePhoto').hidden = !p.photoUrl;
+    look(p);
     const activities = { Producer: 'Üretici', Buyer: 'Alıcı', Trader: 'Tüccar', Cooperative: 'Kooperatif', Other: 'Diğer' };
     const details = [
         ['Görünen ad', p.displayName],
@@ -110,7 +144,6 @@ async function edit() {
         $('#profileOverview').hidden = false;
         editButton.setAttribute('aria-expanded', 'false');
         form.reset();
-        $('#photoForm').reset();
         editButton.focus();
     }
     metadata(await api('/api/profiles/me'));
@@ -155,23 +188,6 @@ async function edit() {
             status('Profilin güncellendi.');
         }).finally(() => { cancelButton.disabled = false; });
     };
-    $('#photoForm').onsubmit = e => {
-        e.preventDefault();
-        if (e.submitter.disabled) return;
-        return busy(e.submitter, async () => {
-            const body = new FormData(e.currentTarget), file = body.get('file');
-            if (!file || !file.size) throw Error('Bir fotoğraf seç.');
-            if (file.size > 3000000) throw Error('Fotoğraf en fazla 3 MB olabilir.');
-            metadata(await api('/api/profiles/me/photo', 'POST', body));
-            $('#photoForm').reset();
-            status('Profil fotoğrafı güncellendi.');
-        });
-    };
-    $('#deletePhoto').onclick = e => busy(e.currentTarget, async () => {
-        await api('/api/profiles/me/photo', 'DELETE');
-        metadata(await api('/api/profiles/me'));
-        status('Fotoğraf kaldırıldı.');
-    });
 }
 const id=new URLSearchParams(location.search).get('id');
 async function listings(){const data=await api('/api/meyve-ilanlari?ownerId='+encodeURIComponent(id)+'&page='+page),root=$('#sellerListings');root.replaceChildren();$('#count').textContent=data.total+' ilan';if(!data.items.length)root.append(node('p','Henüz yayında ilan yok.'));for(const x of data.items){const c=node('article');c.className='card';if(x.photoUrl){const img=node('img');img.src=x.photoUrl;img.alt=x.baslik;img.className='seller-list-image';c.append(img);}const body=node('div');body.className='card-body';const link=node('a',x.baslik);link.href='/html/ilan.html?id='+x.id+'&seller='+encodeURIComponent(id);body.append(link,node('p',x.il+' / '+x.ilce),window.MarketPresentation.price(x),window.MarketPresentation.stats(x));body.append(window.MarketPresentation.facts(x));c.append(body);root.append(c);}$('#pageLabel').textContent=page+' / '+Math.max(1,Math.ceil(data.total/data.pageSize));$('#previous').disabled=page===1;$('#next').disabled=page*data.pageSize>=data.total;}

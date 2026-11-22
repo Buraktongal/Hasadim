@@ -1494,3 +1494,32 @@ footer.site-footer {
 @media (max-width: 560px) {
     .dw-dialog { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 20px 20px 0 0; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
+
+/* ---------- Fotoğraf büyütme ve kadraj penceresi (js/foto-cerceve.js) ---------- */
+.pp-lightbox { max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; margin: 0; padding: 0; border: 0; background: #000d; display: none; }
+.pp-lightbox[open] { display: grid; place-items: center; }
+.pp-lightbox img { max-width: min(92vw, 1100px); max-height: 88vh; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 60px #000a; }
+.pp-close { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: #fff2; color: #fff; font-size: 28px; cursor: pointer; }
+.pp-editor { width: min(640px, calc(100vw - 24px)); padding: 18px; border: 0; border-radius: 20px; box-shadow: 0 24px 60px #0005; }
+.pp-editor::backdrop { background: #0008; }
+.pp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pp-head h2 { margin: 0; font-size: 18px; }
+.pp-x { border: 0; background: none; font-size: 28px; line-height: 1; cursor: pointer; color: inherit; }
+.pp-stage { position: relative; overflow: hidden; border-radius: 14px; background: linear-gradient(120deg, #19452b, #2f7a4a 55%, #6aa84f); touch-action: none; cursor: grab; outline: none; }
+.pp-stage.dragging { cursor: grabbing; }
+.pp-stage:focus-visible { box-shadow: 0 0 0 3px #9cc39a; }
+.pp-cover .pp-stage { aspect-ratio: 4 / 1; }
+.pp-avatar .pp-stage { width: min(300px, 70vw); aspect-ratio: 1; margin: 0 auto; border-radius: 26%; }
+.pp-stage img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; pointer-events: none; }
+.pp-stage img[hidden] { display: none; }
+.pp-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 12px; color: #fff; text-align: center; font-weight: 600; }
+.pp-grid { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .15s; background-image: linear-gradient(#fff6 1px, transparent 1px), linear-gradient(90deg, #fff6 1px, transparent 1px); background-size: 33.33% 33.33%; background-position: -1px -1px; }
+.pp-stage.has-image:hover .pp-grid, .pp-stage.dragging .pp-grid { opacity: 1; }
+.pp-hint { margin: 10px 0 4px; font-size: 13px; color: #6b746d; text-align: center; }
+.pp-zoom { display: flex; align-items: center; gap: 10px; max-width: 360px; margin: 0 auto; font-weight: 700; }
+.pp-zoom input { flex: 1; accent-color: var(--green); }
+.pp-zoom[hidden], .pp-hint[hidden] { display: none; }
+.pp-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.pp-actions .pp-remove { margin-right: auto; color: #b3261e; }
+.pp-actions [hidden] { display: none; }
+.pp-editor .form-error:empty { display: none; }

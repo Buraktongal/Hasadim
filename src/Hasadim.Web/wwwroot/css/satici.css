@@ -16,7 +16,8 @@
         linear-gradient(120deg, #19452b, #2f7a4a 55%, #6aa84f);
 }
 .sp-cover-place { position: absolute; right: 18px; bottom: 14px; padding: 6px 12px; border-radius: 999px; background: #0000004d; color: #fff; font-size: 13px; font-weight: 600; backdrop-filter: blur(4px); }
-.sp-hero-body { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: end; padding: 0 26px 22px; }
+.sp-hero-body { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding: 0 26px 22px; }
+.sp-hero-body .sp-avatar { align-self: start; }
 .sp-avatar { position: relative; z-index: 1; width: 116px; height: 116px; margin-top: -58px; border-radius: 28px; border: 5px solid #fff; background: #eaf3e4; box-shadow: 0 8px 24px #0002; overflow: hidden; display: grid; place-items: center; }
 .sp-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .sp-initial { font-size: 48px; font-weight: 800; color: var(--green); }
@@ -29,8 +30,10 @@
 .sp-badge-ok { background: #e8f4fd; color: #155a8a; border-color: #cfe4f5; }
 .sp-badge-new { background: #fff4dc; color: #8a5a00; border-color: #f4e2b4; }
 .sp-badge-season { background: #effae6; color: #2f6b12; border-color: #d4ecc2; }
-.sp-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.sp-act { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
+.sp-actions { display: grid; grid-template-columns: repeat(3, minmax(130px, 1fr)); gap: 8px; align-self: center; }
+.sp-actions > [hidden] { display: none; }
+.sp-act { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.sp-act.shown { border-color: var(--green); color: var(--green); font-weight: 700; }
 .sp-phone-label { display: none; }
 .sp-act.sp-disabled { opacity: .55; cursor: not-allowed; }
 .sp-ico { width: 18px; height: 18px; background: currentColor; -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat; }
@@ -133,10 +136,12 @@
     .sp-avatar { width: 92px; height: 92px; margin-top: -46px; border-radius: 22px; }
     .sp-identity { padding-top: 0; }
     .sp-identity h1 { font-size: 23px; }
-    .sp-actions { display: grid; grid-template-columns: 1.3fr 1fr 1fr; }
+    .sp-actions { grid-template-columns: 1.3fr 1fr 1fr; }
     .sp-act { justify-content: center; gap: 6px; padding-inline: 8px; font-size: 14px; }
     .sp-phone-number { display: none; }
     .sp-phone-label { display: inline !important; }
+    .sp-act.shown .sp-phone-number { display: inline; }
+    .sp-act.shown .sp-phone-label { display: none !important; }
     .sp-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .sp-item-body { padding: 10px; }
     .sp-item-body h3 { font-size: 13.5px; }
@@ -154,3 +159,40 @@ html[data-theme="dark"] .sp-seasons .sp-strip i.on { background: #3f6e31; }
 html[data-theme="dark"] .sp-seasons .sp-strip i.peak { background: #7cc466; }
 html[data-theme="dark"] .sp-seasons .sp-season-head .sp-strip i { background: none; }
 html[data-theme="dark"] .sp-avatar { border-color: #1b211d; }
+
+/* ---------- Fotoğraf kadrajı, büyütme ve düzenleme (js/foto-cerceve.js) ---------- */
+.sp-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sp-cover.has-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(#0000 55%, #0005); pointer-events: none; }
+.sp-cover-place { z-index: 1; }
+.sp-avatar img { cursor: zoom-in; }
+.sp-avatar button { all: unset; display: block; width: 100%; height: 100%; cursor: zoom-in; }
+.sp-avatar button:focus-visible { outline: 3px solid var(--green); }
+
+/* ---------- Profil bilgilerim: profil görünümü kartı ---------- */
+.pl-panel { padding: 0 !important; overflow: hidden; }
+.pl-cover { position: relative; height: 160px; background:
+    radial-gradient(circle at 18% 120%, #ffffff26 0 90px, transparent 91px),
+    repeating-linear-gradient(-12deg, #ffffff0d 0 14px, transparent 14px 34px),
+    linear-gradient(120deg, #19452b, #2f7a4a 55%, #6aa84f); overflow: hidden; }
+.pl-edit { display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; font: inherit; font-weight: 700; }
+.pl-edit-cover { position: absolute; right: 14px; bottom: 14px; z-index: 1; padding: 9px 14px; border-radius: 999px; background: #000000a0; color: #fff; backdrop-filter: blur(4px); }
+.pl-edit-cover:hover { background: #000000c8; }
+.pl-cam { width: 18px; height: 18px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M4 8h3l2-3h6l2 3h3v11H4z'/%3E%3Ccircle cx='12' cy='13' r='3.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M4 8h3l2-3h6l2 3h3v11H4z'/%3E%3Ccircle cx='12' cy='13' r='3.5'/%3E%3C/svg%3E") center / contain no-repeat; }
+.pl-body { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; padding: 0 22px 18px; }
+.pl-avatar { position: relative; z-index: 1; width: 104px; height: 104px; margin-top: -48px; border-radius: 26px; border: 5px solid #fff; background: #eaf3e4; box-shadow: 0 8px 24px #0002; overflow: hidden; display: grid; place-items: center; align-self: start; }
+.pl-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pl-initial { font-size: 42px; font-weight: 800; color: var(--green); }
+.pl-edit-avatar { position: absolute; inset: 0; justify-content: center; background: #0000; color: #fff; opacity: 0; transition: opacity .15s, background .15s; }
+.pl-avatar:hover .pl-edit-avatar, .pl-edit-avatar:focus-visible { opacity: 1; background: #0007; }
+.pl-text { padding-top: 12px; }
+.pl-text h2 { margin: 0 0 4px; font-size: 18px; }
+.pl-text p { margin: 0; font-size: 13.5px; }
+.pl-public { text-decoration: none; white-space: nowrap; }
+@media (hover: none) { .pl-edit-avatar { opacity: 1; background: #0005; align-items: end; padding-bottom: 8px; } }
+@media (max-width: 640px) {
+    .pl-body { grid-template-columns: auto 1fr; padding: 0 14px 14px; }
+    .pl-avatar { width: 84px; height: 84px; margin-top: -40px; }
+    .pl-public { grid-column: 1 / -1; text-align: center; }
+    .pl-edit-cover span:last-child { font-size: 13px; }
+}
+html[data-theme="dark"] .pl-avatar { border-color: #1b211d; }

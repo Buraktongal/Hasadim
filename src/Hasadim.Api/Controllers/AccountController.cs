@@ -90,8 +90,8 @@ public class AccountController(UserManager<AppUser> users,SignInManager<AppUser>
    return BadRequest(new{mesaj="Şifre hatalı."});
   if(await users.IsInRoleAsync(u,"Admin")&&(await users.GetUsersInRoleAsync("Admin")).Count<=1)
    return BadRequest(new{mesaj="Son yönetici hesabı silinemez. Önce başka bir yönetici ekle."});
-  var photo=await deletion.Delete(u.Id,ct);
-  if(photo is not null&&Path.GetFileName(photo)==photo){try{System.IO.File.Delete(Path.Combine(env.ContentRootPath,"App_Data","profiles",photo));}catch(IOException){}}
+  foreach(var photo in await deletion.Delete(u.Id,ct))
+   if(Path.GetFileName(photo)==photo){try{System.IO.File.Delete(Path.Combine(env.ContentRootPath,"App_Data","profiles",photo));}catch(IOException){}}
   await signIn.SignOutAsync();
   return Ok(new{mesaj="Hesabın silindi. Hasadım'ı kullandığın için teşekkürler."});
  }

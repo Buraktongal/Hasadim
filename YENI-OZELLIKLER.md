@@ -1,5 +1,26 @@
 # Yeni özellikler (Kasım 2026)
 
+## Profil: kapak fotoğrafı, fotoğraf kadrajı ve büyütme
+- Profile **kapak fotoğrafı** eklenebilir (yeşil bandın yerine geçer; JPG/PNG/WebP, en fazla 6 MB). Veritabanı: `019_ProfilKapak.sql`.
+- Kapak ve profil fotoğrafı yüklenirken **sürükleyerek ortalanır**, kaydırıcıyla (web'de fare tekerleğiyle de) yakınlaştırılır; "Ortala" ile sıfırlanır. Kadraj sonradan da değiştirilebilir. API: `POST/DELETE /api/profiles/me/cover`, `PUT /api/profiles/me/frame`, `GET /api/profiles/{id}/cover`.
+- Web'de **Profil bilgilerim** sayfasının başında herkese açık profildeki gibi bir önizleme kartı var; kapağa veya fotoğrafa tıklayınca kadraj penceresi açılır. Mobilde **Profilim** ekranında aynı kart var; fotoğrafa dokununca Galeriden seç / Fotoğraf çek / Konumunu ayarla / Büyüt / Kaldır seçenekleri çıkar.
+- Satıcı profilinde profil fotoğrafına (ve kapağa) tıklayınca fotoğraf **kırpılmadan büyük** gösterilir.
+- Hesap silinince kapak fotoğrafı da silinir.
+
+## Satıcı profili: numara gizli
+- Telefon numarası doğrudan görünmez: **Numarayı göster**'e basınca açılır, ikinci dokunuşta arar. Giriş yapmamış kişi giriş sayfasına yönlendirilir. Mesaj / Numara / Paylaş düğmeleri eşit genişlikte ve yazıları ortalı.
+- Mobil satıcı profili web'deki düzene getirildi: kapak, büyütülebilen fotoğraf, rozetler, Mesaj (birden çok ilanı varsa hangi ilan için olduğu sorulur) / Numara / Paylaş, özet, hazır stok, hasat takvimi, hakkında, ürüne göre süzülen iki sütunlu ilanlar. Aşağı kaydırınca üstte satıcının adı yazan çubuk çıkar.
+
+## Harita bağlantıları
+- Web'de ilan konumu **Google Haritalar**'da açılır ("Google Haritalar’da aç", "Yol tarifi").
+- Mobilde "Haritada aç" ve "Yol tarifi" hangi uygulamanın kullanılacağını sorar: **Google Haritalar**, iPhone'da **Apple Haritalar**, Android'de **telefonun harita uygulaması** (yüklü uygulamalardan seçilir).
+
+## Mobil düzeltmeler
+- Pazar ekranının üstünde Hasadım yazısı artık **arka plansız** (koyu temada açık yeşil). Aşağı kaydırınca yazı yukarı kayıp kaybolur, arama + harita + ürün takvimi + filtre çubuğu yaylanarak iner.
+- Alttan açılan pencerelerde (paylaş, onay, teklif…) arkadaki **karartı artık pencereyle birlikte inip kalkmıyor**; yerinde solarak gelir, yalnızca pencere kayar.
+- İlan verirken ekran yanlışlıkla kapatılırsa girilenler kaybolmaz: tekrar açınca "Yarım kalan ilanın geri yüklendi" yazar (Baştan başla ile silinir). Metinler uygulama kapanıp açılınca da durur; fotoğraflar uygulama açık kaldığı sürece korunur. İlan yayımlanınca taslak silinir.
+- Ürün takvimi ekranında ay harfleri **yan yana** dizilir (iPhone'da alt alta görünüyordu).
+
 ## Arama: satıcılar da aranır
 - Web'de üstteki arama kutusuna yazdıkça öneri listesi açılır: **Ürünler** (seçince pazar yeri o ürünle süzülür) ve **Satıcılar** (ad veya firma adıyla; seçince profili açılır). En altta "… için ilanlarda ara" satırı vardır; ok tuşları, Enter ve Esc ile kullanılabilir.
 - Mobilde de aynı öneriler arama kutusunun altında çıkar.

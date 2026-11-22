@@ -19,7 +19,14 @@ public class ProfileRepository(SqlConnectionFactory factory):IProfileRepository
    "PhoneNumberConfirmed=CASE WHEN PhoneNumber=@normalized THEN PhoneNumberConfirmed ELSE 0 END,"+
    "PhoneNumber=CASE WHEN PhoneNumber=@normalized THEN PhoneNumber ELSE @normalized END WHERE Id=@id",p,tx,cancellationToken:ct));tx.Commit();return true;
  }
- public async Task<string?> SetPhoto(Guid id,string? name,CancellationToken ct){await using var c=await factory.Open(ct);var old=await c.QueryAsync<string?>(new CommandDefinition("UPDATE dbo.UserProfiles SET PhotoFile=@name OUTPUT deleted.PhotoFile WHERE UserId=@id",new{id,name},cancellationToken:ct));return old.SingleOrDefault();}
+ public async Task<string?> SetPhoto(Guid id,string? name,CancellationToken ct){await using var c=await factory.Open(ct);var old=await c.QueryAsync<string?>(new CommandDefinition("UPDATE dbo.UserProfiles SET PhotoFile=@name,PhotoX=50,PhotoY=50,PhotoZoom=100 OUTPUT deleted.PhotoFile WHERE UserId=@id",new{id,name},cancellationToken:ct));return old.SingleOrDefault();}
+ public async Task<string?> SetCover(Guid id,string? name,CancellationToken ct){await using var c=await factory.Open(ct);var old=await c.QueryAsync<string?>(new CommandDefinition("UPDATE dbo.UserProfiles SET CoverFile=@name,CoverX=50,CoverY=50,CoverZoom=100 OUTPUT deleted.CoverFile WHERE UserId=@id",new{id,name},cancellationToken:ct));return old.SingleOrDefault();}
+ // Sütun adı sabit iki seçenekten seçilir (kullanıcı girdisi SQL'e eklenmez).
+ public async Task SetFrame(Guid id,string target,int x,int y,int zoom,CancellationToken ct)
+ {
+  var sql=target=="cover"?"UPDATE dbo.UserProfiles SET CoverX=@x,CoverY=@y,CoverZoom=@zoom WHERE UserId=@id":"UPDATE dbo.UserProfiles SET PhotoX=@x,PhotoY=@y,PhotoZoom=@zoom WHERE UserId=@id";
+  await using var c=await factory.Open(ct);await c.ExecuteAsync(new CommandDefinition(sql,new{id,x=(byte)x,y=(byte)y,zoom=(short)zoom},cancellationToken:ct));
+ }
  // Satıcı arama: ad veya firma adında geçen, yayında ilanı olan kullanıcılar (arayanın engellediği kişiler hariç).
  // LIKE özel karakterleri (%, _, [) kaçışlanır; önce adı aranan kelimeyle başlayanlar, sonra ilan sayısı çok olanlar gelir.
  public async Task<IReadOnlyList<SellerSearchRow>> Search(string term,Guid? viewer,int take,CancellationToken ct)

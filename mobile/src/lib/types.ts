@@ -45,7 +45,9 @@ export interface MapData {
     noktalar: { id: string; baslik: string; kategori: string; meyveTuru: string; il: string; ilce: string; kilogramFiyati: number; birim: string; miktarKg: number; enlem?: number | null; boylam?: number | null }[];
 }
 
+export interface PhotoFrame { x: number; y: number; zoom: number }
 export interface PublicProfile {
+    coverUrl?: string | null; photoFrame?: PhotoFrame | null; coverFrame?: PhotoFrame | null; hasPhone?: boolean;
     id: string; displayName: string; accountType: string; activity: string; businessName?: string | null;
     city: string; district: string; about: string; phone?: string | null; photoUrl?: string | null;
     memberSince?: string | null; emailVerified: boolean; activeListingCount: number;

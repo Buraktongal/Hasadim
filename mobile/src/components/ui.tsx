@@ -393,20 +393,41 @@ export function useRequireUser() {
 export type { Colors };
 
 // Alttan açılan pencere (teklif, şikâyet, onay).
+// Karartı yerinde solarak gelir; yalnızca panel aşağıdan kayar (karartı panelle birlikte inip kalkmaz).
 export function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title: string; children: ReactNode }) {
     const c = useColors(); const t = useT(); const insets = useSafeAreaInsets();
+    const [mounted, setMounted] = useState(visible);
+    const fade = useRef(new Animated.Value(0)).current;
+    const slide = useRef(new Animated.Value(1)).current;
+    useEffect(() => {
+        if (visible) {
+            setMounted(true);
+            Animated.parallel([
+                Animated.timing(fade, { toValue: 1, duration: 200, useNativeDriver: native }),
+                Animated.timing(slide, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: native })
+            ]).start();
+        } else if (mounted) {
+            Animated.parallel([
+                Animated.timing(fade, { toValue: 0, duration: 180, useNativeDriver: native }),
+                Animated.timing(slide, { toValue: 1, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: native })
+            ]).start(({ finished }) => { if (finished) setMounted(false); });
+        }
+    }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!mounted) return null;
     return (
-        <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end' }}>
-                <Pressable accessibilityLabel={t('Kapat')} onPress={onClose} style={[StyleSheet.absoluteFill, { backgroundColor: '#0008' }]} />
-                <View style={{ backgroundColor: c.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 18, paddingBottom: insets.bottom + 18, gap: 12, maxHeight: '90%' }}>
+                <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#0008', opacity: fade }]}>
+                    <Pressable accessibilityLabel={t('Kapat')} onPress={onClose} style={StyleSheet.absoluteFill} />
+                </Animated.View>
+                <Animated.View style={{ backgroundColor: c.panel, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 18, paddingBottom: insets.bottom + 18, gap: 12, maxHeight: '90%', transform: [{ translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [0, 600] }) }] }}>
                     <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: c.line }} />
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text accessibilityRole="header" style={{ flex: 1, fontSize: 18, fontWeight: '800', color: c.ink }}>{t(title)}</Text>
                         <IconButton label="Kapat" onPress={onClose}><Svg width={18} height={18} viewBox="0 0 24 24"><Path d="M6 6l12 12M18 6L6 18" stroke={c.muted} strokeWidth={2.4} strokeLinecap="round" /></Svg></IconButton>
                     </View>
                     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>{children}</ScrollView>
-                </View>
+                </Animated.View>
             </KeyboardAvoidingView>
         </Modal>
     );
@@ -415,10 +436,12 @@ export function Sheet({ visible, onClose, title, children }: { visible: boolean;
 // Onay penceresi (silme, çıkış, engelleme).
 export function useConfirm() {
     const [state, setState] = useState<{ title: string; text: string; ok: string; danger?: boolean; resolve: (v: boolean) => void } | null>(null);
-    const ask = (title: string, text: string, ok = 'Tamam', danger = false) => new Promise<boolean>(resolve => setState({ title, text, ok, danger, resolve }));
-    const close = (v: boolean) => { state?.resolve(v); setState(null); };
+    const [open, setOpen] = useState(false);
+    const ask = (title: string, text: string, ok = 'Tamam', danger = false) => new Promise<boolean>(resolve => { setState({ title, text, ok, danger, resolve }); setOpen(true); });
+    // Metin, kapanma animasyonu bitene kadar ekranda kalır.
+    const close = (v: boolean) => { if (open) state?.resolve(v); setOpen(false); };
     const node = (
-        <Sheet visible={Boolean(state)} onClose={() => close(false)} title={state?.title ?? ''}>
+        <Sheet visible={open} onClose={() => close(false)} title={state?.title ?? ''}>
             <Txt>{state?.text ?? ''}</Txt>
             <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}><Button title="Vazgeç" kind="secondary" onPress={() => close(false)} /></View>

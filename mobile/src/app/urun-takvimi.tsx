@@ -63,14 +63,17 @@ export default function CropCalendar() {
                         <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: nowTint, borderWidth: 1, borderColor: c.accent }} /><Txt muted size={12.5}>Bu ay</Txt></View>
                     </View>
                 </View>
-                {/* Ay başlıkları kaydırırken üstte sabit kalır. */}
-                <View style={{ flexDirection: 'row', paddingHorizontal: 12, backgroundColor: c.panel, borderBottomWidth: 1, borderTopWidth: 1, borderColor: c.line }}>
-                    <View style={{ width: 112 }} />
-                    {months.map((m, i) => (
-                        <View key={m} style={{ flex: 1, alignItems: 'center', paddingVertical: 7, backgroundColor: i + 1 === now ? nowTint : 'transparent' }}>
-                            <Text accessibilityLabel={monthNames(lang)[i]} style={{ fontSize: 12, fontWeight: i + 1 === now ? '900' : '700', color: i + 1 === now ? c.accent : c.muted }}>{initials[i]}</Text>
-                        </View>
-                    ))}
+                {/* Ay başlıkları kaydırırken üstte sabit kalır. Yapışkan başlık kendi sarmalayıcısına konur:
+                    iOS'ta yapışkan öğenin kendi satır düzeni bozulup harfler alt alta dizilebiliyor. */}
+                <View style={{ backgroundColor: c.panel, borderBottomWidth: 1, borderTopWidth: 1, borderColor: c.line }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', paddingHorizontal: 12 }}>
+                        <View style={{ width: 112 }} />
+                        {months.map((m, i) => (
+                            <View key={m} style={{ flex: 1, minWidth: 0, alignItems: 'center', paddingVertical: 7, backgroundColor: i + 1 === now ? nowTint : 'transparent' }}>
+                                <Text numberOfLines={1} accessibilityLabel={monthNames(lang)[i]} style={{ fontSize: 12, fontWeight: i + 1 === now ? '900' : '700', color: i + 1 === now ? c.accent : c.muted }}>{initials[i]}</Text>
+                            </View>
+                        ))}
+                    </View>
                 </View>
                 {groups.map(g => (
                     <View key={g.cat.id}>

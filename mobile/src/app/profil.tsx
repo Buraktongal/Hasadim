@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { Button, Card, ErrorBox, Field, H2, Loading, Notice, Page, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt } from '../components/ui';
+import { Linking, Pressable, Text, View } from 'react-native';
+import { Icon } from '../components/Icon';
+import { FrameEditor, FramedImage, PhotoViewer } from '../components/ProfileMedia';
+import { Button, Card, ErrorBox, Field, H2, Loading, Notice, Page, Row, Segmented, Select, Sheet, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
 import { api, get, post, put } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { cities, districts } from '../lib/catalog';
-import type { MyProfile } from '../lib/types';
+import { appendPhoto, pickPhotos } from '../lib/photos';
+import { radius } from '../lib/theme';
+import type { MyProfile, PhotoFrame } from '../lib/types';
 
 const ACTIVITIES: [string, string][] = [['Producer', 'Üretici'], ['Buyer', 'Alıcı'], ['Trader', 'Tüccar'], ['Cooperative', 'Kooperatif'], ['Other', 'Diğer']];
 
 export default function Profile() {
-    const { user, reloadUser, t } = useApp();
+    const { user, reloadUser, t, colors: c, dark } = useApp();
     const [p, setP] = useState<MyProfile | null>(null);
     const [f, setF] = useState<Record<string, string | boolean>>({});
     const [busy, setBusy] = useState(false);
@@ -17,6 +21,11 @@ export default function Profile() {
     const [phoneChallenge, setPhoneChallenge] = useState<string | null>(null);
     const [phoneInfo, setPhoneInfo] = useState<string | null>(null);
     const [code, setCode] = useState('');
+    // Fotoğraflar: hangi fotoğrafın seçenekleri açık, kadraj düzenleyicide ne var, büyütülen fotoğraf.
+    const [menu, setMenu] = useState<'photo' | 'cover' | null>(null);
+    const [framing, setFraming] = useState<{ target: 'photo' | 'cover'; url: string; local: boolean } | null>(null);
+    const [viewing, setViewing] = useState<string | null>(null);
+    const confirm = useConfirm();
 
     const load = useCallback(async () => {
         try {
@@ -40,6 +49,36 @@ export default function Profile() {
         } catch (e) { setError(e instanceof Error ? e.message : 'Profil kaydedilemedi.'); void load(); }
         finally { setBusy(false); }
     }
+    async function pick(target: 'photo' | 'cover', source: 'camera' | 'library') {
+        setMenu(null);
+        try {
+            const r = await pickPhotos(source, 1);
+            if ('photos' in r) { if (r.photos[0]) setFraming({ target, url: r.photos[0].uri, local: true }); }
+            else if ('denied' in r) {
+                if (!r.canAskAgain && await confirm.ask('Kamera izni gerekli', t('Fotoğraf çekmek için Ayarlar’dan Hasadım’a kamera izni vermelisin.'), 'Ayarları aç')) await Linking.openSettings();
+            } else toast(r.error);
+        } catch { toast('Fotoğraf hazırlanamadı. Başka bir fotoğraf dene.'); }
+    }
+    async function saveFrame(frame: PhotoFrame) {
+        if (!framing) return;
+        try {
+            if (framing.local) {
+                const form = new FormData();
+                appendPhoto(form, 'file', { uri: framing.url, width: 0, height: 0 }, 0);
+                await api('/api/profiles/me/' + (framing.target === 'cover' ? 'cover' : 'photo'), { method: 'POST', body: form });
+            }
+            const r = await put<MyProfile>('/api/profiles/me/frame', { target: framing.target, ...frame });
+            setP(r); setFraming(null); void reloadUser();
+            toast(framing.target === 'cover' ? 'Kapak fotoğrafı kaydedildi.' : 'Profil fotoğrafı kaydedildi.');
+        } catch (e) { toast(e instanceof Error ? e.message : 'Fotoğraf kaydedilemedi.'); }
+    }
+    async function removePhoto(target: 'photo' | 'cover') {
+        setMenu(null);
+        if (!await confirm.ask(target === 'cover' ? 'Kapak fotoğrafını kaldır' : 'Profil fotoğrafını kaldır', t('Fotoğraf profilinden kaldırılacak.'), 'Kaldır', true)) return;
+        try { setP(await del2('/api/profiles/me/' + (target === 'cover' ? 'cover' : 'photo'))); toast('Fotoğraf kaldırıldı.'); void reloadUser(); }
+        catch (e) { toast(e instanceof Error ? e.message : 'Fotoğraf kaldırılamadı.'); }
+    }
+    const del2 = (path: string) => api<MyProfile>(path, { method: 'DELETE' });
     async function startPhone() {
         try { const r = await post<{ challengeId: string; mesaj: string }>('/api/account/me/phone/start'); setPhoneChallenge(r.challengeId); setPhoneInfo(r.mesaj); }
         catch (e) { toast(e instanceof Error ? e.message : 'Kod gönderilemedi.'); }
@@ -51,6 +90,28 @@ export default function Profile() {
 
     return (
         <Page title="Profilim">
+            {/* Profil görünümü: kapak ve profil fotoğrafı herkese açık profildeki gibi görünür. */}
+            <View style={{ borderRadius: radius.l, overflow: 'hidden', backgroundColor: c.panel, borderWidth: 1, borderColor: c.line }}>
+                <Pressable onPress={() => setMenu('cover')} accessibilityRole="button" accessibilityLabel={t('Kapak fotoğrafı')} style={{ height: 130, backgroundColor: dark ? '#1f4a2f' : '#2f7a4a' }}>
+                    <CoverPattern />
+                    <FramedImage url={p.coverUrl} frame={p.coverFrame} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+                    <View style={{ position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#000a', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 }}>
+                        <Icon name="camera" color="#fff" size={16} />
+                        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>{t(p.coverUrl ? 'Kapağı düzenle' : 'Kapak fotoğrafı ekle')}</Text>
+                    </View>
+                </Pressable>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 14, paddingBottom: 14 }}>
+                    <Pressable onPress={() => setMenu('photo')} accessibilityRole="button" accessibilityLabel={t('Profil fotoğrafı')}
+                        style={{ width: 92, height: 92, marginTop: -44, borderRadius: 26, borderWidth: 4, borderColor: c.panel, backgroundColor: c.greenSoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                        {p.photoUrl ? <FramedImage url={p.photoUrl} frame={p.photoFrame} style={{ width: '100%', height: '100%' }} /> : <Text style={{ fontSize: 36, fontWeight: '900', color: c.green2 }}>{(p.displayName || '?').trim().slice(0, 1).toLocaleUpperCase('tr')}</Text>}
+                        <View style={{ position: 'absolute', right: 4, bottom: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: c.green2, alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" color="#fff" size={14} /></View>
+                    </Pressable>
+                    <View style={{ flex: 1, paddingTop: 8 }}>
+                        <Txt weight="800" size={17} raw numberOfLines={1}>{p.businessName || p.displayName}</Txt>
+                        <Txt muted size={12.5}>Fotoğraflara dokunarak değiştir, konumunu ayarla veya büyüt.</Txt>
+                    </View>
+                </View>
+            </View>
             <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <H2>Profil doluluğu</H2><View style={{ flex: 1 }} /><Tag label={'%' + p.completion} raw tone={p.completion >= 80 ? 'green' : 'accent'} />
@@ -81,6 +142,34 @@ export default function Profile() {
             </Card>
             {error ? <ErrorBox message={error} /> : null}
             <Button title="Kaydet" busy={busy} onPress={save} />
+
+            <Sheet visible={Boolean(menu)} onClose={() => setMenu(null)} title={menu === 'cover' ? 'Kapak fotoğrafı' : 'Profil fotoğrafı'}>
+                {menu ? <>
+                    <Row title="Galeriden seç" icon={<Icon name="image" color={c.green2} />} onPress={() => void pick(menu, 'library')} />
+                    <Row title="Fotoğraf çek" icon={<Icon name="camera" color={c.green2} />} onPress={() => void pick(menu, 'camera')} />
+                    {(menu === 'cover' ? p.coverUrl : p.photoUrl) ? <>
+                        <Row title="Konumunu ayarla" subtitle="Sürükleyerek ortala, yakınlaştır" icon={<Icon name="edit" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; setMenu(null); setFraming({ target: menu, url, local: false }); }} />
+                        <Row title="Büyüt" icon={<Icon name="eye" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; setMenu(null); setViewing(url); }} />
+                        <Row title="Kaldır" danger icon={<Icon name="trash" color={c.danger} />} onPress={() => void removePhoto(menu)} />
+                    </> : null}
+                    <Txt muted size={12}>{menu === 'cover' ? t('Geniş, yatay bir fotoğraf seç (tarlan, bahçen, deponun önü…).') : t('Yüzünün veya logonun net göründüğü bir fotoğraf seç.')}</Txt>
+                </> : null}
+            </Sheet>
+            {framing ? <FrameEditor url={framing.url} shape={framing.target === 'cover' ? 'cover' : 'avatar'} title={framing.target === 'cover' ? 'Kapak fotoğrafı' : 'Profil fotoğrafı'}
+                frame={framing.local ? null : framing.target === 'cover' ? p.coverFrame : p.photoFrame} onCancel={() => setFraming(null)} onSave={saveFrame} /> : null}
+            <PhotoViewer url={viewing} onClose={() => setViewing(null)} />
+            {confirm.node}
         </Page>
+    );
+}
+
+// Kapak fotoğrafı yokken yeşil zemin üzerinde ince çizgiler (web'deki kapakla uyumlu).
+function CoverPattern() {
+    return (
+        <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, overflow: 'hidden' }}>
+            <View style={{ position: 'absolute', right: -40, top: -70, width: 200, height: 200, borderRadius: 100, backgroundColor: '#ffffff1f' }} />
+            <View style={{ position: 'absolute', left: -30, bottom: -90, width: 170, height: 170, borderRadius: 85, backgroundColor: '#ffffff17' }} />
+            <View style={{ position: 'absolute', left: '35%', top: 0, bottom: 0, width: 160, backgroundColor: '#ffffff0d', transform: [{ skewX: '-20deg' }] }} />
+        </View>
     );
 }

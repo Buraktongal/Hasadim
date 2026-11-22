@@ -145,6 +145,10 @@ profiles.Value.ShowPhone=true;Check((await ps.Public(profiles.Value.UserId,ct)).
 Check((await ps.Public(profiles.Value.UserId,ct)).MemberSince is null,"Eski kullanıcı için üyelik tarihi uydurulmaz");
 var pr=new ProfileRequest{DisplayName="Burak",City="Antalya",District="Merkez",Version=new byte[8]};await ps.Update(pr,ct);Check(profiles.UpdatedId==owner,"Profil güncellemesi oturumdaki kullanıcıya aittir");
 profiles.Success=false;await Status(409,()=>ps.Update(pr,ct),"Profil sürüm çakışması reddedilir");
+await ps.SetFrame(new FrameRequest{Target="cover",X=20,Y=80,Zoom=150},ct);Check(profiles.Frame==("cover",20,80,150),"Kapak kadrajı kaydedilir");
+async Task<bool> Rejected(Func<Task> f){try{await f();return false;}catch(System.ComponentModel.DataAnnotations.ValidationException){return true;}}
+profiles.Frame=null;Check(await Rejected(()=>ps.SetFrame(new FrameRequest{Target="photo; DROP",X=20},ct))&&profiles.Frame is null,"Bilinmeyen kadraj hedefi reddedilir");
+Check(await Rejected(()=>ps.SetFrame(new FrameRequest{Zoom=900},ct)),"Aşırı yakınlaştırma reddedilir");
 Check((await ps.Search("a",ct)).Count==0&&profiles.LastTerm is null,"Tek harfle satıcı araması veritabanına gitmez");
 profiles.Rows=[new(Guid.NewGuid(),"Ali Kaya","Business","Kaya Tarım","Antalya","Korkuteli","Trader",null,3,true),new(Guid.NewGuid(),"Veli","Individual","Gizli Firma","İzmir","Ödemiş","Producer","x.jpg",1,false)];
 var found=await ps.Search("  ka  ",ct);Check(profiles.LastTerm=="ka"&&found[0].Name=="Kaya Tarım"&&found[0].PersonName=="Ali Kaya","Kurumsal satıcı firma adıyla, kişi adı alt satırda gösterilir");
@@ -280,6 +284,9 @@ class MemoryProfiles:IProfileRepository{
  public Task<SellerProfile?> Find(Guid id,CancellationToken ct)=>Task.FromResult<SellerProfile?>(Value);
  public Task<bool> Update(Guid id,ProfileRequest r,CancellationToken ct){UpdatedId=id;return Task.FromResult(Success);}
  public Task<string?> SetPhoto(Guid id,string? n,CancellationToken ct)=>Task.FromResult<string?>(null);
+ public Task<string?> SetCover(Guid id,string? n,CancellationToken ct)=>Task.FromResult<string?>(null);
+ public (string T,int X,int Y,int Z)? Frame;
+ public Task SetFrame(Guid id,string t,int x,int y,int z,CancellationToken ct){Frame=(t,x,y,z);return Task.CompletedTask;}
  public List<SellerSearchRow> Rows=[];public string? LastTerm;
  public Task<IReadOnlyList<SellerSearchRow>> Search(string term,Guid? viewer,int take,CancellationToken ct){LastTerm=term;return Task.FromResult<IReadOnlyList<SellerSearchRow>>(Rows.Take(take).ToList());}
 }

@@ -9,13 +9,14 @@ namespace Hasadim.Infrastructure.Identity;
 // Google/Apple hesapları kaldırılır; güvenlik damgası yenilenir).
 public class AccountDeletion(SqlConnectionFactory factory)
 {
-    // Silinen profil fotoğrafının dosya adını döndürür (dosyayı çağıran siler).
-    public async Task<string?> Delete(Guid user, CancellationToken ct)
+    // Silinen profil ve kapak fotoğraflarının dosya adlarını döndürür (dosyaları çağıran siler).
+    public async Task<IReadOnlyList<string>> Delete(Guid user, CancellationToken ct)
     {
         await using var c = await factory.Open(ct);
         using var tx = c.BeginTransaction();
-        var photo = await c.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(
-            "SELECT PhotoFile FROM dbo.UserProfiles WHERE UserId = @user;", new { user }, tx, cancellationToken: ct));
+        var files = (await c.QueryAsync<(string? Photo, string? Cover)>(new CommandDefinition(
+            "SELECT PhotoFile, CoverFile FROM dbo.UserProfiles WHERE UserId = @user;", new { user }, tx, cancellationToken: ct)))
+            .SelectMany(x => new[] { x.Photo, x.Cover }).OfType<string>().ToList();
         var anonymous = "silinmis-" + user.ToString("N");
         await c.ExecuteAsync(new CommandDefinition("""
             UPDATE dbo.Listings SET IsDeleted = 1, Active = 0 WHERE OwnerId = @user AND IsDeleted = 0;
@@ -35,7 +36,7 @@ public class AccountDeletion(SqlConnectionFactory factory)
             DELETE dbo.RecoveryCodes WHERE UserId = @user;
             DELETE dbo.UserRoles WHERE UserId = @user;
             UPDATE dbo.UserProfiles
-            SET BusinessName = N'', City = N'', District = N'', About = N'', Phone = N'', ShowPhone = 0, PhotoFile = NULL
+            SET BusinessName = N'', City = N'', District = N'', About = N'', Phone = N'', ShowPhone = 0, PhotoFile = NULL, CoverFile = NULL
             WHERE UserId = @user;
             UPDATE dbo.Users
             SET UserName = @anonymous, NormalizedUserName = UPPER(@anonymous),
@@ -47,6 +48,6 @@ public class AccountDeletion(SqlConnectionFactory factory)
             WHERE Id = @user AND DeletedAt IS NULL;
             """, new { user, anonymous, email = anonymous + "@silindi.invalid" }, tx, cancellationToken: ct, commandTimeout: 60));
         tx.Commit();
-        return photo;
+        return files;
     }
 }

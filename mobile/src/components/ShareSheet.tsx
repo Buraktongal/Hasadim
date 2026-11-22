@@ -14,14 +14,16 @@ export type ShareContent = { title: string; text: string; path: string };
 export const shareUrl = (path: string) => PUBLIC_WEB_URL + path;
 
 export function useShare() {
+    // İçerik kapanınca da tutulur; pencere kapanma animasyonu boyunca boşalmaz.
     const [content, setContent] = useState<ShareContent | null>(null);
-    const node = <ShareSheet content={content} onClose={() => setContent(null)} />;
-    return { open: (x: ShareContent) => { void Haptics.selectionAsync().catch(() => undefined); setContent(x); }, node };
+    const [visible, setVisible] = useState(false);
+    const node = <ShareSheet content={content} visible={visible} onClose={() => setVisible(false)} />;
+    return { open: (x: ShareContent) => { void Haptics.selectionAsync().catch(() => undefined); setContent(x); setVisible(true); }, node };
 }
 
-function ShareSheet({ content, onClose }: { content: ShareContent | null; onClose: () => void }) {
+function ShareSheet({ content, visible, onClose }: { content: ShareContent | null; visible: boolean; onClose: () => void }) {
     const { colors: c, t } = useApp();
-    if (!content) return <Sheet visible={false} onClose={onClose} title="Paylaş"><View /></Sheet>;
+    if (!content) return null;
     const url = shareUrl(content.path);
     const message = content.text + '\n' + url;
     const enc = encodeURIComponent;
@@ -40,7 +42,7 @@ function ShareSheet({ content, onClose }: { content: ShareContent | null; onClos
         }
     ];
     return (
-        <Sheet visible onClose={onClose} title="Paylaş">
+        <Sheet visible={visible} onClose={onClose} title="Paylaş">
             <View style={{ padding: 12, borderRadius: 12, backgroundColor: c.bg, gap: 2 }}>
                 <Text style={{ color: c.ink, fontWeight: '800' }} numberOfLines={2}>{content.title}</Text>
                 <Text style={{ color: c.muted, fontSize: 12.5 }} numberOfLines={1}>{url}</Text>

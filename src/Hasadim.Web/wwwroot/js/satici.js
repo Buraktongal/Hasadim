@@ -36,8 +36,22 @@
     function hero(p, listings) {
         document.title = (p.businessName || p.displayName) + ' — Hasadım';
         const avatar = $('#spAvatar');
-        if (p.photoUrl) { const img = node('img'); img.src = p.photoUrl; img.alt = p.displayName; avatar.append(img); }
+        if (p.photoUrl) {
+            // Fotoğrafa tıklayınca kırpılmadan büyük gösterilir.
+            const open = node('button'); open.type = 'button'; open.setAttribute('aria-label', 'Profil fotoğrafını büyüt');
+            const img = node('img'); img.src = p.photoUrl; img.alt = p.displayName;
+            window.ProfilePhoto?.apply(img, p.photoFrame);
+            open.append(img); open.onclick = () => window.ProfilePhoto?.lightbox(p.photoUrl, p.businessName || p.displayName);
+            avatar.append(open);
+        }
         else avatar.append(node('span', (p.businessName || p.displayName || 'S').trim().slice(0, 1).toLocaleUpperCase('tr-TR'), 'sp-initial'));
+        if (p.coverUrl) {
+            const cover = node('img', undefined, 'sp-cover-img'); cover.src = p.coverUrl; cover.alt = '';
+            window.ProfilePhoto?.apply(cover, p.coverFrame);
+            const box = document.querySelector('.sp-cover');
+            box.classList.add('has-photo'); box.prepend(cover);
+            cover.addEventListener('click', () => window.ProfilePhoto?.lightbox(p.coverUrl, 'Kapak fotoğrafı'));
+        }
         $('#spName').textContent = p.businessName || p.displayName;
         $('#spName').setAttribute('translate', 'no');
         const place = [p.district, p.city].filter(Boolean).join(', ');
@@ -54,20 +68,27 @@
         badge(nf.format(p.activeListingCount ?? listings.length) + ' ilan yayında');
         if (listings.some(x => isInSeason(x.meyveTuru))) badge('🌱 Şu an hasatta ürünü var', 'sp-badge-season');
 
+        // Numara doğrudan görünmez: "Numarayı göster"e basınca açılır (giriş yapmamış kişi giriş sayfasına gider).
         const phone = $('#spPhone');
-        if (p.phone) {
-            phone.hidden = false;
+        const label = phone.querySelector('.sp-phone-number');
+        phone.hidden = !p.hasPhone && !p.phone;
+        phone.removeAttribute('href');
+        label.textContent = 'Numarayı göster';
+        phone.querySelector('.sp-phone-label').textContent = 'Numara';
+        phone.onclick = e => {
+            if (phone.dataset.shown) return; // ikinci dokunuşta arama bağlantısı çalışsın
+            e.preventDefault();
+            if (!p.phone) { location.href = window.HasadimApi.loginUrl(); return; }
+            phone.dataset.shown = '1';
             phone.href = 'tel:' + p.phone.replace(/[^0-9+]/g, '');
-            phone.querySelector('.sp-phone-number').textContent = p.phone;
+            label.textContent = p.phone;
+            phone.querySelector('.sp-phone-label').textContent = 'Ara';
             phone.setAttribute('aria-label', 'Satıcıyı ara: ' + p.phone);
-        } else {
-            phone.hidden = false;
-            phone.querySelector('.sp-phone-label').textContent = 'Telefon';
-            phone.removeAttribute('href');
-            phone.classList.add('sp-disabled');
-            phone.title = 'Satıcı numarasını gizlemiş ya da görmek için giriş yapman gerekiyor.';
-            phone.setAttribute('aria-disabled', 'true');
-        }
+            phone.classList.add('shown');
+        };
+        phone.setAttribute('role', 'button');
+        phone.tabIndex = 0;
+        phone.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); phone.click(); } };
         $('#spShare').onclick = async () => {
             const url = location.origin + '/html/satici.html?id=' + encodeURIComponent(p.id);
             try {

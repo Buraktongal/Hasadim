@@ -66,7 +66,7 @@ window.MarketPresentation = (() => {
         root.classList.add('seller-profile');
         const header = node('div', undefined, 'seller-profile-heading');
         const avatar = p.photoUrl ? node('img', undefined, 'avatar') : node('span', (p.displayName || 'S').trim().slice(0, 1).toLocaleUpperCase('tr-TR'), 'seller-initial');
-        if (p.photoUrl) { avatar.src = p.photoUrl; avatar.alt = p.displayName; }
+        if (p.photoUrl) { avatar.src = p.photoUrl; avatar.alt = p.displayName; if (p.photoFrame) avatar.style.objectPosition = p.photoFrame.x + '% ' + p.photoFrame.y + '%'; }
         else avatar.setAttribute('aria-hidden', 'true');
         const identity = node('div');
         identity.append(node('p', 'Hasadım satıcı profili', 'eyebrow'), node(full ? 'h1' : 'h3', full ? p.displayName : 'Satıcı bilgileri'));
@@ -194,12 +194,13 @@ window.MarketPresentation = (() => {
                 map?.setPin(point[0], point[1]);
             });
             const links = node('div', undefined, 'detail-map-links');
-            const open = node('a', 'Haritada aç', 'secondary');
-            open.href = 'https://www.openstreetmap.org/?mlat=' + point[0] + '&mlon=' + point[1] + '#map=' + (exact ? 15 : 10) + '/' + point[0] + '/' + point[1];
+            // Google Haritalar'da açılır (telefonda yüklüyse Google Haritalar uygulaması devralır).
+            const open = node('a', 'Google Haritalar’da aç', 'secondary');
+            open.href = 'https://www.google.com/maps/search/?api=1&query=' + point[0] + '%2C' + point[1];
             links.append(open);
             if (exact) {
                 const route = node('a', 'Yol tarifi', 'secondary');
-                route.href = 'https://www.openstreetmap.org/directions?route=%3B' + point[0] + '%2C' + point[1];
+                route.href = 'https://www.google.com/maps/dir/?api=1&destination=' + point[0] + '%2C' + point[1];
                 links.append(route);
             }
             for (const a of links.children) { a.target = '_blank'; a.rel = 'noopener noreferrer'; a.append(node('span', ' ↗', 'ext')); }

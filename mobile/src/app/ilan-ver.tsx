@@ -13,6 +13,7 @@ import { api, del, get, post } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { categories, category, cities, DELIVERY, DEED, districts, IRRIGATION, PACKAGING, varieties, ZONING } from '../lib/catalog';
 import { money, number, unitLabel } from '../lib/format';
+import { clearDraft, loadDraft, saveDraft } from '../lib/draft';
 import { appendPhoto, type PickedPhoto, pickPhotos } from '../lib/photos';
 import type { Listing } from '../lib/types';
 import { radius } from '../lib/theme';
@@ -62,6 +63,24 @@ export default function ListingEditor() {
         set(patch);
     };
     const confirm = useConfirm();
+    // Taslak: yeni ilanda girilenler her değişiklikte saklanır, ekran yeniden açılınca geri yüklenir.
+    const [restored, setRestored] = useState(false);
+    const [draftReady, setDraftReady] = useState(editing);
+    useEffect(() => {
+        if (editing) return;
+        let live = true;
+        void loadDraft<Form, PickedPhoto>().then(d => {
+            if (!live) return;
+            if (d && (d.form.kategori || d.form.baslik)) { setF({ ...empty, ...d.form }); setStep(Math.min(3, Math.max(0, d.step))); setPhotos(d.photos ?? []); setRestored(true); }
+            setDraftReady(true);
+        });
+        return () => { live = false; };
+    }, [editing]);
+    useEffect(() => {
+        if (editing || !draftReady) return;
+        if (f.kategori || f.baslik || photos.length) saveDraft({ form: f, step, photos });
+    }, [f, step, photos, editing, draftReady]);
+    const startOver = () => { clearDraft(); setF(empty); setPhotos([]); setStep(0); setRestored(false); setError(null); };
 
     useEffect(() => {
         if (!editing || !user) return;
@@ -155,6 +174,7 @@ export default function ListingEditor() {
                 form.append('listing', JSON.stringify(body()));
                 photos.forEach((p, i) => appendPhoto(form, 'files', p, i));
                 const r = await api<{ id: string; mesaj: string }>('/api/meyve-ilanlari/with-photos', { method: 'POST', body: form });
+                clearDraft();
                 toast(r.mesaj || 'İlanın yayımlandı. 30 gün boyunca yayında kalacak.');
                 router.replace({ pathname: '/ilan/[id]', params: { id: r.id } });
             } else {
@@ -194,6 +214,13 @@ export default function ListingEditor() {
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <ScrollView contentContainerStyle={{ padding: 14, gap: 12, paddingBottom: 30 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}>
+                {restored ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: radius.m, backgroundColor: c.greenSoft }}>
+                        <Icon name="edit" color={c.green2} size={20} />
+                        <Txt style={{ flex: 1 }} size={13.5}>Yarım kalan ilanın geri yüklendi. Kaldığın yerden devam edebilirsin.</Txt>
+                        <Button title="Baştan başla" kind="plain" small full={false} onPress={startOver} />
+                    </View>
+                ) : null}
                 {step === 0 ? <>
                     <Txt muted>Önce ana kategoriyi, sonra satacağın ürünü seç. Alıcılar ilanını bu kategoride ve ürün filtresinde bulur.</Txt>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

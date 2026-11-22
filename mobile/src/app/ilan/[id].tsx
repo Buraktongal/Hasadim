@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon';
 import { MiniMap, approximate } from '../../components/MiniMap';
 import { Photo } from '../../components/Photo';
 import { useShare } from '../../components/ShareSheet';
+import { useMapChooser } from '../../components/MapChooser';
 import { Button, Card, ErrorBox, Eyebrow, Field, goBack, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
 import { del, get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
@@ -29,6 +30,7 @@ export default function ListingDetail() {
     const [sheet, setSheet] = useState<'offer' | 'report' | 'more' | null>(null);
     const confirm = useConfirm();
     const sharer = useShare();
+    const maps = useMapChooser();
     const valid = typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id);
 
     const load = useCallback(async () => {
@@ -145,8 +147,8 @@ export default function ListingDetail() {
                         {point ? <>
                             <MiniMap center={point} zoom={exact ? 13 : 9} pin={point} height={190} />
                             <View style={{ flexDirection: 'row', gap: 8 }}>
-                                <View style={{ flex: 1 }}><Button kind="secondary" small title="Haritada aç" onPress={() => void Linking.openURL(`https://www.openstreetmap.org/?mlat=${point.lat}&mlon=${point.lon}#map=${exact ? 15 : 10}/${point.lat}/${point.lon}`)} /></View>
-                                {exact ? <View style={{ flex: 1 }}><Button kind="secondary" small title="Yol tarifi" onPress={() => void Linking.openURL(`https://www.openstreetmap.org/directions?route=%3B${point.lat}%2C${point.lon}`)} /></View> : null}
+                                <View style={{ flex: 1 }}><Button kind="secondary" small title="Haritada aç" onPress={() => maps.open({ lat: point.lat, lon: point.lon, label: x.baslik, route: false })} /></View>
+                                {exact ? <View style={{ flex: 1 }}><Button kind="secondary" small title="Yol tarifi" onPress={() => maps.open({ lat: point.lat, lon: point.lon, label: x.baslik, route: true })} /></View> : null}
                             </View>
                         </> : null}
                     </Card>
@@ -192,6 +194,7 @@ export default function ListingDetail() {
             </Sheet>
             {confirm.node}
             {sharer.node}
+            {maps.node}
         </View>
     );
 }

@@ -244,6 +244,12 @@ html[data-theme="dark"] .dw-col:focus-visible .dw-item.on {
 html[data-theme="dark"] .dw-item.on {
     color: #d8e3dc;
 }
+html[data-theme="dark"] .pp-close {
+    background: #16161622;
+}
+html[data-theme="dark"] .pp-actions .pp-remove {
+    color: #dd8f8a;
+}
 
 /* ---- tema.css ---- */
 html[data-theme="dark"] .fruit-letter {
@@ -1471,6 +1477,9 @@ html[data-theme="dark"] .sp-badge-season {
     color: #c1e7ae;
     border-color: #435535;
 }
+html[data-theme="dark"] .sp-act.shown {
+    color: #8fd0a3;
+}
 html[data-theme="dark"] .sp-card {
     border: 1px solid #41493b;
     background: #161616;
@@ -1533,6 +1542,18 @@ html[data-theme="dark"] .sp-item-qty {
 html[data-theme="dark"] .sp-empty {
     color: #aaaab6;
     border: 1px dashed #464d43;
+}
+html[data-theme="dark"] .pl-cover {
+    background: radial-gradient(circle at 18% 120%, #16161626 0 90px, transparent 91px),
+    repeating-linear-gradient(-12deg, #1616160d 0 14px, transparent 14px 34px),
+    linear-gradient(120deg, #19452b, #2f7a4a 55%, #6aa84f);
+}
+html[data-theme="dark"] .pl-avatar {
+    border: 5px solid #333333;
+    background: #20291b;
+}
+html[data-theme="dark"] .pl-initial {
+    color: #8fd0a3;
 }
 
 /* ---- elle ince ayar ---- */

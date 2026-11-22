@@ -110,7 +110,7 @@ window.HasadimEn = (() => {
         'E-posta doğrulandı': 'Email verified', 'E-posta doğrulanmadı': 'Email not verified', 'Bireysel hesap': 'Individual account', 'Kurumsal · Kullanıcı beyanı': 'Business · Self-declared',
         'E-posta doğrulaması, ürün kalitesi veya ticari kimlik onayı değildir.': 'Email verification does not confirm product quality or business identity.',
         'Üretici': 'Grower', 'Alıcı': 'Buyer', 'Tüccar': 'Trader', 'Kooperatif': 'Cooperative', 'Konum seçme haritası': 'Location picker map',
-        'Haritada büyük aç ↗': 'Open larger map ↗', 'Haritada aç': 'Open map', 'Yol tarifi': 'Directions',
+        'Haritada büyük aç ↗': 'Open larger map ↗', 'Haritada aç': 'Open map', 'Google Haritalar’da aç': 'Open in Google Maps', 'Yol tarifi': 'Directions',
         'Satıcının haritada işaretlediği konum': 'Location pinned by the seller', 'Yaklaşık konum · tam yeri satıcıya sor': 'Approximate location · ask the seller for the exact spot',
         'Hangi ilde ne kadar ilan olduğunu gör; ürün veya araziyi haritada bul. Bir ile dokununca o ildeki ilanları ve ürünleri gör.': 'See how many listings each province has and find products or land on the map. Tap a province to see its listings and products.',
         'Haritada bir ile dokun; o ildeki ilan sayısını ve ürünleri burada gör.': 'Tap a province on the map to see its listing count and products here.',
