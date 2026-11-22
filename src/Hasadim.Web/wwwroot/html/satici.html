@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/css/market-presentation.css">
     <link rel="stylesheet" href="/css/hesap.css">
     <link rel="stylesheet" href="/css/hesap-merkezi.css">
+    <link rel="stylesheet" href="/css/satici.css">
     <link rel="stylesheet" href="/css/tema-koyu.css">
     <script src="/js/layout.js" defer></script>
     <script src="/js/footer.js" defer></script>
@@ -26,19 +27,91 @@
     <script src="/js/hasadim-api.js" defer></script>
     <script src="/js/menu-settings.js" defer></script>
     <script src="/js/market-presentation.js" defer></script>
-    <script src="/js/profile.js" defer></script>
+    <script src="/js/turkiye-iller.js" defer></script>
+    <script src="/js/kart-fotograf.js" defer></script>
+    <script src="/js/satici.js" defer></script>
     <script src="/js/navigation.js" defer></script>
     <script src="/js/i18n.js" defer></script>
 </head>
 <body data-page="seller">
 <div id="siteLayout"></div>
-<main class="account-page seller-page">
-    <p id="status" role="status"></p>
-    <section id="seller" class="seller-box account-panel"></section>
-    <div class="section-heading results-heading"><div><h2>Satıcının ilanları</h2><span id="count" class="muted"></span></div></div>
-    <div id="sellerListings" class="cards"></div>
-    <div class="pagination"><button id="previous" class="secondary">← Önceki</button><span id="pageLabel"></span><button id="next" class="secondary">Sonraki →</button></div>
+<main class="sp-page" id="sellerPage">
+    <p id="status" role="status" class="sp-status"></p>
+
+    <!-- Üst kart: kapak, fotoğraf, ad, rozetler ve iletişim -->
+    <section class="sp-hero" aria-labelledby="spName" hidden>
+        <div class="sp-cover">
+            <span class="sp-cover-place" id="spCoverPlace"></span>
+        </div>
+        <div class="sp-hero-body">
+            <div class="sp-avatar" id="spAvatar"></div>
+            <div class="sp-identity">
+                <h1 id="spName"></h1>
+                <p class="sp-sub" id="spSub"></p>
+                <div class="sp-badges" id="spBadges"></div>
+            </div>
+            <div class="sp-actions">
+                <button type="button" class="primary sp-act" id="spMessage"><span class="sp-ico sp-ico-msg" aria-hidden="true"></span>Mesaj gönder</button>
+                <a class="secondary sp-act" id="spPhone" hidden><span class="sp-ico sp-ico-phone" aria-hidden="true"></span><span class="sp-phone-label">Ara</span><span class="sp-phone-number">Telefon</span></a>
+                <button type="button" class="secondary sp-act" id="spShare"><span class="sp-ico sp-ico-share" aria-hidden="true"></span>Paylaş</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="sp-grid" hidden>
+        <aside class="sp-side">
+            <section class="sp-card sp-stats" aria-label="Özet">
+                <div><strong id="spStatListings">0</strong><span>aktif ilan</span></div>
+                <div><strong id="spStatProducts">0</strong><span>ürün çeşidi</span></div>
+                <div><strong id="spStatYears"></strong><span id="spStatYearsLabel">üyelik</span></div>
+            </section>
+
+            <section class="sp-card sp-stock" aria-labelledby="spStockTitle">
+                <h2 id="spStockTitle">Hazır stok</h2>
+                <div id="spStock" class="sp-stock-list"></div>
+            </section>
+
+            <section class="sp-card" aria-labelledby="spSeasonTitle">
+                <h2 id="spSeasonTitle">Ne zaman ne bulunur?</h2>
+                <p class="muted sp-hint">Satıcının ürünlerinin hasat dönemleri. Koyu yeşil: yoğun hasat.</p>
+                <div id="spSeasons" class="sp-seasons"></div>
+            </section>
+
+            <section class="sp-card" aria-labelledby="spMapTitle">
+                <h2 id="spMapTitle">Ürünlerin çıktığı yerler</h2>
+                <div id="spMap" class="sp-map"></div>
+                <p id="spMapList" class="muted sp-hint"></p>
+            </section>
+
+            <section class="sp-card" aria-labelledby="spAboutTitle">
+                <h2 id="spAboutTitle">Hakkında</h2>
+                <p id="spAbout" class="sp-about"></p>
+                <dl id="spFacts" class="sp-facts"></dl>
+                <p class="muted sp-hint">E-posta doğrulaması ürün kalitesi veya ticari kimlik onayı değildir.</p>
+            </section>
+        </aside>
+
+        <section class="sp-main" aria-labelledby="spListingsTitle">
+            <div class="sp-listings-head">
+                <h2 id="spListingsTitle">İlanlar <span id="spListingsCount"></span></h2>
+                <div class="sp-chips" id="spChips" role="tablist" aria-label="Ürüne göre süz"></div>
+            </div>
+            <div id="spListings" class="sp-cards"></div>
+            <button type="button" class="secondary sp-more" id="spMore" hidden>Daha fazla ilan göster</button>
+        </section>
+    </div>
 </main>
+
+<!-- Mesaj gönderme -->
+<dialog id="spMessageDialog" class="sp-dialog" aria-labelledby="spMsgTitle">
+    <form id="spMessageForm" class="sp-dialog-form">
+        <div class="sp-dialog-head"><h2 id="spMsgTitle">Satıcıya mesaj gönder</h2><button type="button" class="close" data-close aria-label="Kapat">×</button></div>
+        <label>Hangi ilan hakkında?<select name="listingId" required></select></label>
+        <label>Mesajın<textarea name="body" rows="5" maxlength="2000" required></textarea></label>
+        <p class="form-error" role="alert"></p>
+        <div class="sp-dialog-actions"><button type="button" class="secondary" data-close>Vazgeç</button><button type="submit" class="primary">Gönder</button></div>
+    </form>
+</dialog>
 <div id="siteFooter"></div>
 </body>
 </html>

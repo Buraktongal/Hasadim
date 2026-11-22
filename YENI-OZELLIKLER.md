@@ -1,5 +1,21 @@
 # Yeni özellikler (Kasım 2026)
 
+## Satıcı profili (yenilendi)
+- Kapak bandı, kapağa taşan profil fotoğrafı, ad / işletme adı, konum ve üyelik tarihi.
+- Rozetler: faaliyet (Üretici, Tüccar…), Kurumsal (beyan), Yeni üye (ilk 30 gün), E-posta doğrulandı, kaç ilan yayında, "Şu an hasatta ürünü var".
+- Düğmeler: **Mesaj gönder** (ilan seçilerek; mesajlar ilan üzerinden yürür), **Telefon** (numara görünürse arama bağlantısı), **Paylaş** (telefonda paylaşım menüsü, bilgisayarda bağlantıyı kopyalar).
+- Hasadım'a özgü bölümler:
+  - **Hazır stok:** ürün başına toplam miktar (ton / balya / dönüm) ve fiyat aralığı.
+  - **Ne zaman ne bulunur?:** satıcının ürünlerinin 12 aylık hasat takvimi; bu ay vurgulu.
+  - **Ürünlerin çıktığı yerler:** ilan verdiği iller Türkiye haritasında, ilan sayısına göre koyulaşır.
+- İlanlar ürüne göre süzülebilir (Tümü, Kiraz (4)…); kartlarda kategori, "Hasat döneminde" etiketi, konum · süre · görüntülenme, fiyat ve miktar.
+- Puan / değerlendirme sistemi olmadığı için profilde puan gösterilmez.
+
+## İlan kartlarında fotoğraf gezinme
+- Bilgisayarda fareyi kart görselinin üzerinde sağa-sola gezdirince ilanın diğer fotoğrafları görünür; fare çıkınca ilk fotoğrafa döner. Altta kaç fotoğraf olduğunu gösteren noktalar çıkar.
+- Telefonda görsel sağa-sola kaydırılınca sonraki/önceki fotoğraf gelir (kaydırma ilanı açmaz).
+- Pazar yeri ve satıcı profilindeki kartlarda çalışır; liste API'si artık ilan başına en fazla 6 fotoğraf adresi döndürür.
+
 ## Kategoriler ve satılık arazi
 - Ana kategoriler: **Meyve, Tahıl, Yem ve balya, Bal ve arı ürünleri, Kuruyemiş, Satılık arazi**.
   - Tahıl: buğday, arpa, yulaf, mısır, çavdar, tritikale, çeltik.

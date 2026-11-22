@@ -59,8 +59,21 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         };
         using var results = await c.QueryMultipleAsync(new CommandDefinition("SELECT COUNT(*) FROM dbo.Listings l WHERE " + where + "; SELECT " + ViewColumns + " FROM dbo.Listings l JOIN dbo.Users u ON u.Id=l.OwnerId WHERE " + where + " ORDER BY " + order + " OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY", args, cancellationToken: ct));
         var total = await results.ReadSingleAsync<int>(); var items = (await results.ReadAsync<ListingView>()).ToList(); foreach (var x in items) { x.Telefon = null; if (x.PhotoUrl is not null) x.PhotoUrl = $"/api/meyve-ilanlari/{x.Id}/photo"; }
+        results.Dispose();
+        // Kartlarda fareyle/kaydırarak fotoğraflar arasında gezinmek için ilan başına en fazla 6 fotoğrafın adresi.
+        if (items.Count > 0)
+        {
+            var rows = await c.QueryAsync<CardPhotoRow>(new CommandDefinition(
+                "SELECT ListingId, Id FROM dbo.ListingPhotos WHERE ListingId IN @ids ORDER BY ListingId, SortOrder, Id",
+                new { ids = items.Select(x => x.Id).ToArray() }, cancellationToken: ct));
+            var byListing = rows.GroupBy(r => r.ListingId).ToDictionary(g => g.Key, g => g.Take(6).ToList());
+            foreach (var x in items)
+                if (byListing.TryGetValue(x.Id, out var list))
+                    x.Photos = list.Select(r => new ListingPhoto(r.Id, "") { PhotoUrl = $"/api/meyve-ilanlari/{x.Id}/photos/{r.Id}" }).ToList();
+        }
         return new(items, total, q.Page, q.PageSize);
     }
+    private sealed record CardPhotoRow(Guid ListingId, Guid Id);
     public async Task<Listing?> Find(Guid id, CancellationToken ct) { await using var c = await factory.Open(ct); return await c.QuerySingleOrDefaultAsync<Listing>(new CommandDefinition("SELECT * FROM dbo.Listings WHERE Id=@id", new { id }, cancellationToken: ct)); }
     public async Task<ListingView?> Detail(Guid id, Guid? user, CancellationToken ct) { await using var c = await factory.Open(ct); var item = await c.QuerySingleOrDefaultAsync<ListingView>(new CommandDefinition("SELECT " + ViewColumns + " FROM dbo.Listings l JOIN dbo.Users u ON u.Id=l.OwnerId WHERE l.Id=@id", new { id, user }, cancellationToken: ct)); if (item is not null) item.Photos = (await c.QueryAsync<ListingPhoto>(new CommandDefinition("SELECT Id,Url FROM dbo.ListingPhotos WHERE ListingId=@id ORDER BY SortOrder", new { id }, cancellationToken: ct))).ToList(); return item; }
     public async Task Create(

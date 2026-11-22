@@ -258,7 +258,9 @@ function card(x) {
     const c = el('article', undefined, 'card listing-item'),
         media = el('div', undefined, 'card-media');
 
-    media.append(picture(x));
+    const pic = picture(x);
+    media.append(pic);
+    if (pic.tagName === 'IMG') window.CardPhotos?.attach(media, pic, x.photos);
     const stats = window.MarketPresentation.stats(x);
     const fav = button(x.favorite ? '♥' : '♡', 'favorite' + (x.favorite ? ' on' : ''),
         async () => {

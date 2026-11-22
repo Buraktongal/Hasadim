@@ -370,6 +370,12 @@ html[data-theme="dark"] .discount-badge {
     background: #192a1d;
     color: #a8e4bc;
 }
+html[data-theme="dark"] .cp-dots i {
+    background: #16161688;
+}
+html[data-theme="dark"] .cp-dots i.on {
+    background: #161616;
+}
 
 /* ---- market-header.css ---- */
 html[data-theme="dark"] #siteLayout .account-menu-toggle {
@@ -1370,6 +1376,119 @@ html[data-theme="dark"] .admin-denied p {
 html[data-theme="dark"] .admin-nav {
     border-bottom: 1px solid #3f453c;
 }
+}
+
+/* ---- satici.css ---- */
+html[data-theme="dark"] .sp-status {
+    color: #aaaab6;
+}
+html[data-theme="dark"] .sp-hero {
+    border: 1px solid #41493b;
+    background: #161616;
+}
+html[data-theme="dark"] .sp-cover {
+    background: radial-gradient(circle at 18% 120%, #16161626 0 90px, transparent 91px),
+        radial-gradient(circle at 82% -30%, #1616161f 0 120px, transparent 121px),
+        repeating-linear-gradient(-12deg, #1616160d 0 14px, transparent 14px 34px),
+        linear-gradient(120deg, #19452b, #2f7a4a 55%, #6aa84f);
+}
+html[data-theme="dark"] .sp-avatar {
+    border: 5px solid #333333;
+    background: #20291b;
+}
+html[data-theme="dark"] .sp-initial {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .sp-sub {
+    color: #b1bbb3;
+}
+html[data-theme="dark"] .sp-badge {
+    background: #1d211b;
+    color: #c3cdc5;
+    border: 1px solid #3f453a;
+}
+html[data-theme="dark"] .sp-badge-role {
+    background: #1c271e;
+    color: #b2e5c5;
+    border-color: #3b4d3f;
+}
+html[data-theme="dark"] .sp-badge-ok {
+    background: #101f2b;
+    color: #a0c8e3;
+    border-color: #2d4253;
+}
+html[data-theme="dark"] .sp-badge-new {
+    background: #32270f;
+    color: #e6d1a9;
+    border-color: #5e512f;
+}
+html[data-theme="dark"] .sp-badge-season {
+    background: #1e2a14;
+    color: #c1e7ae;
+    border-color: #435535;
+}
+html[data-theme="dark"] .sp-card {
+    border: 1px solid #41493b;
+    background: #161616;
+}
+html[data-theme="dark"] .sp-stats > div + div {
+    border-left: 1px solid #3d4438;
+}
+html[data-theme="dark"] .sp-stats strong {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .sp-stats span {
+    color: #aaaab6;
+}
+html[data-theme="dark"] .sp-stock-row {
+    background: #1a1f17;
+}
+html[data-theme="dark"] .sp-stock-qty {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .sp-strip i {
+    background: #20241d;
+}
+html[data-theme="dark"] .sp-strip i.on {
+    background: #445837;
+}
+html[data-theme="dark"] .sp-strip i.now {
+    outline: 2px solid #a78a3f;
+}
+html[data-theme="dark"] .sp-il.hi {
+    fill: #a2dbb7;
+}
+html[data-theme="dark"] .sp-facts dt {
+    color: #aaaab6;
+}
+html[data-theme="dark"] .sp-chip {
+    border: 1px solid #434a3f;
+    background: #161616;
+    color: #cbd6ce;
+}
+html[data-theme="dark"] .sp-chip:hover {
+    border-color: #4e614d;
+}
+html[data-theme="dark"] .sp-item {
+    border: 1px solid #41493b;
+    background: #161616;
+}
+html[data-theme="dark"] .sp-item-media {
+    background: #1f251b;
+}
+html[data-theme="dark"] .sp-item-cat {
+    background: #161616e6;
+    color: #b2e5c5;
+}
+html[data-theme="dark"] .sp-item-foot .price {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .sp-item-qty {
+    background: #1d221a;
+}
+html[data-theme="dark"] .sp-empty {
+    color: #aaaab6;
+    border: 1px dashed #464d43;
 }
 
 /* ---- elle ince ayar ---- */

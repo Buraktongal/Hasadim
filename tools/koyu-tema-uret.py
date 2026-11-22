@@ -13,7 +13,7 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "src" / "Hasadim.Web" / "wwwroot" / "css"
 SOURCES = ["styles.css", "tema.css", "market-presentation.css", "market-header.css", "messages.css", "market-experience.css",
            "listing-form.css", "listing-editor.css", "listing-workflow.css", "profile.css", "auth-experience.css", "hesap.css",
-           "ticaret.css", "hesap-merkezi.css", "yonetim.css"]
+           "ticaret.css", "hesap-merkezi.css", "yonetim.css", "satici.css"]
 PREFIX = 'html[data-theme="dark"]'
 
 HEADER = """@charset "UTF-8";
@@ -182,8 +182,8 @@ def rules(css, depth=0):
             if inner:
                 lines.append(prelude + " {\n" + inner + "}\n")
             continue
-        if prelude.startswith("@"):
-            continue
+        if prelude.startswith("@") or "data-theme" in prelude:
+            continue  # kaynakta zaten koyu tema için yazılmış kurallar olduğu gibi kalır
         decls = []
         for decl in body.split(";"):
             if ":" not in decl:

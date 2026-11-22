@@ -20,6 +20,7 @@ const pageScripts = [
     '/js/market-catalog.js',
     '/js/listing-workflow.js',
     '/js/market-presentation.js',
+    '/js/kart-fotograf.js',
     '/js/market-tools.js',
     '/js/messages.js',
     '/js/message-notifications.js',
