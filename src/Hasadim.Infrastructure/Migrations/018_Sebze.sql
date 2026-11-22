@@ -1,0 +1,11 @@
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_PADDING ON;
+SET ANSI_WARNINGS ON;
+SET ARITHABORT ON;
+SET CONCAT_NULL_YIELDS_NULL ON;
+SET NUMERIC_ROUNDABORT OFF;
+
+-- Yeni ana kategori: Sebze.
+ALTER TABLE dbo.Listings DROP CONSTRAINT CK_Listings_Kategori;
+EXEC(N'ALTER TABLE dbo.Listings ADD CONSTRAINT CK_Listings_Kategori CHECK (Kategori IN (N''Meyve'',N''Sebze'',N''Tahil'',N''Yem'',N''Bal'',N''Kuruyemis'',N''Arazi''))');

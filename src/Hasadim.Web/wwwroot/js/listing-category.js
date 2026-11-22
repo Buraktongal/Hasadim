@@ -52,6 +52,7 @@ window.ListingCategory = (() => {
         const title = form.elements.namedItem('baslik');
         if (title) title.placeholder = land
             ? (rent ? 'Örn. Karapınar’da kiralık 40 dönüm sulu tarla' : 'Örn. Eğirdir’de yola cepheli 12 dönüm sulu elma bahçesi')
+            : c?.id === 'Sebze' ? 'Örn. Antalya serasından salkım domates — 20 ton, kasalı'
             : c?.id === 'Tahil' ? 'Örn. Konya Karapınar Bezostaya buğday — 50 ton, dökme'
             : c?.id === 'Yem' ? 'Örn. 2. biçim yonca balyası — 3.000 balya, ahırdan teslim'
             : c?.id === 'Bal' ? 'Örn. Muğla çam balı — 2026 hasadı, teneke'

@@ -2,11 +2,36 @@
 
 // Ürün kataloğu: ana kategoriler, ürünler, çeşitler, birimler ve hasat takvimi.
 // fruit-varieties.js'ten sonra yüklenir; meyve çeşitleri oradan gelir.
-// Sunucu kategori kimliklerini (Meyve, Tahil, Yem, Bal, Kuruyemis, Arazi) saklar.
+// Sunucu kategori kimliklerini (Meyve, Sebze, Tahil, Yem, Bal, Kuruyemis, Arazi) saklar.
 window.HasadimCatalog = (() => {
     const fruits = typeof fruitVarieties !== 'undefined' ? fruitVarieties : {};
 
     const extra = {
+        Sebze: {
+            'Domates': ['Salkım domates', 'Sırık domates', 'Pembe domates', 'Cherry (kiraz) domates', 'Kokteyl domates', 'Çengelköy domatesi', 'Sanayi (salçalık) domates', 'Yerli domates'],
+            'Biber': ['Sivri biber', 'Çarliston', 'Dolmalık biber', 'Kapya', 'Kıl biber (acı)', 'Sarı / kırmızı California', 'Köy biberi', 'Salçalık biber'],
+            'Patlıcan': ['Kemer patlıcan', 'Topan patlıcan', 'Bostan patlıcanı', 'Pala patlıcan', 'Halep karası'],
+            'Salatalık': ['Silor', 'Çengelköy salatalığı', 'Badem salatalık', 'Kornişon (turşuluk)'],
+            'Kabak': ['Sakız kabağı', 'Bal kabağı', 'Kestane kabağı', 'Çerezlik kabak'],
+            'Patates': ['Agria', 'Marabel', 'Lady Rosetta', 'Granola', 'Russet Burbank', 'Taze patates'],
+            'Soğan': ['Kuru soğan (sarı)', 'Kırmızı soğan', 'Beyaz soğan', 'Taze soğan', 'Arpacık soğan'],
+            'Sarımsak': ['Taşköprü sarımsağı', 'Kuru sarımsak', 'Taze sarımsak'],
+            'Havuç': ['Nantes', 'Beypazarı havucu', 'Mor havuç'],
+            'Lahana': ['Beyaz lahana', 'Kırmızı lahana', 'Karalahana', 'Brüksel lahanası'],
+            'Karnabahar': ['Beyaz karnabahar', 'Mor karnabahar'],
+            'Brokoli': [],
+            'Marul': ['Göbek marul', 'Kıvırcık', 'Iceberg', 'Lolorosso', 'Roka'],
+            'Ispanak': ['Kışlık ıspanak', 'Yazlık ıspanak'],
+            'Pırasa': ['İnegöl pırasası', 'Yerli pırasa'],
+            'Fasulye': ['Ayşe kadın', 'Barbunya (taze)', 'Çalı fasulyesi', 'Oturak fasulye'],
+            'Bezelye': ['Taze bezelye', 'İç bezelye'],
+            'Bamya': ['Amasya bamyası', 'Bursa bamyası', 'Kırma bamya'],
+            'Enginar': ['Sakız enginarı', 'Bayrampaşa enginarı'],
+            'Turp': ['Kırmızı turp', 'Siyah turp', 'Beyaz turp'],
+            'Mantar': ['Kültür mantarı', 'İstiridye mantarı', 'Kanlıca mantarı'],
+            'Yeşillik': ['Maydanoz', 'Dereotu', 'Nane', 'Tere', 'Semizotu'],
+            'Diğer sebze': []
+        },
         Tahil: {
             'Buğday': ['Bezostaya 1', 'Tosunbey', 'Esperia', 'Kunduru 1149 (makarnalık)', 'Ceyhan 99', 'Pehlivan', 'Sönmez 2001', 'Altay 2000', 'Karakılçık (yerli)'],
             'Arpa': ['Larende', 'Bülbül 89', 'Tarm-92', 'Konevi 98', 'Zeynel Ağa', 'Yemlik arpa', 'Biralık arpa'],
@@ -57,6 +82,7 @@ window.HasadimCatalog = (() => {
 
     const categories = [
         { id: 'Meyve', name: 'Meyve', short: 'Meyve', icon: 'Elma', units: ['kg'], products: Object.keys(fruits).filter(name => !Object.values(extra).some(g => name in g)) },
+        { id: 'Sebze', name: 'Sebze', short: 'Sebze', icon: 'Domates', units: ['kg'], products: Object.keys(extra.Sebze) },
         { id: 'Tahil', name: 'Tahıl', short: 'Tahıl', icon: 'Buğday', units: ['kg'], products: Object.keys(extra.Tahil) },
         { id: 'Yem', name: 'Yem ve balya', short: 'Yem / balya', icon: 'Yonca balyası', units: ['balya', 'kg'], products: Object.keys(extra.Yem) },
         { id: 'Bal', name: 'Bal ve arı ürünleri', short: 'Bal', icon: 'Bal', units: ['kg'], products: Object.keys(extra.Bal) },
@@ -82,6 +108,14 @@ window.HasadimCatalog = (() => {
         'Dut': [[6, 7], [6, 7]], 'Karpuz': [[6, 7, 8, 9], [7, 8]], 'Kavun': [[6, 7, 8, 9], [7, 8]],
         'Muz': [[9, 10, 11, 12, 1, 2, 3, 4, 5], [11, 12, 1]], 'İncir': [[7, 8, 9], [8]],
         'Trabzon hurması': [[10, 11, 12], [11]], 'Avokado': [[11, 12, 1, 2, 3, 4], [12, 1, 2]], 'Kivi': [[10, 11, 12], [11]],
+        'Domates': [[5, 6, 7, 8, 9, 10, 11], [7, 8]], 'Biber': [[5, 6, 7, 8, 9, 10, 11], [7, 8, 9]], 'Patlıcan': [[6, 7, 8, 9, 10], [7, 8]],
+        'Salatalık': [[4, 5, 6, 7, 8, 9, 10], [6, 7]], 'Kabak': [[5, 6, 7, 8, 9, 10], [6, 7]], 'Patates': [[6, 7, 8, 9, 10, 11], [8, 9]],
+        'Soğan': [[6, 7, 8, 9], [7, 8]], 'Sarımsak': [[5, 6, 7, 8], [6, 7]], 'Havuç': [[10, 11, 12, 1, 2, 3, 4], [11, 12]],
+        'Lahana': [[10, 11, 12, 1, 2, 3], [11, 12]], 'Karnabahar': [[10, 11, 12, 1, 2, 3], [12, 1]], 'Brokoli': [[10, 11, 12, 1, 2, 3], [11, 12]],
+        'Marul': [[10, 11, 12, 1, 2, 3, 4, 5], [3, 4]], 'Ispanak': [[10, 11, 12, 1, 2, 3, 4], [11, 12]], 'Pırasa': [[10, 11, 12, 1, 2, 3], [12, 1]],
+        'Fasulye': [[6, 7, 8, 9, 10], [7, 8]], 'Bezelye': [[3, 4, 5, 6], [4, 5]], 'Bamya': [[7, 8, 9, 10], [8, 9]],
+        'Enginar': [[3, 4, 5, 6], [4, 5]], 'Turp': [[10, 11, 12, 1, 2, 3, 4], [12, 1]],
+        'Mantar': [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [10, 11]], 'Yeşillik': [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], [3, 4, 10]],
         'Buğday': [[5, 6, 7, 8], [6, 7]], 'Arpa': [[5, 6, 7], [6]], 'Yulaf': [[6, 7, 8], [7]], 'Mısır': [[8, 9, 10, 11], [9, 10]],
         'Çavdar': [[6, 7, 8], [7]], 'Tritikale': [[6, 7], [6, 7]], 'Çeltik (pirinç)': [[9, 10], [9, 10]],
         'Yonca balyası': [[5, 6, 7, 8, 9], [6, 7]], 'Saman balyası': [[6, 7, 8], [7]], 'Fiğ balyası': [[5, 6], [5, 6]],

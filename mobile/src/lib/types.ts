@@ -1,5 +1,5 @@
 // Sunucunun döndürdüğü veri tipleri (Hasadim.Application sözleşmeleriyle aynı adlar, camelCase).
-export type CategoryId = 'Meyve' | 'Tahil' | 'Yem' | 'Bal' | 'Kuruyemis' | 'Arazi';
+export type CategoryId = 'Meyve' | 'Sebze' | 'Tahil' | 'Yem' | 'Bal' | 'Kuruyemis' | 'Arazi';
 
 export interface Photo { id: string; url: string; photoUrl?: string | null }
 

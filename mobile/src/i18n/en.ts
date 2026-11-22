@@ -22,7 +22,7 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'Giriş yapın.': 'Please sign in.',
 
         // Üst menü ve gezinme
-        'Türkiye’nin toptan tarım ilan pazarı · Meyve, tahıl, yem, bal, kuruyemiş ve arazi': 'Türkiye’s wholesale farm marketplace · Fruit, grain, feed, honey, nuts and land',
+        'Türkiye’nin toptan tarım ilan pazarı · Meyve, sebze, tahıl, yem, bal, kuruyemiş ve arazi': 'Türkiye’s wholesale farm marketplace · Fruit, vegetables, grain, feed, honey, nuts and land',
         'İlan vermek ücretsiz · İlanlar 30 gün yayında': 'Listing is free · Listings stay live for 30 days',
         'Menü': 'Menu', 'Gezinme menüsü': 'Navigation menu', 'Hesap ve gezinme': 'Account and navigation', 'Hoş geldin': 'Welcome', 'Hesabım': 'My account',
         'Keşfet': 'Explore', 'Pazar yeri': 'Marketplace', 'Harita': 'Map', 'Ürün takvimi': 'Crop calendar', 'İlan işlemleri': 'Listings',
@@ -60,9 +60,9 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
 
         // Ana sayfa
         'Hasadım · Toptan tarım pazarı': 'Hasadım · Wholesale farm marketplace',
-        'Meyveden tahıla, baldan araziye tarımın ilan pazarı': 'From fruit to grain, from honey to land: the farm marketplace',
+        'Meyveden sebzeye, tahıldan araziye tarımın ilan pazarı': 'From fruit to vegetables, from grain to land: the farm marketplace',
         'Üreticiden, tüccardan ve kooperatiften güncel fiyatlar. Kategoriye, bölgeye ve miktara göre filtrele; teklif ver, satıcıyla doğrudan konuş.': 'Current prices from growers, traders and cooperatives. Filter by category, region and quantity; make an offer and talk to the seller directly.',
-        'Hasadım’ın öne çıkanları': 'Hasadım highlights', '6 kategori': '6 categories', 'Meyve, tahıl, yem ve balya, bal, kuruyemiş, arazi': 'Fruit, grain, feed and hay, honey, nuts, land',
+        'Hasadım’ın öne çıkanları': 'Hasadım highlights', '7 kategori': '7 categories', 'Meyve, sebze, tahıl, yem ve balya, bal, kuruyemiş, arazi': 'Fruit, vegetables, grain, feed and hay, honey, nuts, land',
         'Teklif': 'Offer', 'Fiyat ve miktar önerisini doğrudan satıcıya ilet': 'Send your price and quantity straight to the seller',
         '81 il': '81 provinces', 'İl ve ilçeye göre ürünün yerini bul': 'Find products by province and district',
         'Taze ilanları keşfet': 'Explore fresh listings', 'İlanlarım bölümleri': 'My listings sections', 'Güncel ilanlar': 'Current listings',
@@ -269,6 +269,17 @@ export const HasadimEn: { words: Record<string, string>; patterns: [RegExp, stri
         'Gördüğün 5 karakteri yaz. Büyük/küçük harf fark etmez.': 'Type the 5 characters you see. Case does not matter.', 'Kodu eksiksiz yaz.': 'Enter the full code.',
         'Yeni kod alınamadı.': 'Could not get a new code.', 'Doğrulama kodu görseli': 'Verification code image', 'Güvenlik doğrulaması tamamlanmadı.': 'Security check was not completed.',
         'Güvenlik doğrulaması tamamlanamadı. Biraz sonra tekrar dene.': 'Security check failed. Try again shortly.', 'Yönetim paneli': 'Admin panel',
+        // Sebze
+        'Sebze': 'Vegetables', 'Domates': 'Tomato', 'Biber': 'Pepper', 'Patlıcan': 'Eggplant', 'Salatalık': 'Cucumber', 'Kabak': 'Squash', 'Patates': 'Potato',
+        'Soğan': 'Onion', 'Sarımsak': 'Garlic', 'Havuç': 'Carrot', 'Lahana': 'Cabbage', 'Karnabahar': 'Cauliflower', 'Brokoli': 'Broccoli', 'Marul': 'Lettuce',
+        'Ispanak': 'Spinach', 'Pırasa': 'Leek', 'Fasulye': 'Green beans', 'Bezelye': 'Peas', 'Bamya': 'Okra', 'Enginar': 'Artichoke', 'Turp': 'Radish',
+        'Mantar': 'Mushroom', 'Yeşillik': 'Herbs and greens', 'Diğer sebze': 'Other vegetables',
+        'Salkım domates': 'Truss tomato', 'Cherry (kiraz) domates': 'Cherry tomato', 'Kokteyl domates': 'Cocktail tomato', 'Pembe domates': 'Pink tomato',
+        'Sanayi (salçalık) domates': 'Processing tomato', 'Sivri biber': 'Long green pepper', 'Dolmalık biber': 'Stuffing pepper', 'Kıl biber (acı)': 'Hot chili pepper',
+        'Kuru soğan (sarı)': 'Dry onion (yellow)', 'Kırmızı soğan': 'Red onion', 'Taze soğan': 'Spring onion', 'Taze patates': 'New potatoes', 'Kültür mantarı': 'Button mushroom',
+        'İstiridye mantarı': 'Oyster mushroom', 'Bal kabağı': 'Pumpkin', 'Sakız kabağı': 'Zucchini', 'Brüksel lahanası': 'Brussels sprouts', 'Karalahana': 'Black cabbage',
+        'Maydanoz': 'Parsley', 'Dereotu': 'Dill', 'Nane': 'Mint', 'Roka': 'Rocket', 'Tere': 'Cress', 'Semizotu': 'Purslane',
+        'Örn. Antalya serasından salkım domates — 20 ton, kasalı': 'E.g. Truss tomatoes from an Antalya greenhouse — 20 t, crated',
         // Mobil filtreler
         'Kaldır': 'Remove', 'Seçimi kaldır': 'Clear selection', 'Fiyat aralığı (TL)': 'Price range (TRY)', 'Fiyat aralığı (TL / birim)': 'Price range (TRY / unit)',
         'En az (₺)': 'Min (₺)', 'En çok (₺)': 'Max (₺)', 'Sınırsız': 'No limit', 'Fiyat aralığını kaldır': 'Clear price range', '+ Fiyat aralığı': '+ Price range',

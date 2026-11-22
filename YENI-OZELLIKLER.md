@@ -252,3 +252,7 @@ Ayarlanmamışsa uygulamada düğme "Google ile devam et (yakında)" olarak pasi
 - Web: Apple ile giriş düğmesi şimdilik kaldırıldı (sunucu desteği duruyor).
 - Web: QR ile giriş telefon ve tabletlerde (dokunmatik ekran / mobil tarayıcı) gösterilmez.
 - Web: Menü panelinde alttaki "Hesap, Ayarlar, Çıkış yap" bölümü görünmeyen ikinci sütuna taşıyordu; düzeltildi, panel ekran yüksekliğine sığıyor ve kayıyor.
+
+## Sebze kategorisi
+Meyve ile aynı yapıda yeni ana kategori (`Sebze`): 22 ürün (domates, biber, patlıcan, salatalık, kabak, patates, soğan, sarımsak, havuç, lahana, karnabahar, brokoli, marul, ıspanak, pırasa, fasulye, bezelye, bamya, enginar, turp, mantar, yeşillik) ve "Diğer sebze"; her biri için çeşitler, SVG simge ve hasat takvimi. Web (pazar, filtreler, harita, ürün takvimi, ilan verme, alt bilgi) ve mobil uygulama (veriler `tools/mobil-veri-uret.js` ile üretilir) aynı kataloğu kullanır.
+Veritabanı: `018_Sebze.sql` kategori kısıtını günceller. Sebze için demo ilan üretilmez (fotoğraf seti yok).

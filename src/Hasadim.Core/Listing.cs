@@ -31,7 +31,7 @@ public record ListingData(
     string? Ambalaj = null,
     string? Teslimat = null,
     decimal? MinAlimKg = null,
-    // Ana kategori: Meyve, Tahil, Yem, Bal, Kuruyemis veya Arazi.
+    // Ana kategori: Meyve, Sebze, Tahil, Yem, Bal, Kuruyemis veya Arazi.
     string Kategori = ListingCategories.Meyve,
     // Miktarın birimi: kg, balya veya m2 (arazi alanı).
     string? Birim = null,
@@ -57,13 +57,14 @@ public record LandDetails(
 public static class ListingCategories
 {
     public const string Meyve = "Meyve";
+    public const string Sebze = "Sebze";
     public const string Tahil = "Tahil";
     public const string Yem = "Yem";
     public const string Bal = "Bal";
     public const string Kuruyemis = "Kuruyemis";
     public const string Arazi = "Arazi";
 
-    public static readonly string[] All = [Meyve, Tahil, Yem, Bal, Kuruyemis, Arazi];
+    public static readonly string[] All = [Meyve, Sebze, Tahil, Yem, Bal, Kuruyemis, Arazi];
 
     public static readonly string[] Packaging =
         ["Kasa", "Koli", "Dökme", "Çuval", "Big bag", "Balya", "Kavanoz", "Teneke", "Diğer"];

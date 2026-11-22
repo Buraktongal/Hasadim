@@ -43,7 +43,7 @@ public class ListingRequest
         ParseLimitsInInvariantCulture = true)]
     public decimal KilogramFiyati { get; set; }
 
-    [Required, RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Kategori geçersiz.")]
+    [Required, RegularExpression("^(Meyve|Sebze|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Kategori geçersiz.")]
     public string Kategori { get; set; } = ListingCategories.Meyve;
 
     [RegularExpression("^(kg|balya|m2)$", ErrorMessage = "Birim geçersiz.")]
@@ -124,7 +124,7 @@ public class ListingQuery
     [StringLength(100)]
     public string? Cesit { get; set; }
 
-    [RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
+    [RegularExpression("^(Meyve|Sebze|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
     public string? Kategori { get; set; }
 
     [RegularExpression("^(Satilik|Kiralik)$", ErrorMessage = "Geçersiz işlem tipi.")]
@@ -273,7 +273,7 @@ public record MapData(IReadOnlyList<CityCount> Iller, IReadOnlyList<MapPoint> No
 
 public class MapQuery
 {
-    [RegularExpression("^(Meyve|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
+    [RegularExpression("^(Meyve|Sebze|Tahil|Yem|Bal|Kuruyemis|Arazi)$", ErrorMessage = "Geçersiz kategori.")]
     public string? Kategori { get; set; }
 
     [StringLength(100)]
