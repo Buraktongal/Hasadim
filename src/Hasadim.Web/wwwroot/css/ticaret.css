@@ -638,3 +638,8 @@ footer.site-footer {
 /* Aranabilir kutular yerel açılır listelerle aynı yazı ağırlığında. */
 #filters .ss-button { font-weight: inherit; }
 #filters .ss-value.is-placeholder { color: inherit; font-weight: 400; }
+
+/* Satıcı kartı fotoğrafların altında (sol sütun) */
+.detail-stack { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.detail-stack .seller-box { padding: 14px; margin: 0; box-shadow: none; background: var(--t-panel); border: 1px solid var(--t-line); border-radius: var(--t-radius); }
+.detail-stack .seller-box .harvest-facts { grid-template-columns: 1fr 1fr; }

@@ -620,3 +620,22 @@ html.site-menu-open #siteLayout .market-header > .header-new-listing { visibilit
    Çıkış yap…) görünmeyen ikinci bir sütuna taşıyordu; tek sütunda kalsınlar, panel kaysın. */
 #siteLayout .account-dropdown > .account-menu-panel { flex-wrap: nowrap; }
 #siteLayout .account-dropdown > .account-menu-panel > * { flex-shrink: 0; }
+
+/* ---------- Google Haritalar (js/google-harita.js) ---------- */
+.mini-map iframe.gmap { display: block; width: 100%; height: 100%; border: 0; border-radius: inherit; }
+.mini-map:has(iframe.gmap) { overflow: hidden; background: #e8ece6; }
+.lp-tools { display: grid; gap: 8px; }
+.lp-tools .lp-here { justify-self: start; }
+.lp-row { display: flex; gap: 8px; }
+.lp-row input { flex: 1; min-width: 0; margin: 0; }
+.lp-open { justify-self: start; font-size: 13.5px; }
+
+/* ---------- Çoklu seçim çipleri (js/coklu-secim.js) ---------- */
+.multi-field { display: grid; gap: 8px; }
+.multi-label { font-weight: 700; }
+.multi-choice { display: flex; flex-wrap: wrap; gap: 8px; }
+.multi-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--t-line, #d6dfd1); background: #fff; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.multi-chip::before { content: ""; width: 16px; height: 16px; border-radius: 5px; border: 2px solid #9aa79c; box-sizing: border-box; }
+.multi-chip.on { border-color: var(--green); background: #e9f3e4; color: var(--green); }
+.multi-chip.on::before { border-color: var(--green); background: var(--green) url("/img/ikon/tik.svg") center / 12px no-repeat; }
+.multi-chip:disabled { opacity: .5; cursor: not-allowed; }

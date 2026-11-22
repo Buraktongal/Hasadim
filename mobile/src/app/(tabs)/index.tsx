@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon';
 import { ListingCard } from '../../components/ListingCard';
 import { ProductIcon } from '../../components/ProductIcon';
 import { SearchSuggest } from '../../components/SearchSuggest';
+import { AppMenu } from '../../components/AppMenu';
 import { Button, Chip, Empty, ErrorBox, IconButton, Spinner, toast } from '../../components/ui';
 import { get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
@@ -26,6 +27,7 @@ export default function Market() {
     const list = useListingPages(filters);
     // Liste aşağı kaydırılınca üstteki logo çubuğu yerini arama + harita + ürün takvimi kısayollarına bırakır.
     const [compact, setCompact] = useState(false);
+    const [menu, setMenu] = useState(false);
     const [focused, setFocused] = useState<'top' | 'list' | null>(null);
     const fade = useRef(new Animated.Value(0)).current;
     useEffect(() => { Animated.spring(fade, { toValue: compact ? 1 : 0, useNativeDriver: true, speed: 18, bounciness: compact ? 6 : 0 }).start(); }, [compact, fade]);
@@ -133,13 +135,17 @@ export default function Market() {
             <View style={{ height: 56, zIndex: 2 }}>
                 {/* Kaydırınca beliren çubuk zemini (en üstteyken logo doğrudan sayfa zemininde durur). */}
                 <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }), shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: compact ? 3 : 0 }} />
-                <Animated.View pointerEvents={compact ? 'none' : 'auto'} accessibilityElementsHidden={compact} importantForAccessibility={compact ? 'no-hide-descendants' : 'auto'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' }), transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }, { scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0.94] }) }] }}>
-                    <Image source={dark ? require('../../../assets/logo-yazi-koyu.png') : require('../../../assets/logo-yazi.png')} style={{ width: 132, height: 34 }} resizeMode="contain" accessibilityLabel="Hasadım" />
-                    <View style={{ flex: 1 }} />
+                <Animated.View pointerEvents={compact ? 'none' : 'auto'} accessibilityElementsHidden={compact} importantForAccessibility={compact ? 'no-hide-descendants' : 'auto'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' }), transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }, { scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0.94] }) }] }}>
+                    {/* Solda menü, ortada Hasadım yazısı, sağda bildirimler */}
+                    <IconButton label="Menü" onPress={() => setMenu(true)}><Icon name="menu" color={c.green2} /></IconButton>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Image source={dark ? require('../../../assets/logo-yazi-koyu.png') : require('../../../assets/logo-yazi.png')} style={{ width: 132, height: 34 }} resizeMode="contain" accessibilityLabel="Hasadım" />
+                    </View>
                     <IconButton label="Bildirimler" badge={badges.notifications} onPress={() => router.push(user ? '/bildirimler' : '/giris')}><Icon name="bell" color={c.green2} /></IconButton>
                 </Animated.View>
                 {(
                     <Animated.View pointerEvents={compact ? 'auto' : 'none'} accessibilityElementsHidden={!compact} importantForAccessibility={compact ? 'auto' : 'no-hide-descendants'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }), transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-22, 0] }) }] }}>
+                        <IconButton label="Menü" size={40} onPress={() => setMenu(true)}><Icon name="menu" color={c.green2} size={21} /></IconButton>
                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 40, borderWidth: 1.5, borderColor: c.green, borderRadius: radius.m, backgroundColor: c.input, paddingLeft: 9 }}>
                             <Icon name="search" color={c.muted} size={17} />
                             <TextInput value={text} onChangeText={setText} returnKeyType="search" maxLength={150} onSubmitEditing={submit}
@@ -177,6 +183,7 @@ export default function Market() {
                 ListFooterComponent={list.items.length && list.hasMore ? <View style={{ padding: 16, alignItems: 'center' }}><Spinner size={30} /></View> : undefined}
             />
             </View>
+            <AppMenu open={menu} onClose={() => setMenu(false)} />
         </SafeAreaView>
     );
 }

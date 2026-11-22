@@ -5,6 +5,7 @@ const icons = {
     market: <><Path d="M4 10h16l-1.2-5H5.2z" /><Path d="M5 10v9h14v-9" /><Path d="M10 19v-5h4v5" /></>,
     map: <><Path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z" /><Path d="M9 4v14M15 6v14" /></>,
     plus: <Path d="M12 5v14M5 12h14" />,
+    menu: <Path d="M4 7h16M4 12h16M4 17h16" />,
     chat: <Path d="M4 5h16v11H9l-5 4z" />,
     user: <><Circle cx={12} cy={8} r={4} /><Path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></>,
     bell: <><Path d="M6 16V11a6 6 0 0112 0v5l2 2H4z" /><Path d="M10 20a2 2 0 004 0" /></>,

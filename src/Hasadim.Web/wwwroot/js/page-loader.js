@@ -13,6 +13,8 @@ const pageScripts = [
     '/js/fruit-icons.js',
     '/js/listing-category.js',
     '/js/mini-map.js',
+    '/js/google-harita.js',
+    '/js/coklu-secim.js',
     '/js/location-picker.js',
     '/js/listing-wizard.js',
     '/js/listing-photos.js',

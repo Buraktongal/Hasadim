@@ -1,5 +1,14 @@
 # Yeni özellikler (Kasım 2026)
 
+## Kasım 2026 — son düzenlemeler
+- **Harita:** İlan konumu artık **Google Haritalar** ile gösterilir (OpenStreetMap karoları bazı adreslerde "Access blocked" veriyordu). Yaklaşık konumda ilçe, işaretli konumda iğne gösterilir. İlan verirken konum: "Bulunduğum yeri kullan", Google Haritalar bağlantısı ya da "38.49, 27.70" gibi koordinat yapıştırarak eklenir; önizleme Google Haritalar'dadır. (Mobilde ilan konumu dokunarak seçilmeye devam eder; açma/yol tarifi Google veya Apple Haritalar'a gider.)
+- **Teslimat:** Yeni seçenek **Kargo**; birden çok seçenek işaretlenebilir (ör. "Yerinden teslim, Kargo"). Filtrede bir seçenek seçilince o seçeneği içeren tüm ilanlar gelir. Veritabanı: `020_TeslimatCoklu.sql`.
+- **İlan detayı (web):** Hasadım satıcı profili kartı fotoğrafların hemen altına taşındı; sağ sütun kısaldı.
+- **Mobil seçim listeleri:** Liste açılınca klavye çıkmaz; arama için üstteki **Ara** düğmesine dokunulur. Web'de de dokunmatik ekranlarda liste açılınca klavye açılmaz.
+- **Mobil üst çubuk:** Hasadım yazısı ortada; solda **menü** düğmesi (soldan açılan menü: Tüm ilanlar, Harita, Ürün takvimi, İlan ver, İlanlarım, Favorilerim, Mesajlar, Tekliflerim, Bildirimler, Kayıtlı aramalar, Profilim, Hesap güvenliği, Ayarlar, Geri bildirim, Çıkış). Kaydırınca çıkan arama çubuğunda da menü düğmesi var.
+- **Mobil ilan verme:** Alttaki düğme **İleri** olur ve adımdaki sıradaki yazı alanına geçer; adımda doldurulacak alan kalmayınca **Devam et** olur ve sonraki adıma geçer.
+- **Mobil mesajlar:** Konuşma listesinde ve mesaj ekranının üstünde karşı tarafın **profil fotoğrafı** var; fotoğrafa/ada dokununca profili açılır. Mesaj ekranında o kişiyle olan **tüm eski yazışmalar** (farklı ilanlar dahil, araya ilan adı yazılarak) görünür. Satıcı profilinde "Mesaj"a basınca doğrudan bu ekrana gidilir.
+
 ## Kendi profiline bakarken mesaj düğmesi yok
 - Kişi kendi satıcı profilini açınca (web ve mobil) **Mesaj** ve **Numara** düğmeleri gizlenir; yerine **Profilimi düzenle** çıkar ve "Senin profilin" rozeti görünür. API `PublicProfile.isMine` döndürür; sunucu da kendine mesajı "Kendine mesaj gönderemezsin." diyerek reddeder.
 - Geliştirmede site dev tunnel adresinden açıldığında Visual Studio'nun tarayıcı yenileme / Browser Link betikleri boş döndürülür (konsol hataları kesilir); localhost'tan açınca bu araçlar çalışmaya devam eder.

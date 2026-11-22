@@ -396,7 +396,10 @@ async function renderDetail(id)
         const mediaCol = el('div', undefined, 'detail-media');
         const infoCol = el('div', undefined, 'detail-info');
         const sideCol = el('aside', undefined, 'detail-side');
-        layout.append(mediaCol, infoCol, sideCol);
+        // Satıcı kartı fotoğrafların hemen altında durur (sağ sütun kısa kalır, sayfa gereksiz uzamaz).
+        const mediaStack = el('div', undefined, 'detail-stack');
+        mediaStack.append(mediaCol);
+        layout.append(mediaStack, infoCol, sideCol);
         content.append(layout);
 
         const photos = x.photos || [];
@@ -421,7 +424,7 @@ async function renderDetail(id)
         if (publiclyVisible) infoCol.append(window.MarketTools.detailActions(x, { api, requireLogin: mustLogin, onFavorite: () => { statistics.textContent = window.MarketPresentation.stats(x).textContent; } }));
 
         // Sağ sütun: satıcı ve iletişim
-        const seller = el('section', undefined, 'seller-box'); sideCol.append(seller);
+        const seller = el('section', undefined, 'seller-box'); mediaStack.append(seller);
         const actions = el('div', undefined, 'actions contact-actions');
         if (x.isMine) {
             if (window.ListingWorkflow.editable(x)) {

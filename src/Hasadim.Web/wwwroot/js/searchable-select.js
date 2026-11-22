@@ -147,8 +147,10 @@ window.SearchableSelect = window.SearchableSelect || (() => {
             // Az seçenekli listelerde arama kutusu gerekmez.
             search.hidden = options().length < 8;
             render();
-            (search.hidden ? list : search).focus?.();
-            if (search.hidden) { list.tabIndex = -1; }
+            // Dokunmatik ekranda liste açılınca klavye çıkmasın: arama kutusuna ancak dokununca odaklanılır.
+            const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+            list.tabIndex = -1;
+            (search.hidden || touch ? list : search).focus?.({ preventScroll: true });
         }
 
         function close(focusButton = true) {

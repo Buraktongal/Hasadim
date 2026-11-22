@@ -130,7 +130,7 @@
                                 <select name="ambalaj"><option value="">Fark etmez</option><option value="Kasa">Kasa</option><option value="Koli">Koli</option><option value="Dökme">Dökme</option><option value="Çuval">Çuval</option><option value="Big bag">Big bag</option><option value="Balya">Balya</option><option value="Kavanoz">Kavanoz</option><option value="Teneke">Teneke</option><option value="Diğer">Diğer</option></select>
                             </label>
                             <label>Teslimat
-                                <select name="teslimat"><option value="">Fark etmez</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select>
+                                <select name="teslimat"><option value="">Fark etmez</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Kargo">Kargo</option><option value="Görüşülür">Görüşülür</option></select>
                             </label>
                         </fieldset>
 
@@ -315,12 +315,12 @@
 <div class="land-checks"><label class="check"><input name="elektrik" type="checkbox"> Elektrik var</label><label class="check"><input name="yolCephesi" type="checkbox"> Yola cephesi var</label></div>
 </div>
 <div class="two"><label><span data-location-label>Ürünün bulunduğu il</span><select name="il" required data-searchable><option value="">İl seç</option></select></label><label>İlçe<select name="ilce" required disabled data-searchable><option value="">Önce il seç</option></select></label></div>
-<label data-product-only>Teslimat <span class="muted">(isteğe bağlı)</span><select name="teslimat"><option value="">Belirtilmedi</option><option value="Yerinden teslim">Yerinden teslim</option><option value="Satıcı teslimatı">Satıcı teslimatı</option><option value="Görüşülür">Görüşülür</option></select></label>
+<div data-product-only class="multi-field"><span class="multi-label">Teslimat <span class="muted">(isteğe bağlı · birden çok seçilebilir)</span></span><input type="hidden" name="teslimat" data-multi="Yerinden teslim|Satıcı teslimatı|Kargo|Görüşülür" aria-label="Teslimat seçenekleri"></div>
 <section class="location-picker" aria-labelledby="pinTitle">
 <div class="location-picker-head"><p id="pinTitle"><strong>Haritada konum</strong> <span class="muted">(isteğe bağlı)</span></p><button type="button" id="clearPin" class="textbtn" hidden>Konumu kaldır</button></div>
-<div id="locationPicker" class="mini-map" role="application" aria-label="Konum seçme haritası"></div>
+<div id="locationPicker" class="mini-map gmap-box" aria-label="Konum önizlemesi (Google Haritalar)"></div>
 <input name="enlem" type="hidden"><input name="boylam" type="hidden">
-<small id="pinHelp" class="muted">Haritaya dokunarak ürünün veya arazinin yerini işaretle. İşaretlemezsen ilan, il merkezine yakın yaklaşık konumla gösterilir.</small>
+<small id="pinHelp" class="muted">Konum eklemezsen ilan, seçtiğin ilçeye yakın yaklaşık konumla gösterilir.</small>
 </section>
 <p class="step-help">İletişim için profilindeki telefon kullanılır. Görünürlüğünü <a href="/html/profilim.html">profilinden yönetebilirsin</a>.</p></fieldset>
 <fieldset class="editor-section wizard-step" data-step="4"><legend>4 · Fotoğraflar ve yayın</legend><p class="step-help">Ürünü yakından ve ambalajında, araziyi farklı açılardan göster. İlk fotoğraf ilanın vitrin fotoğrafı olur.</p>

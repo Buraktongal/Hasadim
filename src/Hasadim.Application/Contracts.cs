@@ -79,6 +79,8 @@ public class ListingRequest
     public string Telefon { get; set; } = "";
 
     public string? Ambalaj { get; set; }
+    // Birden çok seçenek virgülle: "Yerinden teslim, Kargo".
+    [RegularExpression(DeliveryOptions.Pattern, ErrorMessage = "Geçersiz teslimat seçeneği.")]
     public string? Teslimat { get; set; }
     public decimal? MinAlimKg { get; set; }
     public DateTime? HasatTarihi { get; set; }
@@ -139,7 +141,7 @@ public class ListingQuery
     [RegularExpression("^(Kasa|Koli|Dökme|Çuval|Big bag|Balya|Kavanoz|Teneke|Diğer)$", ErrorMessage = "Geçersiz ambalaj seçeneği.")]
     public string? Ambalaj { get; set; }
 
-    [RegularExpression("^(Yerinden teslim|Satıcı teslimatı|Görüşülür)$", ErrorMessage = "Geçersiz teslimat seçeneği.")]
+    [RegularExpression("^(Yerinden teslim|Satıcı teslimatı|Kargo|Görüşülür)$", ErrorMessage = "Geçersiz teslimat seçeneği.")]
     public string? Teslimat { get; set; }
 
     public decimal? MinFiyat { get; set; }

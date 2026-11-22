@@ -35,7 +35,8 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         if (!string.IsNullOrWhiteSpace(q.Ilce)) where += " AND l.Ilce=@district";
         if (!string.IsNullOrWhiteSpace(q.Cesit)) where += " AND l.Cesit=@variety";
         if (!string.IsNullOrWhiteSpace(q.Ambalaj)) where += " AND l.Ambalaj=@packaging";
-        if (!string.IsNullOrWhiteSpace(q.Teslimat)) where += " AND l.Teslimat=@delivery";
+        // Teslimat birden çok seçenek içerebilir: aranan seçenek listede geçiyorsa eşleşir.
+        if (!string.IsNullOrWhiteSpace(q.Teslimat)) where += " AND (N', ' + l.Teslimat + N',') LIKE @delivery";
         if (q.MinFiyat.HasValue) where += " AND l.KilogramFiyati>=@min";
         if (q.MaxFiyat.HasValue) where += " AND l.KilogramFiyati<=@max";
         if (q.MinMiktar.HasValue) where += " AND l.MiktarKg>=@minQty";
@@ -53,7 +54,7 @@ public class MarketplaceRepository(SqlConnectionFactory factory) : IMarketplaceR
         {
             user, owner = q.OwnerId, term = "%" + q.Q?.Trim() + "%", fruit = q.MeyveTuru?.Trim(), city = q.Il?.Trim(),
             category = q.Kategori, deal = q.IslemTipi, zoning = q.ImarDurumu?.Trim(), deed = q.TapuDurumu?.Trim(),
-            district = q.Ilce?.Trim(), variety = q.Cesit?.Trim(), packaging = q.Ambalaj, delivery = q.Teslimat,
+            district = q.Ilce?.Trim(), variety = q.Cesit?.Trim(), packaging = q.Ambalaj, delivery = "%, " + q.Teslimat + ",%",
             min = q.MinFiyat, max = q.MaxFiyat, minQty = q.MinMiktar, maxQty = q.MaxMiktar,
             skip = (q.Page - 1) * q.PageSize, take = q.PageSize
         };

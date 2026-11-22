@@ -187,16 +187,16 @@ window.MarketPresentation = (() => {
         const box = node('div', undefined, 'mini-map detail-mini-map');
         box.setAttribute('aria-label', 'İlan konumu haritası');
         root.append(box);
-        if (point && window.HasadimMap) {
-            // Harita, sayfaya eklendikten sonra ölçülerek çizilir.
-            setTimeout(() => {
-                const map = window.HasadimMap.create(box, { center: point, zoom: exact ? 13 : 9 });
-                map?.setPin(point[0], point[1]);
-            });
+        if (point) {
+            // Google Haritalar: işaretli konum iğneyle; yaklaşık konumda ilçenin kendisi gösterilir.
+            if (window.GoogleMap) {
+                if (exact) window.GoogleMap.embed(box, { lat: point[0], lon: point[1], zoom: 14, title: 'İlanın konumu' });
+                else window.GoogleMap.embed(box, { place: [x.ilce, x.il].filter(Boolean).join(', '), zoom: 11, title: 'İlanın yaklaşık konumu' });
+            }
             const links = node('div', undefined, 'detail-map-links');
             // Google Haritalar'da açılır (telefonda yüklüyse Google Haritalar uygulaması devralır).
             const open = node('a', 'Google Haritalar’da aç', 'secondary');
-            open.href = 'https://www.google.com/maps/search/?api=1&query=' + point[0] + '%2C' + point[1];
+            open.href = 'https://www.google.com/maps/search/?api=1&query=' + (exact ? point[0] + '%2C' + point[1] : encodeURIComponent([x.ilce, x.il, 'Türkiye'].filter(Boolean).join(', ')));
             links.append(open);
             if (exact) {
                 const route = node('a', 'Yol tarifi', 'secondary');

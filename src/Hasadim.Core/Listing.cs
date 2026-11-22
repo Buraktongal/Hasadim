@@ -188,7 +188,7 @@ public class Listing
         Telefon = data.Telefon.Trim();
         HasatTarihi = data.HasatTarihi?.Date;
         Ambalaj = string.IsNullOrWhiteSpace(data.Ambalaj) ? null : data.Ambalaj;
-        Teslimat = string.IsNullOrWhiteSpace(data.Teslimat) ? null : data.Teslimat;
+        Teslimat = DeliveryOptions.Normalize(data.Teslimat);
         MinAlimKg = data.MinAlimKg;
         Kategori = data.Kategori;
         Birim = UnitOf(data);

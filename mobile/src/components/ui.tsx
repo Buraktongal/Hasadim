@@ -215,7 +215,8 @@ export function Select({ label, value, options, onChange, placeholder = 'Seç', 
     const c = useColors(); const t = useT();
     const [open, setOpen] = useState(false);
     const [q, setQ] = useState('');
-    useEffect(() => { if (openSignal > 0 && !disabled) { Keyboard.dismiss(); setQ(''); setOpen(true); } }, [openSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+    const [searching, setSearching] = useState(false);
+    useEffect(() => { if (openSignal > 0 && !disabled) { Keyboard.dismiss(); setQ(''); setSearching(false); setOpen(true); } }, [openSignal]); // eslint-disable-line react-hooks/exhaustive-deps
     const list = useMemo(() => options.map(o => (Array.isArray(o) ? o : [o, o]) as [string, string]), [options]);
     const shown = useMemo(() => {
         const n = q.trim().toLocaleLowerCase('tr');
@@ -227,7 +228,7 @@ export function Select({ label, value, options, onChange, placeholder = 'Seç', 
     return (
         <View style={{ gap: 5 }}>
             <Text style={{ color: c.ink, fontWeight: '700', fontSize: 13.5 }}>{t(label)}</Text>
-            <Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={t(label) + ': ' + (current ?? t(placeholder))} onPress={() => { Keyboard.dismiss(); setQ(''); setOpen(true); }}
+            <Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={t(label) + ': ' + (current ?? t(placeholder))} onPress={() => { Keyboard.dismiss(); setQ(''); setSearching(false); setOpen(true); }}
                 style={{ minHeight: 46, borderRadius: radius.m, borderWidth: 1, borderColor: c.line, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: disabled ? c.bg : c.input, opacity: disabled ? 0.6 : 1 }}>
                 <Text style={{ flex: 1, color: current ? c.ink : c.muted, fontSize: 15.5 }} numberOfLines={1}>{current ? (raw ? current : t(current)) : t(placeholder)}</Text>
                 {allowEmpty && value && !disabled ? <View style={{ marginRight: 6 }}><ClearButton label={t('Seçimi kaldır') + ': ' + t(label)} onPress={() => onChange('')} /></View> : null}
@@ -237,11 +238,13 @@ export function Select({ label, value, options, onChange, placeholder = 'Seç', 
                 <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.line }}>
                         <Text style={{ flex: 1, fontSize: 17, fontWeight: '800', color: c.ink }}>{t(label)}</Text>
+                        {/* Liste açılınca klavye çıkmaz; arama yalnızca "Ara"ya dokununca açılır. */}
+                        {list.length > 8 && !searching ? <Button title="Ara" kind="secondary" small full={false} onPress={() => setSearching(true)} /> : null}
                         <Button title="Kapat" kind="plain" small full={false} onPress={() => setOpen(false)} />
                     </View>
-                    {list.length > 8 ? <View style={{ padding: 12 }}><TextInput autoFocus value={q} onChangeText={setQ} placeholder={t('Ara')} placeholderTextColor={c.muted}
+                    {searching ? <View style={{ padding: 12 }}><TextInput autoFocus value={q} onChangeText={setQ} placeholder={t('Ara')} placeholderTextColor={c.muted} returnKeyType="done"
                         style={{ height: 44, borderRadius: radius.m, borderWidth: 1, borderColor: c.line, paddingHorizontal: 12, color: c.ink, backgroundColor: c.input }} /></View> : null}
-                    <FlatList data={shown} keyExtractor={([v]) => v || '__all'} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+                    <FlatList data={shown} keyExtractor={([v]) => v || '__all'} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
                         renderItem={({ item: [v, l] }) => (
                             <Pressable onPress={() => { onChange(v); setOpen(false); }} style={({ pressed }) => ({ paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', backgroundColor: pressed ? c.greenSoft : 'transparent', borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.line })}>
                                 <Text style={{ flex: 1, color: c.ink, fontSize: 16, fontWeight: v === value ? '800' : '400' }}>{raw && v ? l : t(l)}</Text>

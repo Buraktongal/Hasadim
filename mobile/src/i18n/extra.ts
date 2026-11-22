@@ -1,5 +1,9 @@
 // Yalnızca mobil uygulamada geçen metinlerin İngilizcesi.
 export const extraEn: Record<string, string> = {
+    'İleri': 'Next', 'profili aç': 'open profile', 'Profili gör': 'View profile', 'Yazdığın ilan': 'Listing',
+    'Menü': 'Menu', 'Menüyü kapat': 'Close menu', 'Keşfet': 'Explore', 'Tüm ilanlar': 'All listings', 'İlanlar ve alışveriş': 'Listings and trade',
+    'Giriş yap veya kayıt ol': 'Sign in or sign up', 'Profilini görüntüle': 'View your profile', 'İlan vermek ve mesajlaşmak için': 'To post listings and message', 'Bu cihazdaki oturumun kapatılacak.': 'You will be signed out on this device.',
+    'Teslimat (birden çok seçilebilir)': 'Delivery (choose one or more)', 'Kargo': 'Cargo shipping',
     'Profilimi düzenle': 'Edit my profile', 'Kendine mesaj gönderemezsin.': 'You can’t message yourself.',
     'Numara': 'Phone', 'Mesaj': 'Message', 'aktif ilan': 'active listings', 'ürün çeşidi': 'products', 'aydır üye': 'months a member', 'yıldır üye': 'years a member', 'üye': 'member', 'Yeni': 'New',
     'Hazır stok': 'Available stock', 'Ne zaman ne bulunur?': 'What’s available when?', 'Koyu yeşil: yoğun hasat. Turuncu çerçeve: bu ay.': 'Dark green: peak harvest. Orange outline: this month.',

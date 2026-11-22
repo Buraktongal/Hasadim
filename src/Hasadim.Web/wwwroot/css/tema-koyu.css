@@ -1277,6 +1277,20 @@ html[data-theme="dark"] .status-done {
     background: #1a281e;
     color: #a9e6c0;
 }
+html[data-theme="dark"] .mini-map:has(iframe.gmap) {
+    background: #222621;
+}
+html[data-theme="dark"] .multi-chip {
+    border: 1px solid var(--t-line, #434a3f);
+    background: #161616;
+}
+html[data-theme="dark"] .multi-chip::before {
+    border: 2px solid #5b605c;
+}
+html[data-theme="dark"] .multi-chip.on {
+    background: #1f291b;
+    color: #8fd0a3;
+}
 
 /* ---- yonetim.css ---- */
 html[data-theme="dark"] .admin-body {

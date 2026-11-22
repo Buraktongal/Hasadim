@@ -7,7 +7,7 @@ import { Photo } from '../../components/Photo';
 import { FramedImage, PhotoViewer } from '../../components/ProfileMedia';
 import { ProductIcon } from '../../components/ProductIcon';
 import { useShare } from '../../components/ShareSheet';
-import { Chevron, Chip, Empty, ErrorBox, goBack, Row, Sheet, Spinner, toast } from '../../components/ui';
+import { Chevron, Chip, Empty, ErrorBox, goBack, Spinner, toast } from '../../components/ui';
 import { get } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
 import { ACTIVITY, category, seasons } from '../../lib/catalog';
@@ -33,7 +33,6 @@ export default function Seller() {
     const [filter, setFilter] = useState('');
     const [phoneShown, setPhoneShown] = useState(false);
     const [viewing, setViewing] = useState<string | null>(null);
-    const [pickListing, setPickListing] = useState(false);
     const sharer = useShare();
     const [now] = useState(() => Date.now());
     const [solid, setSolid] = useState(false); // kapak geçilince üstte adın yazdığı düz çubuk çıkar
@@ -91,9 +90,10 @@ export default function Seller() {
         if (!user) { router.push('/giris'); return; }
         if (p?.isMine || p?.id === user.id) { toast('Kendine mesaj gönderemezsin.'); return; }
         if (!list.length) { toast('Mesaj göndermek için satıcının yayında bir ilanı olmalı.'); return; }
-        if (list.length === 1) openChat(list[0]!); else setPickListing(true);
+        // Doğrudan mesaj ekranına gidilir: bu kişiyle önceki tüm yazışmalar orada görünür; yeni mesaj en yeni ilan üzerinden gider.
+        openChat(list[0]!);
     };
-    const openChat = (x: Listing) => { setPickListing(false); router.push({ pathname: '/sohbet', params: { listingId: x.id, userId: x.ownerId, name: x.ownerName, title: x.baslik } }); };
+    const openChat = (x: Listing) => { router.push({ pathname: '/sohbet', params: { listingId: x.id, userId: x.ownerId, name: x.ownerName, title: x.baslik } }); };
 
     const header = p ? (
         <View style={{ gap: 12, marginBottom: 6 }}>
@@ -218,9 +218,6 @@ export default function Seller() {
                 <Round label="Geri" solid={solid} onPress={goBack}><Chevron dir="left" color={solid ? c.green2 : '#fff'} size={24} /></Round>
                 {p ? <Round label="Paylaş" solid={solid} onPress={share}><Icon name="share" color={solid ? c.green2 : '#fff'} size={19} /></Round> : null}
             </View>
-            <Sheet visible={pickListing} onClose={() => setPickListing(false)} title="Hangi ilan hakkında?">
-                {list.slice(0, 30).map(x => <Row key={x.id} raw title={x.baslik} subtitle={t(priceText(x)) + ' · ' + x.il} icon={<ProductIcon name={x.meyveTuru} size={26} />} onPress={() => openChat(x)} />)}
-            </Sheet>
             <PhotoViewer url={viewing} onClose={() => setViewing(null)} />
             {sharer.node}
         </View>

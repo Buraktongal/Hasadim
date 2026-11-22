@@ -6,7 +6,8 @@ import { Icon } from '../../components/Icon';
 import { Empty, ErrorBox, SignInRequired, Spinner } from '../../components/ui';
 import { useApp } from '../../lib/app-state';
 import { refreshCounts } from '../../lib/counts';
-import { initials, timeAgo } from '../../lib/format';
+import { timeAgo } from '../../lib/format';
+import { UserAvatar } from '../../components/UserAvatar';
 import { type Conversation, conversations, loadMessages } from '../../lib/messages';
 import type { Message } from '../../lib/types';
 import { radius } from '../../lib/theme';
@@ -36,9 +37,7 @@ export default function Messages() {
     const row = ({ item }: { item: Conversation }) => (
         <Pressable onPress={() => router.push({ pathname: '/sohbet', params: { listingId: item.listingId, userId: item.otherId, name: item.otherName, title: item.listingTitle } })}
             style={({ pressed }) => ({ flexDirection: 'row', gap: 12, padding: 12, alignItems: 'center', backgroundColor: pressed ? c.greenSoft : c.panel })}>
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: c.green2, fontWeight: '900', fontSize: 17 }}>{initials(item.otherName)}</Text>
-            </View>
+            <UserAvatar userId={item.otherId} name={item.otherName} size={48} />
             <View style={{ flex: 1, gap: 1 }}>
                 <View style={{ flexDirection: 'row', gap: 6 }}>
                     <Text style={{ flex: 1, color: c.ink, fontWeight: item.unread ? '900' : '700', fontSize: 15.5 }} numberOfLines={1}>{item.otherName}</Text>

@@ -19,7 +19,7 @@ const districtMap = new Map(cityData as [string, string[]][]);
 export const districts = (city: string) => districtMap.get(city) ?? [];
 
 export const PACKAGING = ['Kasa', 'Koli', 'Dökme', 'Çuval', 'Big bag', 'Balya', 'Kavanoz', 'Teneke', 'Diğer'];
-export const DELIVERY = ['Yerinden teslim', 'Satıcı teslimatı', 'Görüşülür'];
+export const DELIVERY = ['Yerinden teslim', 'Satıcı teslimatı', 'Kargo', 'Görüşülür'];
 export const ZONING = ['İmarsız (tarım arazisi)', 'Konut imarlı', 'Ticari imarlı', 'Sanayi imarlı', 'Turizm imarlı', 'Belirtilmedi'];
 export const DEED = ['Müstakil tapu', 'Hisseli tapu', 'Tahsisli', 'Zilliyet'];
 export const IRRIGATION = ['Sulu', 'Kısmen sulu', 'Kuru (yağışa bağlı)'];
