@@ -89,6 +89,7 @@ export default function Seller() {
     };
     const message = () => {
         if (!user) { router.push('/giris'); return; }
+        if (p?.isMine || p?.id === user.id) { toast('Kendine mesaj gönderemezsin.'); return; }
         if (!list.length) { toast('Mesaj göndermek için satıcının yayında bir ilanı olmalı.'); return; }
         if (list.length === 1) openChat(list[0]!); else setPickListing(true);
     };
@@ -128,8 +129,11 @@ export default function Seller() {
             </View>
             {/* İletişim: düğmeler eşit genişlikte, yazılar ortalı. Numara ilk dokunuşta açılır, ikincide arar. */}
             <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Action label="Mesaj" icon="chat" primary onPress={message} />
-                {p.hasPhone || p.phone ? <Action label={phoneShown && p.phone ? p.phone : t('Numara')} icon="phone" onPress={phone} active={phoneShown} /> : null}
+                {/* Kendi profiline bakan kişi kendine mesaj gönderemez; yerine profil düzenleme çıkar. */}
+                {p.isMine || p.id === user?.id ? <Action label="Profilimi düzenle" icon="edit" primary onPress={() => router.push('/profil')} /> : <>
+                    <Action label="Mesaj" icon="chat" primary onPress={message} />
+                    {p.hasPhone || p.phone ? <Action label={phoneShown && p.phone ? p.phone : t('Numara')} icon="phone" onPress={phone} active={phoneShown} /> : null}
+                </>}
                 <Action label="Paylaş" icon="share" onPress={share} />
             </View>
             {/* Özet */}
@@ -248,7 +252,7 @@ function Badge({ label, tone }: { label: string; tone?: 'green' | 'blue' | 'new'
     const [bg, fg] = tone === 'green' ? [c.greenSoft, c.green2] : tone === 'blue' ? [dark ? '#16324a' : '#e8f4fd', dark ? '#8cc8f0' : '#155a8a'] : tone === 'new' ? [dark ? '#3a2e12' : '#fff4dc', dark ? '#f0c96a' : '#8a5a00'] : tone === 'season' ? [dark ? '#1f3a17' : '#effae6', dark ? '#a6dd8a' : '#2f6b12'] : [c.panel, c.ink];
     return <View style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: c.line }}><Text style={{ color: fg, fontSize: 12, fontWeight: '700' }}>{label}</Text></View>;
 }
-function Action({ label, icon, onPress, primary, active }: { label: string; icon: 'chat' | 'phone' | 'share'; onPress: () => void; primary?: boolean; active?: boolean }) {
+function Action({ label, icon, onPress, primary, active }: { label: string; icon: 'chat' | 'phone' | 'share' | 'edit'; onPress: () => void; primary?: boolean; active?: boolean }) {
     const { colors: c, t } = useApp();
     const fg = primary ? c.onGreen : c.green2;
     return (

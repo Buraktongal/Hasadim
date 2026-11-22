@@ -1555,6 +1555,11 @@ html[data-theme="dark"] .pl-avatar {
 html[data-theme="dark"] .pl-initial {
     color: #8fd0a3;
 }
+html[data-theme="dark"] .sp-badge-me {
+    background: #2e1b0d;
+    color: #e1b497;
+    border-color: #59402c;
+}
 
 /* ---- elle ince ayar ---- */
 html[data-theme="dark"] body { background: var(--t-bg); color: var(--t-ink); }

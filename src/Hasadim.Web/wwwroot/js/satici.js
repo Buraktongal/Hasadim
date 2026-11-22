@@ -97,7 +97,18 @@
             } catch { /* kullanıcı paylaşmaktan vazgeçti */ }
         };
         $('#spMessage').onclick = () => openMessage(p, listings);
-        $('#spMessage').hidden = p.isMine === true;
+        // Kişi kendi profiline bakıyorsa kendine mesaj gönderemez ve kendi numarasını aramaz;
+        // bu düğmelerin yerine "Profilimi düzenle" çıkar.
+        if (p.isMine) {
+            $('#spMessage').hidden = true;
+            phone.hidden = true;
+            const edit = node('a', undefined, 'primary sp-act');
+            edit.href = '/html/profilim.html';
+            edit.append(node('span', undefined, 'sp-ico sp-ico-edit'), node('span', 'Profilimi düzenle'));
+            $('#spMessage').before(edit);
+            document.querySelector('.sp-actions').classList.add('is-mine');
+            $('#spBadges').prepend(node('span', 'Senin profilin', 'sp-badge sp-badge-me'));
+        }
     }
 
     function toast(text) {
@@ -259,6 +270,7 @@
 
     // ---------- Mesaj ----------
     function openMessage(p, listings) {
+        if (p.isMine) { toast('Kendine mesaj gönderemezsin.'); return; }
         const api = window.HasadimApi;
         const d = $('#spMessageDialog'), f = $('#spMessageForm'), err = f.querySelector('.form-error');
         const select = f.elements.listingId;

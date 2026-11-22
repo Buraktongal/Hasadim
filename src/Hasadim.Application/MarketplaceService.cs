@@ -592,11 +592,10 @@ public class MarketplaceService(
 
         var listing = await FindExisting(request.ListingId, ct);
 
-        if (request.RecipientId == userId ||
-            request.RecipientId == Guid.Empty)
-        {
+        if (request.RecipientId == userId)
+            throw new AppException(400, "Kendine mesaj gönderemezsin.");
+        if (request.RecipientId == Guid.Empty)
             throw new AppException(400, "Alıcı geçersiz.");
-        }
 
         if (userId == listing.OwnerId)
         {

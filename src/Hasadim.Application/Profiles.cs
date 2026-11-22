@@ -17,7 +17,7 @@ public class ProfileRequest:IValidatableObject
 }
 // Fotoğraf kadrajı: X/Y odak noktası (yüzde), Zoom yakınlaştırma (yüzde 100-300).
 public record PhotoFrame(int X=50,int Y=50,int Zoom=100);
-public record PublicProfile(Guid Id,string DisplayName,string AccountType,string Activity,string? BusinessName,string City,string District,string About,string? Phone,string? PhotoUrl,DateTime? MemberSince,bool EmailVerified,int ActiveListingCount,string? CoverUrl=null,PhotoFrame? PhotoFrame=null,PhotoFrame? CoverFrame=null,bool HasPhone=false);
+public record PublicProfile(Guid Id,string DisplayName,string AccountType,string Activity,string? BusinessName,string City,string District,string About,string? Phone,string? PhotoUrl,DateTime? MemberSince,bool EmailVerified,int ActiveListingCount,string? CoverUrl=null,PhotoFrame? PhotoFrame=null,PhotoFrame? CoverFrame=null,bool HasPhone=false,bool IsMine=false);
 public class FrameRequest
 {
  [Required,RegularExpression("^(photo|cover)$")]public string Target {get;set;}="photo";
@@ -46,7 +46,7 @@ public class ProfileService(IProfileRepository repo,ICurrentUser user)
  static PhotoFrame PFrame(SellerProfile p)=>new(p.PhotoX,p.PhotoY,p.PhotoZoom);
  static PhotoFrame CFrame(SellerProfile p)=>new(p.CoverX,p.CoverY,p.CoverZoom);
  async Task<SellerProfile> Find(Guid id,CancellationToken ct)=>await repo.Find(id,ct)??throw new AppException(404,"Satıcı bulunamadı.");
- public async Task<PublicProfile> Public(Guid id,CancellationToken ct){var p=await Find(id,ct);return new(p.UserId,p.DisplayName,p.AccountType,p.Activity,p.AccountType=="Business"?p.BusinessName:null,p.City,p.District,p.About,user.Id.HasValue&&p.ShowPhone?p.Phone:null,Photo(p),p.CreatedAt,p.EmailConfirmed,p.ActiveListingCount,Cover(p),PFrame(p),CFrame(p),p.ShowPhone&&!string.IsNullOrWhiteSpace(p.Phone));}
+ public async Task<PublicProfile> Public(Guid id,CancellationToken ct){var p=await Find(id,ct);return new(p.UserId,p.DisplayName,p.AccountType,p.Activity,p.AccountType=="Business"?p.BusinessName:null,p.City,p.District,p.About,user.Id.HasValue&&p.ShowPhone?p.Phone:null,Photo(p),p.CreatedAt,p.EmailConfirmed,p.ActiveListingCount,Cover(p),PFrame(p),CFrame(p),p.ShowPhone&&!string.IsNullOrWhiteSpace(p.Phone),user.Id==p.UserId);}
  public async Task<IReadOnlyList<SellerSearchResult>> Search(string? q,CancellationToken ct)
  {
   var term=(q??"").Trim();

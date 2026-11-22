@@ -139,6 +139,8 @@ user.Id=owner;await Status(400,()=>service.Create(request,ct),"Fotoğrafsız ila
 await Status(400,()=>service.Create(request,ct,Enumerable.Repeat("a.jpg",11).ToArray()),"11 fotoğraf reddedilir");
 var profiles=new MemoryProfiles();var ps=new ProfileService(profiles,user);
 user.Id=null;Check((await ps.Public(profiles.Value.UserId,ct)).Phone is null,"Anonim profil telefonu gizlenir");
+Check(!(await ps.Public(profiles.Value.UserId,ct)).IsMine,"Anonim ziyaretçi için profil kendi profili sayılmaz");
+user.Id=profiles.Value.UserId;Check((await ps.Public(profiles.Value.UserId,ct)).IsMine,"Kişi kendi profilini açınca IsMine işaretlenir");
 await Status(401,()=>ps.Mine(ct),"Anonim kullanıcı kendi profiline erişemez");
 user.Id=owner;profiles.Value.ShowPhone=false;Check((await ps.Public(profiles.Value.UserId,ct)).Phone is null,"Gizlenen telefon oturum açmış kişiye verilmez");
 profiles.Value.ShowPhone=true;Check((await ps.Public(profiles.Value.UserId,ct)).Phone=="05000000000","İzin verilen profil telefonu görünür");

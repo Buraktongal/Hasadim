@@ -196,3 +196,8 @@ html[data-theme="dark"] .sp-avatar { border-color: #1b211d; }
     .pl-edit-cover span:last-child { font-size: 13px; }
 }
 html[data-theme="dark"] .pl-avatar { border-color: #1b211d; }
+
+/* Kendi profiline bakarken: Mesaj ve Numara yerine "Profilimi düzenle" + Paylaş */
+.sp-ico-edit { --i: url("/img/ikon/sp-ico-edit.svg"); }
+.sp-actions.is-mine { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+.sp-badge-me { background: #fff1e6; color: #a04a12; border-color: #f6d9c2; }

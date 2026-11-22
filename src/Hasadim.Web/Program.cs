@@ -4,6 +4,10 @@ builder.WebHost.ConfigureKestrel(o=>o.Limits.MaxRequestBodySize=52000000);
 var apiUrl=builder.Configuration["Api:BaseUrl"]??throw new InvalidOperationException("API adresi gerekli.");
 if(!Uri.TryCreate(apiUrl,UriKind.Absolute,out var apiUri)||apiUri.Scheme!="https")throw new InvalidOperationException("API adresi HTTPS olmalıdır.");
 builder.Services.AddHttpClient("api",c=>{c.BaseAddress=apiUri;c.Timeout=TimeSpan.FromSeconds(60);}).ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{UseCookies=false,AllowAutoRedirect=false});
+// Site dev tunnel gibi localhost dışı bir adresten açıldığında Visual Studio'nun tarayıcı yenileme ve Browser Link
+// betikleri bilgisayardaki localhost'a bağlanamaz ve konsolu hatayla doldurur. Bu süzgeç en dışta çalışır (listenin başına
+// eklenir) ve o durumda bu betiklerin yerine boş bir dosya döndürür. Yalnızca geliştirmede; yayında bu betikler hiç yoktur.
+if(builder.Environment.IsDevelopment())builder.Services.Insert(0,ServiceDescriptor.Transient<IStartupFilter,QuietDevToolsFilter>());
 var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();
 // Geliştirmede Visual Studio'nun canlı yenileme ve Browser Link betikleri localhost'a bağlanır; yayında eklenmez.
 var devConnect=app.Environment.IsDevelopment()?" ws://localhost:* wss://localhost:* http://localhost:* https://localhost:*":"";app.UseHttpsRedirection();
@@ -49,3 +53,20 @@ foreach (var file in Directory.EnumerateFiles(
 }
 
 app.UseStaticFiles();app.Run();
+
+sealed class QuietDevToolsFilter:IStartupFilter
+{
+ public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)=>app=>
+ {
+  app.Use(async(c,go)=>
+  {
+   var path=c.Request.Path.Value??"";
+   var tool=path.StartsWith("/_framework/aspnetcore-browser-refresh",StringComparison.OrdinalIgnoreCase)||path.StartsWith("/_vs/browserLink",StringComparison.OrdinalIgnoreCase);
+   var host=c.Request.Host.Host;
+   var local=host.Equals("localhost",StringComparison.OrdinalIgnoreCase)||host=="127.0.0.1"||host=="[::1]";
+   if(tool&&!local){c.Response.ContentType="application/javascript; charset=utf-8";c.Response.Headers.CacheControl="no-store";await c.Response.WriteAsync("// Geliştirme araçları bu adreste kapalı.\n");return;}
+   await go();
+  });
+  next(app);
+ };
+}

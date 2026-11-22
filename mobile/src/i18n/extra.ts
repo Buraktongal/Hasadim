@@ -1,5 +1,6 @@
 // Yalnızca mobil uygulamada geçen metinlerin İngilizcesi.
 export const extraEn: Record<string, string> = {
+    'Profilimi düzenle': 'Edit my profile', 'Kendine mesaj gönderemezsin.': 'You can’t message yourself.',
     'Numara': 'Phone', 'Mesaj': 'Message', 'aktif ilan': 'active listings', 'ürün çeşidi': 'products', 'aydır üye': 'months a member', 'yıldır üye': 'years a member', 'üye': 'member', 'Yeni': 'New',
     'Hazır stok': 'Available stock', 'Ne zaman ne bulunur?': 'What’s available when?', 'Koyu yeşil: yoğun hasat. Turuncu çerçeve: bu ay.': 'Dark green: peak harvest. Orange outline: this month.',
     'İlanlar': 'Listings', 'Hasatta': 'In season', 'ilan yayında': 'listings live', 'Kurumsal (beyan)': 'Business (self-declared)', 'Yeni üye': 'New member',

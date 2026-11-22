@@ -47,7 +47,7 @@ export interface MapData {
 
 export interface PhotoFrame { x: number; y: number; zoom: number }
 export interface PublicProfile {
-    coverUrl?: string | null; photoFrame?: PhotoFrame | null; coverFrame?: PhotoFrame | null; hasPhone?: boolean;
+    coverUrl?: string | null; photoFrame?: PhotoFrame | null; coverFrame?: PhotoFrame | null; hasPhone?: boolean; isMine?: boolean;
     id: string; displayName: string; accountType: string; activity: string; businessName?: string | null;
     city: string; district: string; about: string; phone?: string | null; photoUrl?: string | null;
     memberSince?: string | null; emailVerified: boolean; activeListingCount: number;
