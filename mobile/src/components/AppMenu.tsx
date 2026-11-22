@@ -6,7 +6,7 @@ import { useApp } from '../lib/app-state';
 import { useCounts } from '../lib/counts';
 import { initials } from '../lib/format';
 import { Icon, type IconName } from './Icon';
-import { useConfirm } from './ui';
+import { afterModal, useConfirm } from './ui';
 
 // Soldan açılan ana menü (Pazar ekranındaki ☰ düğmesi). Web'deki "Menü" ile aynı bölümler.
 type Item = { icon: IconName; label: string; href: string; count?: number; auth?: boolean };
@@ -25,7 +25,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
         else if (mounted) Animated.timing(x, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => { if (finished) setMounted(false); });
     }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const go = (href: string, auth?: boolean) => { onClose(); setTimeout(() => router.push((auth && !user ? '/giris' : href) as never), 280); };
+    const go = (href: string, auth?: boolean) => { onClose(); afterModal(() => router.push((auth && !user ? '/giris' : href) as never)); };
     const sections: [string, Item[]][] = [
         ['Keşfet', [
             { icon: 'market', label: 'Tüm ilanlar', href: '/' },
@@ -48,8 +48,9 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
             { icon: 'idea', label: 'Öneri ve geri bildirim', href: '/geri-bildirim' }
         ]]
     ];
-    if (!mounted) return null;
+    if (!mounted) return confirm.node;
     return (
+        <>
         <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
             <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: '#0008', opacity: x }]}>
                 <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Menüyü kapat')} />
@@ -85,7 +86,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
                         </View>
                     ))}
                     {user ? (
-                        <Pressable onPress={async () => { onClose(); if (await confirm.ask('Çıkış yap', t('Bu cihazdaki oturumun kapatılacak.'), 'Çıkış yap', true)) await signOut(); }}
+                        <Pressable onPress={() => { onClose(); afterModal(async () => { if (await confirm.ask('Çıkış yap', t('Bu cihazdaki oturumun kapatılacak.'), 'Çıkış yap', true)) await signOut(); }); }}
                             style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, marginTop: 8 }}>
                             <Icon name="logout" color={c.danger} size={21} />
                             <Text style={{ color: c.danger, fontSize: 15.5, fontWeight: '700' }}>{t('Çıkış yap')}</Text>
@@ -93,7 +94,8 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
                     ) : null}
                 </ScrollView>
             </Animated.View>
-            {confirm.node}
         </Modal>
+        {confirm.node}
+        </>
     );
 }

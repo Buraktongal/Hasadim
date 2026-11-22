@@ -395,6 +395,10 @@ export function useRequireUser() {
 
 export type { Colors };
 
+// iOS, bir pencere (Modal) kapanırken yeni bir pencere, fotoğraf seçici veya paylaşım menüsü açılmasına izin vermez;
+// açılmak istenen şey sessizce hiç görünmez. Pencere kapandıktan sonra yapılacak işler bu süre kadar bekletilir.
+export const afterModal = (fn: () => void) => { setTimeout(fn, Platform.OS === 'ios' ? 520 : 260); };
+
 // Alttan açılan pencere (teklif, şikâyet, onay).
 // Karartı yerinde solarak gelir; yalnızca panel aşağıdan kayar (karartı panelle birlikte inip kalkmaz).
 export function Sheet({ visible, onClose, title, children }: { visible: boolean; onClose: () => void; title: string; children: ReactNode }) {

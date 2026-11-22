@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useApp } from '../lib/app-state';
 import { PUBLIC_WEB_URL } from '../lib/config';
 import { Icon } from './Icon';
-import { Sheet, toast } from './ui';
+import { afterModal, Sheet, toast } from './ui';
 
 // Uygulama içi Türkçe paylaşım penceresi: WhatsApp, Mesajlar, E-posta, Telegram ve sistemin
 // kendi paylaşım menüsü ("Diğer uygulamalar"). Sistem menüsü telefonun diline göre açılır.
@@ -29,7 +29,7 @@ function ShareSheet({ content, visible, onClose }: { content: ShareContent | nul
     const enc = encodeURIComponent;
     const open = async (link: string, name: string) => {
         onClose();
-        try { await Linking.openURL(link); } catch { toast(t(name) + ' ' + t('açılamadı. Uygulama yüklü olmayabilir.')); }
+        afterModal(() => { Linking.openURL(link).catch(() => toast(t(name) + ' ' + t('açılamadı. Uygulama yüklü olmayabilir.'))); });
     };
     const targets: { key: string; label: string; color: string; icon: React.ReactNode; run: () => void }[] = [
         { key: 'wa', label: 'WhatsApp', color: '#25D366', icon: <Brand d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-3.9-4.7-4.1-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.5c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z" />, run: () => open('https://wa.me/?text=' + enc(message), 'WhatsApp') },
@@ -38,7 +38,7 @@ function ShareSheet({ content, visible, onClose }: { content: ShareContent | nul
         { key: 'tg', label: 'Telegram', color: '#229ED9', icon: <Brand d="M21.5 4.3 18.4 19c-.2 1-.8 1.3-1.7.8l-4.6-3.4-2.2 2.1c-.2.2-.5.5-1 .5l.3-4.7 8.6-7.8c.4-.3-.1-.5-.6-.2L6.6 13 2 11.6c-1-.3-1-1 .2-1.5l18-6.9c.8-.3 1.6.2 1.3 1.1z" />, run: () => open('https://t.me/share/url?url=' + enc(url) + '&text=' + enc(content.text), 'Telegram') },
         {
             key: 'more', label: 'Diğer uygulamalar', color: c.muted, icon: <Icon name="share" color="#fff" size={22} />,
-            run: async () => { onClose(); try { await Share.share(Platform.OS === 'ios' ? { message: content.text, url } : { message, title: content.title }, { dialogTitle: t('Paylaş'), subject: content.title }); } catch { /* vazgeçildi */ } }
+            run: () => { onClose(); afterModal(async () => { try { await Share.share(Platform.OS === 'ios' ? { message: content.text, url } : { message, title: content.title }, { dialogTitle: t('Paylaş'), subject: content.title }); } catch { /* vazgeçildi */ } }); }
         }
     ];
     return (

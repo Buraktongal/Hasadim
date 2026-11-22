@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { Icon } from '../components/Icon';
 import { FrameEditor, FramedImage, PhotoViewer } from '../components/ProfileMedia';
-import { Button, Card, ErrorBox, Field, H2, Loading, Notice, Page, Row, Segmented, Select, Sheet, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
+import { afterModal, Button, Card, ErrorBox, Field, H2, Loading, Notice, Page, Row, Segmented, Select, Sheet, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
 import { api, get, post, put } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { cities, districts } from '../lib/catalog';
@@ -49,11 +49,15 @@ export default function Profile() {
         } catch (e) { setError(e instanceof Error ? e.message : 'Profil kaydedilemedi.'); void load(); }
         finally { setBusy(false); }
     }
-    async function pick(target: 'photo' | 'cover', source: 'camera' | 'library') {
+    // Seçenek penceresi tamamen kapandıktan sonra fotoğraf seçici açılır; seçici kapandıktan sonra da kadraj ekranı.
+    function pick(target: 'photo' | 'cover', source: 'camera' | 'library') {
         setMenu(null);
+        afterModal(() => void pickNow(target, source));
+    }
+    async function pickNow(target: 'photo' | 'cover', source: 'camera' | 'library') {
         try {
             const r = await pickPhotos(source, 1);
-            if ('photos' in r) { if (r.photos[0]) setFraming({ target, url: r.photos[0].uri, local: true }); }
+            if ('photos' in r) { const photo = r.photos[0]; if (photo) afterModal(() => setFraming({ target, url: photo.uri, local: true })); }
             else if ('denied' in r) {
                 if (!r.canAskAgain && await confirm.ask('Kamera izni gerekli', t('Fotoğraf çekmek için Ayarlar’dan Hasadım’a kamera izni vermelisin.'), 'Ayarları aç')) await Linking.openSettings();
             } else toast(r.error);
@@ -72,8 +76,11 @@ export default function Profile() {
             toast(framing.target === 'cover' ? 'Kapak fotoğrafı kaydedildi.' : 'Profil fotoğrafı kaydedildi.');
         } catch (e) { toast(e instanceof Error ? e.message : 'Fotoğraf kaydedilemedi.'); }
     }
-    async function removePhoto(target: 'photo' | 'cover') {
+    function removePhoto(target: 'photo' | 'cover') {
         setMenu(null);
+        afterModal(() => void removeNow(target));
+    }
+    async function removeNow(target: 'photo' | 'cover') {
         if (!await confirm.ask(target === 'cover' ? 'Kapak fotoğrafını kaldır' : 'Profil fotoğrafını kaldır', t('Fotoğraf profilinden kaldırılacak.'), 'Kaldır', true)) return;
         try { setP(await del2('/api/profiles/me/' + (target === 'cover' ? 'cover' : 'photo'))); toast('Fotoğraf kaldırıldı.'); void reloadUser(); }
         catch (e) { toast(e instanceof Error ? e.message : 'Fotoğraf kaldırılamadı.'); }
@@ -100,17 +107,17 @@ export default function Profile() {
                         <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>{t(p.coverUrl ? 'Kapağı düzenle' : 'Kapak fotoğrafı ekle')}</Text>
                     </View>
                 </Pressable>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 14, paddingBottom: 14 }}>
-                    <Pressable onPress={() => setMenu('photo')} accessibilityRole="button" accessibilityLabel={t('Profil fotoğrafı')}
-                        style={{ width: 92, height: 92, marginTop: -44, borderRadius: 26, borderWidth: 4, borderColor: c.panel, backgroundColor: c.greenSoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-                        {p.photoUrl ? <FramedImage url={p.photoUrl} frame={p.photoFrame} style={{ width: '100%', height: '100%' }} /> : <Text style={{ fontSize: 36, fontWeight: '900', color: c.green2 }}>{(p.displayName || '?').trim().slice(0, 1).toLocaleUpperCase('tr')}</Text>}
-                        <View style={{ position: 'absolute', right: 4, bottom: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: c.green2, alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" color="#fff" size={14} /></View>
-                    </Pressable>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 14, paddingBottom: 14, paddingLeft: 14 + 92 + 12, minHeight: 60 }}>
                     <View style={{ flex: 1, paddingTop: 8 }}>
                         <Txt weight="800" size={17} raw numberOfLines={1}>{p.businessName || p.displayName}</Txt>
                         <Txt muted size={12.5}>Fotoğraflara dokunarak değiştir, konumunu ayarla veya büyüt.</Txt>
                     </View>
                 </View>
+                <Pressable onPress={() => setMenu('photo')} accessibilityRole="button" accessibilityLabel={t('Profil fotoğrafı')}
+                    style={{ position: 'absolute', left: 14, top: 130 - 44, width: 92, height: 92, borderRadius: 26, borderWidth: 4, borderColor: c.panel, backgroundColor: c.greenSoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                    {p.photoUrl ? <FramedImage url={p.photoUrl} frame={p.photoFrame} style={{ width: '100%', height: '100%' }} /> : <Text style={{ fontSize: 36, fontWeight: '900', color: c.green2 }}>{(p.displayName || '?').trim().slice(0, 1).toLocaleUpperCase('tr')}</Text>}
+                    <View style={{ position: 'absolute', right: 4, bottom: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: c.green2, alignItems: 'center', justifyContent: 'center' }}><Icon name="camera" color="#fff" size={14} /></View>
+                </Pressable>
             </View>
             <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -145,12 +152,12 @@ export default function Profile() {
 
             <Sheet visible={Boolean(menu)} onClose={() => setMenu(null)} title={menu === 'cover' ? 'Kapak fotoğrafı' : 'Profil fotoğrafı'}>
                 {menu ? <>
-                    <Row title="Galeriden seç" icon={<Icon name="image" color={c.green2} />} onPress={() => void pick(menu, 'library')} />
-                    <Row title="Fotoğraf çek" icon={<Icon name="camera" color={c.green2} />} onPress={() => void pick(menu, 'camera')} />
+                    <Row title="Galeriden seç" icon={<Icon name="image" color={c.green2} />} onPress={() => pick(menu, 'library')} />
+                    <Row title="Fotoğraf çek" icon={<Icon name="camera" color={c.green2} />} onPress={() => pick(menu, 'camera')} />
                     {(menu === 'cover' ? p.coverUrl : p.photoUrl) ? <>
-                        <Row title="Konumunu ayarla" subtitle="Sürükleyerek ortala, yakınlaştır" icon={<Icon name="edit" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; setMenu(null); setFraming({ target: menu, url, local: false }); }} />
-                        <Row title="Büyüt" icon={<Icon name="eye" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; setMenu(null); setViewing(url); }} />
-                        <Row title="Kaldır" danger icon={<Icon name="trash" color={c.danger} />} onPress={() => void removePhoto(menu)} />
+                        <Row title="Konumunu ayarla" subtitle="Sürükleyerek ortala, yakınlaştır" icon={<Icon name="edit" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; const target = menu; setMenu(null); afterModal(() => setFraming({ target, url, local: false })); }} />
+                        <Row title="Büyüt" icon={<Icon name="eye" color={c.green2} />} onPress={() => { const url = (menu === 'cover' ? p.coverUrl : p.photoUrl)!; setMenu(null); afterModal(() => setViewing(url)); }} />
+                        <Row title="Kaldır" danger icon={<Icon name="trash" color={c.danger} />} onPress={() => removePhoto(menu)} />
                     </> : null}
                     <Txt muted size={12}>{menu === 'cover' ? t('Geniş, yatay bir fotoğraf seç (tarlan, bahçen, deponun önü…).') : t('Yüzünün veya logonun net göründüğü bir fotoğraf seç.')}</Txt>
                 </> : null}

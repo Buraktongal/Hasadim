@@ -108,9 +108,10 @@ export default function Seller() {
                         <Icon name="pin" color="#fff" size={13} /><Text style={{ color: '#fff', fontSize: 12.5, fontWeight: '700' }}>{place}</Text>
                     </View> : null}
                 </Pressable>
-                <View style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
+                {/* Fotoğraf kapağın üstüne taşar; dokunma alanı satırın içinde kalsın diye satır yukarı kaydırılır (Android). */}
+                <View pointerEvents="box-none" style={{ paddingHorizontal: 16, flexDirection: 'row', alignItems: 'flex-end', gap: 12, marginTop: -48 }}>
                     <Pressable disabled={!p.photoUrl} onPress={() => setViewing(p.photoUrl ?? null)} accessibilityRole="imagebutton" accessibilityLabel={t('Profil fotoğrafını büyüt')}
-                        style={{ width: 96, height: 96, marginTop: -48, borderRadius: 26, borderWidth: 4, borderColor: c.bg, backgroundColor: c.greenSoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 }}>
+                        style={{ width: 96, height: 96, borderRadius: 26, borderWidth: 4, borderColor: c.bg, backgroundColor: c.greenSoft, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 }}>
                         {p.photoUrl ? <FramedImage url={p.photoUrl} frame={p.photoFrame} style={{ width: '100%', height: '100%' }} /> : <Text style={{ fontSize: 40, fontWeight: '900', color: c.green2 }}>{name.trim().slice(0, 1).toLocaleUpperCase('tr')}</Text>}
                     </Pressable>
                 </View>

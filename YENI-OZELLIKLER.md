@@ -1,5 +1,9 @@
 # Yeni özellikler (Kasım 2026)
 
+## Mobil: fotoğraf ekleme düzeltmesi
+- iPhone, bir alt pencere kapanırken fotoğraf seçici, yeni pencere veya paylaşım menüsü açılmasına izin vermiyor; bu yüzden Profilim'de "Galeriden seç / Fotoğraf çek / Konumunu ayarla / Büyüt / Kaldır" hiçbir şey açmıyordu. Artık pencere kapandıktan sonra açılıyor (`afterModal`). Aynı düzeltme paylaşım, harita seçimi, menüden çıkış ve ilan detayındaki "İlanı bildir / Satıcıyı engelle" için de yapıldı.
+- Profil fotoğrafının kapağa taşan üst yarısı Android'de dokunmaya cevap vermiyordu; dokunma alanı düzeltildi (Profilim ve satıcı profili).
+
 ## Önbellek: sabit dosyalar bir kez iner
 - Daha önce her yanıt `Cache-Control: no-store` ile gidiyordu; her sayfa açılışında tüm betikler, stiller, Türkiye haritası (≈55 KB) ve il-ilçe listesi yeniden indiriliyordu.
 - Artık sayfalardaki `/js`, `/css`, `/img`, `/data` adreslerine dosyanın içerik özeti eklenir (`/js/turkiye-iller.js?v=3fa1c0d2e9`). Özetli dosyalar tarayıcıda **bir yıl** saklanır; dosya değişince özet değişir ve yeni sürüm hemen iner (eski sürümde takılı kalma olmaz).

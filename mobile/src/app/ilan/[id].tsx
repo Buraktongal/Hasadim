@@ -7,7 +7,7 @@ import { MiniMap, approximate } from '../../components/MiniMap';
 import { Photo } from '../../components/Photo';
 import { useShare } from '../../components/ShareSheet';
 import { useMapChooser } from '../../components/MapChooser';
-import { Button, Card, ErrorBox, Eyebrow, Field, goBack, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
+import { afterModal, Button, Card, ErrorBox, Eyebrow, Field, goBack, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
 import { del, get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
 import { ACTIVITY, category } from '../../lib/catalog';
@@ -71,8 +71,11 @@ export default function ListingDetail() {
     function share() {
         sharer.open({ title: x!.baslik, text: x!.baslik + ' — ' + t(priceText(x!)) + ' · ' + x!.il + ' / ' + x!.ilce + ' · Hasadım', path: '/html/ilan.html?id=' + x!.id });
     }
-    async function block() {
+    function block() {
         setSheet(null);
+        afterModal(() => void blockNow());
+    }
+    async function blockNow() {
         if (!await confirm.ask('Satıcıyı engelle', t('Engellediğin kişi sana mesaj ve teklif gönderemez, ilanlarını görmezsin.'), 'Engelle', true)) return;
         try { await post('/api/blocks/' + x!.ownerId); toast('Kullanıcı engellendi.'); goBack(); } catch (e) { toast(e instanceof Error ? e.message : 'İşlem tamamlanamadı.'); }
     }
@@ -189,7 +192,7 @@ export default function ListingDetail() {
             <OfferSheet listing={x} visible={sheet === 'offer'} onClose={() => setSheet(null)} />
             <ReportSheet listing={x} visible={sheet === 'report'} onClose={() => setSheet(null)} />
             <Sheet visible={sheet === 'more'} onClose={() => setSheet(null)} title="Diğer işlemler">
-                <Button title="İlanı bildir" kind="secondary" icon={<Icon name="flag" color={c.green2} size={18} />} onPress={needLogin(() => setSheet('report'))} />
+                <Button title="İlanı bildir" kind="secondary" icon={<Icon name="flag" color={c.green2} size={18} />} onPress={needLogin(() => { setSheet(null); afterModal(() => setSheet('report')); })} />
                 <Button title="Satıcıyı engelle" kind="danger" icon={<Icon name="ban" color={c.danger} size={18} />} onPress={needLogin(block)} />
             </Sheet>
             {confirm.node}

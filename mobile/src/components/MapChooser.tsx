@@ -3,7 +3,7 @@ import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useApp } from '../lib/app-state';
 import { Icon } from './Icon';
-import { Sheet, toast } from './ui';
+import { afterModal, Sheet, toast } from './ui';
 
 // Konumu hangi harita uygulamasında açacağını sorar: Google Haritalar, iPhone'da Apple Haritalar,
 // Android'de telefonun varsayılan harita uygulaması (geo: bağlantısı, sistem uygulama seçtirir).
@@ -19,6 +19,7 @@ function MapChooser({ target, visible, onClose }: { target: Target | null; visib
     const { colors: c, t } = useApp();
     const go = async (url: string, fallback?: string) => {
         onClose();
+        await new Promise<void>(resolve => afterModal(resolve));
         try { await Linking.openURL(url); }
         catch {
             if (fallback) { try { await Linking.openURL(fallback); return; } catch { /* aşağıda bildirilir */ } }
