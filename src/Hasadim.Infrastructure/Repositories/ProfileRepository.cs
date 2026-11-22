@@ -20,4 +20,25 @@ public class ProfileRepository(SqlConnectionFactory factory):IProfileRepository
    "PhoneNumber=CASE WHEN PhoneNumber=@normalized THEN PhoneNumber ELSE @normalized END WHERE Id=@id",p,tx,cancellationToken:ct));tx.Commit();return true;
  }
  public async Task<string?> SetPhoto(Guid id,string? name,CancellationToken ct){await using var c=await factory.Open(ct);var old=await c.QueryAsync<string?>(new CommandDefinition("UPDATE dbo.UserProfiles SET PhotoFile=@name OUTPUT deleted.PhotoFile WHERE UserId=@id",new{id,name},cancellationToken:ct));return old.SingleOrDefault();}
+ // Satıcı arama: ad veya firma adında geçen, yayında ilanı olan kullanıcılar (arayanın engellediği kişiler hariç).
+ // LIKE özel karakterleri (%, _, [) kaçışlanır; önce adı aranan kelimeyle başlayanlar, sonra ilan sayısı çok olanlar gelir.
+ public async Task<IReadOnlyList<SellerSearchRow>> Search(string term,Guid? viewer,int take,CancellationToken ct)
+ {
+  var escaped=term.Replace("[","[[]").Replace("%","[%]").Replace("_","[_]");
+  await using var c=await factory.Open(ct);
+  var rows=await c.QueryAsync<SellerSearchRow>(new CommandDefinition("""
+   SELECT TOP (@take) x.UserId,x.DisplayName,x.AccountType,x.BusinessName,x.City,x.District,x.Activity,x.PhotoFile,x.ActiveListingCount,x.EmailConfirmed
+   FROM (
+    SELECT p.UserId,u.DisplayName,p.AccountType,p.BusinessName,p.City,p.District,p.Activity,p.PhotoFile,u.EmailConfirmed,
+     (SELECT COUNT(*) FROM dbo.Listings l WHERE l.OwnerId=u.Id AND l.Active=1 AND l.Hidden=0 AND l.IsDeleted=0 AND l.Status=4 AND (l.ExpiresAt IS NULL OR l.ExpiresAt>SYSUTCDATETIME())) AS ActiveListingCount,
+     CASE WHEN u.DisplayName LIKE @prefix OR (p.AccountType='Business' AND p.BusinessName LIKE @prefix) THEN 0 ELSE 1 END AS Rank
+    FROM dbo.UserProfiles p JOIN dbo.Users u ON u.Id=p.UserId
+    WHERE (u.DisplayName LIKE @contains OR (p.AccountType='Business' AND p.BusinessName LIKE @contains))
+      AND (@viewer IS NULL OR NOT EXISTS(SELECT 1 FROM dbo.UserBlocks b WHERE b.BlockerId=@viewer AND b.BlockedId=u.Id))
+   ) x
+   WHERE x.ActiveListingCount>0
+   ORDER BY x.Rank, x.ActiveListingCount DESC, x.DisplayName
+   """,new{take,viewer,prefix=escaped+"%",contains="%"+escaped+"%"},cancellationToken:ct));
+  return rows.ToList();
+ }
 }

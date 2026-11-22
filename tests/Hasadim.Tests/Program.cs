@@ -145,6 +145,10 @@ profiles.Value.ShowPhone=true;Check((await ps.Public(profiles.Value.UserId,ct)).
 Check((await ps.Public(profiles.Value.UserId,ct)).MemberSince is null,"Eski kullanıcı için üyelik tarihi uydurulmaz");
 var pr=new ProfileRequest{DisplayName="Burak",City="Antalya",District="Merkez",Version=new byte[8]};await ps.Update(pr,ct);Check(profiles.UpdatedId==owner,"Profil güncellemesi oturumdaki kullanıcıya aittir");
 profiles.Success=false;await Status(409,()=>ps.Update(pr,ct),"Profil sürüm çakışması reddedilir");
+Check((await ps.Search("a",ct)).Count==0&&profiles.LastTerm is null,"Tek harfle satıcı araması veritabanına gitmez");
+profiles.Rows=[new(Guid.NewGuid(),"Ali Kaya","Business","Kaya Tarım","Antalya","Korkuteli","Trader",null,3,true),new(Guid.NewGuid(),"Veli","Individual","Gizli Firma","İzmir","Ödemiş","Producer","x.jpg",1,false)];
+var found=await ps.Search("  ka  ",ct);Check(profiles.LastTerm=="ka"&&found[0].Name=="Kaya Tarım"&&found[0].PersonName=="Ali Kaya","Kurumsal satıcı firma adıyla, kişi adı alt satırda gösterilir");
+Check(found[1].Name=="Veli"&&found[1].PersonName is null&&found[1].PhotoUrl!.Contains("/photo"),"Bireysel hesapta firma adı açığa çıkmaz");
 pr.AccountType="Business";var errors=new List<System.ComponentModel.DataAnnotations.ValidationResult>();Check(!System.ComponentModel.DataAnnotations.Validator.TryValidateObject(pr,new(pr),errors,true),"Firma adı olmadan kurumsal profil reddedilir");
 string RawHash(string sql) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(sql)));
 const string sqlLf = "SELECT 1;\nSELECT 'text';\n";
@@ -276,4 +280,6 @@ class MemoryProfiles:IProfileRepository{
  public Task<SellerProfile?> Find(Guid id,CancellationToken ct)=>Task.FromResult<SellerProfile?>(Value);
  public Task<bool> Update(Guid id,ProfileRequest r,CancellationToken ct){UpdatedId=id;return Task.FromResult(Success);}
  public Task<string?> SetPhoto(Guid id,string? n,CancellationToken ct)=>Task.FromResult<string?>(null);
+ public List<SellerSearchRow> Rows=[];public string? LastTerm;
+ public Task<IReadOnlyList<SellerSearchRow>> Search(string term,Guid? viewer,int take,CancellationToken ct){LastTerm=term;return Task.FromResult<IReadOnlyList<SellerSearchRow>>(Rows.Take(take).ToList());}
 }

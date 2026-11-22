@@ -1,5 +1,8 @@
 // Yalnızca mobil uygulamada geçen metinlerin İngilizcesi.
 export const extraEn: Record<string, string> = {
+    'Bitti': 'Done', 'Sonraki': 'Next', 'Tarih seç': 'Pick a date', 'Tarihi temizle': 'Clear date', 'Gün': 'Day', 'Ay': 'Month', 'Yıl': 'Year', 'Bugün': 'Today',
+    'Ürün, satıcı veya ilan ara': 'Search products, sellers or listings', 'İlanlarda ara': 'Search listings', 'Ürünler': 'Products', 'Satıcılar': 'Sellers', 'ilan': 'listings',
+    'Diğer uygulamalar': 'Other apps', 'Hasadım satıcı profili': 'Seller profile on Hasadım', 'açılamadı. Uygulama yüklü olmayabilir.': 'could not be opened. The app may not be installed.',
     'Pazar': 'Market', 'Hesabım': 'My account', 'Mesajlar': 'Messages', 'Harita': 'Map', 'İlan ver': 'Post',
     'Ürün, çeşit veya ilan ara': 'Search products, varieties or listings', 'Filtreler': 'Filters', 'Sırala': 'Sort',
     'Sonuçları göster': 'Show results', 'Temizle': 'Clear', 'Tümü': 'All', 'Tüm kategoriler': 'All categories',

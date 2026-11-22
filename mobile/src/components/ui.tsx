@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentRef, type ReactNode, type Ref, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated, Easing, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch,
+    Animated, Easing, FlatList, InputAccessoryView, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch,
     Text, TextInput, type TextInputProps, type TextStyle, View, type ViewStyle
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -146,13 +146,49 @@ export function Tag({ label, tone = 'green', raw }: { label: string; tone?: 'gre
 }
 
 // ---------- Form ----------
-export function Field({ label, hint, error, style, ...input }: TextInputProps & { label: string; hint?: string; error?: string | null }) {
+// iOS sayı klavyesinde "Bitti" tuşu yoktur; her alanın üstünde "Sonraki" ve "Bitti" düğmeli bir çubuk çıkar.
+// Ekrandaki alanlar açılış sırasına göre kaydedilir, "Sonraki" bir sonraki alana geçer (son alanda klavyeyi kapatır).
+export const KEYBOARD_BAR_ID = 'hasadim-klavye';
+type InputNode = ComponentRef<typeof TextInput>;
+const fieldOrder: RefObject<InputNode | null>[] = [];
+export function focusNextField() {
+    const current = TextInput.State.currentlyFocusedInput?.();
+    const live = fieldOrder.filter(r => r.current);
+    const i = live.findIndex(r => (r.current as unknown) === (current as unknown));
+    const next = i >= 0 ? live[i + 1] : undefined;
+    if (next?.current) next.current.focus(); else Keyboard.dismiss();
+}
+export function KeyboardBar() {
+    const c = useColors(); const t = useT();
+    if (Platform.OS !== 'ios') return null;
+    return (
+        <InputAccessoryView nativeID={KEYBOARD_BAR_ID} backgroundColor={c.panel}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 4, paddingHorizontal: 8, height: 44, borderTopWidth: StyleSheet.hairlineWidth, borderColor: c.line }}>
+                <Pressable onPress={focusNextField} accessibilityRole="button" style={{ paddingHorizontal: 14, paddingVertical: 8 }}><Text style={{ color: c.green2, fontSize: 16, fontWeight: '600' }}>{t('Sonraki')}</Text></Pressable>
+                <Pressable onPress={() => Keyboard.dismiss()} accessibilityRole="button" style={{ paddingHorizontal: 14, paddingVertical: 8 }}><Text style={{ color: c.green2, fontSize: 16, fontWeight: '800' }}>{t('Bitti')}</Text></Pressable>
+            </View>
+        </InputAccessoryView>
+    );
+}
+
+export function Field({ label, hint, error, style, ref, ...input }: TextInputProps & { label: string; hint?: string; error?: string | null; ref?: Ref<InputNode> }) {
     const c = useColors(); const t = useT();
     const [focus, setFocus] = useState(false);
+    const own = useRef<InputNode | null>(null);
+    useEffect(() => { fieldOrder.push(own); return () => { const i = fieldOrder.indexOf(own); if (i >= 0) fieldOrder.splice(i, 1); }; }, []);
+    const setRef = (node: InputNode | null) => {
+        own.current = node;
+        if (typeof ref === 'function') ref(node); else if (ref) (ref as RefObject<InputNode | null>).current = node;
+    };
     return (
         <View style={{ gap: 5 }}>
             <Text style={{ color: c.ink, fontWeight: '700', fontSize: 13.5 }}>{t(label)}</Text>
-            <TextInput placeholderTextColor={c.muted} accessibilityLabel={t(label)} {...input}
+            <TextInput ref={setRef} placeholderTextColor={c.muted} accessibilityLabel={t(label)}
+                inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_BAR_ID : undefined}
+                returnKeyType={input.multiline ? 'default' : 'next'}
+                submitBehavior={input.multiline ? 'newline' : 'submit'}
+                onSubmitEditing={input.multiline ? undefined : () => focusNextField()}
+                {...input}
                 placeholder={input.placeholder ? t(input.placeholder) : undefined}
                 onFocus={e => { setFocus(true); input.onFocus?.(e); }} onBlur={e => { setFocus(false); input.onBlur?.(e); }}
                 style={[{ minHeight: 46, borderRadius: radius.m, borderWidth: focus ? 2 : 1, borderColor: error ? c.danger : focus ? c.green2 : c.line, paddingHorizontal: 12, paddingVertical: input.multiline ? 10 : 0, color: c.ink, backgroundColor: c.input, fontSize: 15.5, textAlignVertical: input.multiline ? 'top' : 'center' }, style]} />
@@ -172,12 +208,14 @@ export function SwitchRow({ label, hint, value, onChange }: { label: string; hin
 }
 
 // Arama yapılabilir seçim listesi (il, ilçe, ürün, çeşit…).
-export function Select({ label, value, options, onChange, placeholder = 'Seç', disabled, allowEmpty, emptyLabel = 'Hepsi', raw = true }: {
-    label: string; value: string; options: (string | [string, string])[]; onChange: (v: string) => void; placeholder?: string; disabled?: boolean; allowEmpty?: boolean; emptyLabel?: string; raw?: boolean;
+// openSignal: değeri arttıkça liste kendiliğinden açılır (ör. il seçilince ilçe listesi).
+export function Select({ label, value, options, onChange, placeholder = 'Seç', disabled, allowEmpty, emptyLabel = 'Hepsi', raw = true, openSignal = 0 }: {
+    label: string; value: string; options: (string | [string, string])[]; onChange: (v: string) => void; placeholder?: string; disabled?: boolean; allowEmpty?: boolean; emptyLabel?: string; raw?: boolean; openSignal?: number;
 }) {
     const c = useColors(); const t = useT();
     const [open, setOpen] = useState(false);
     const [q, setQ] = useState('');
+    useEffect(() => { if (openSignal > 0 && !disabled) { Keyboard.dismiss(); setQ(''); setOpen(true); } }, [openSignal]); // eslint-disable-line react-hooks/exhaustive-deps
     const list = useMemo(() => options.map(o => (Array.isArray(o) ? o : [o, o]) as [string, string]), [options]);
     const shown = useMemo(() => {
         const n = q.trim().toLocaleLowerCase('tr');
@@ -189,7 +227,7 @@ export function Select({ label, value, options, onChange, placeholder = 'Seç', 
     return (
         <View style={{ gap: 5 }}>
             <Text style={{ color: c.ink, fontWeight: '700', fontSize: 13.5 }}>{t(label)}</Text>
-            <Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={t(label) + ': ' + (current ?? t(placeholder))} onPress={() => { setQ(''); setOpen(true); }}
+            <Pressable disabled={disabled} accessibilityRole="button" accessibilityLabel={t(label) + ': ' + (current ?? t(placeholder))} onPress={() => { Keyboard.dismiss(); setQ(''); setOpen(true); }}
                 style={{ minHeight: 46, borderRadius: radius.m, borderWidth: 1, borderColor: c.line, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', backgroundColor: disabled ? c.bg : c.input, opacity: disabled ? 0.6 : 1 }}>
                 <Text style={{ flex: 1, color: current ? c.ink : c.muted, fontSize: 15.5 }} numberOfLines={1}>{current ? (raw ? current : t(current)) : t(placeholder)}</Text>
                 {allowEmpty && value && !disabled ? <View style={{ marginRight: 6 }}><ClearButton label={t('Seçimi kaldır') + ': ' + t(label)} onPress={() => onChange('')} /></View> : null}

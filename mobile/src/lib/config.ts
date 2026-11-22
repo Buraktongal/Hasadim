@@ -10,6 +10,9 @@ const extra = (Constants.expoConfig?.extra ?? {}) as { apiBaseUrl?: string; goog
 const raw = (process.env.EXPO_PUBLIC_API_URL || extra.apiBaseUrl || '').trim().replace(/\/+$/, '');
 
 export const API_BASE = raw;
+// Paylaşılan bağlantılar her zaman herkese açık web sitesini gösterir (geliştirmede yerel adres telefondan açılmaz).
+const publicWeb = (process.env.EXPO_PUBLIC_WEB_URL || (extra as { publicWebUrl?: string }).publicWebUrl || '').trim().replace(/\/+$/, '');
+export const PUBLIC_WEB_URL = publicWeb.startsWith('https://') ? publicWeb : raw.startsWith('https://') && !/localhost|127\.0\.0\.1/.test(raw) ? raw : 'https://hasadim.com';
 // Web önizlemesi yalnızca geliştirme amaçlıdır (yayınlanan uygulama iOS/Android); orada da yalnızca yerel adreslere http izni var.
 export const API_BASE_ERROR = raw ? checkBaseUrl(raw, __DEV__ || Platform.OS === 'web') : 'Sunucu adresi ayarlanmamış (EXPO_PUBLIC_API_URL).';
 export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';

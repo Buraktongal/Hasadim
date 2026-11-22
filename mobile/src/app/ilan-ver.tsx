@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DateField } from '../components/DateWheel';
 import { Icon } from '../components/Icon';
 import { MiniMap, CITY_CENTERS, TURKEY } from '../components/MiniMap';
 import { Photo } from '../components/Photo';
@@ -49,6 +50,17 @@ export default function ListingEditor() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(editing);
     const set = (patch: Partial<Form>) => setF(p => ({ ...p, ...patch }));
+    // Seçim yapılınca sıradaki seçim listesi kendiliğinden açılır, ilk adım tamamlanınca bir sonraki adıma geçilir.
+    const [openDistrict, setOpenDistrict] = useState(0);
+    const [openDeed, setOpenDeed] = useState(0);
+    const advance = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    useEffect(() => () => clearTimeout(advance.current), []);
+    const goTo = (s: number) => { Keyboard.dismiss(); setError(null); setStep(s); };
+    const autoNext = (from: number, patch: Partial<Form>) => {
+        clearTimeout(advance.current);
+        advance.current = setTimeout(() => setStep(s => (s === from ? from + 1 : s)), 380); // seçimin işaretlendiği kısa an görünsün
+        set(patch);
+    };
     const confirm = useConfirm();
 
     useEffect(() => {
@@ -102,6 +114,7 @@ export default function ListingEditor() {
     function next() {
         const problem = check(step);
         setError(problem);
+        Keyboard.dismiss();
         if (!problem) setStep(s => Math.min(3, s + 1));
     }
 
@@ -172,14 +185,15 @@ export default function ListingEditor() {
             {/* Adım göstergesi */}
             <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: c.panel }}>
                 {STEPS.map((s, i) => (
-                    <Pressable key={s} accessibilityRole="button" accessibilityLabel={t(s)} accessibilityState={{ selected: i === step }} onPress={() => { if (i < step || !check(step)) setStep(i); }} style={{ flex: 1, gap: 4 }}>
+                    <Pressable key={s} accessibilityRole="button" accessibilityLabel={t(s)} accessibilityState={{ selected: i === step }} onPress={() => { if (i < step || !check(step)) goTo(i); }} style={{ flex: 1, gap: 4 }}>
                         <View style={{ height: 4, borderRadius: 2, backgroundColor: i <= step ? c.accent : c.line }} />
                         <Text style={{ fontSize: 11, fontWeight: i === step ? '800' : '600', color: i === step ? c.ink : c.muted }} numberOfLines={1}>{i + 1 + ' · ' + t(s)}</Text>
                     </Pressable>
                 ))}
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 14, gap: 12, paddingBottom: 30 }} keyboardShouldPersistTaps="handled">
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ScrollView contentContainerStyle={{ padding: 14, gap: 12, paddingBottom: 30 }} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}>
                 {step === 0 ? <>
                     <Txt muted>Önce ana kategoriyi, sonra satacağın ürünü seç. Alıcılar ilanını bu kategoride ve ürün filtresinde bulur.</Txt>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -194,13 +208,16 @@ export default function ListingEditor() {
                     {cat ? <>
                         <H2>{land ? 'Arazi türü' : 'Ürün'}</H2>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                            {cat.products.map(p => <Chip key={p} raw label={p} active={f.meyveTuru === p} icon={<ProductIcon name={p} size={18} />} onPress={() => set({ meyveTuru: p, cesit: '' })} />)}
+                            {cat.products.map(p => <Chip key={p} raw label={p} active={f.meyveTuru === p} icon={<ProductIcon name={p} size={18} />} onPress={() => {
+                                const patch = { meyveTuru: p, cesit: '' };
+                                if (land || !varieties(p).length) autoNext(0, patch); else set(patch);
+                            }} />)}
                         </View>
                     </> : null}
                     {!land && f.meyveTuru && varietyList.length ? <>
                         <H2>Çeşidini seç</H2>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                            {[...varietyList, 'Diğer / Belirtilmemiş'].map(v => <Chip key={v} raw={v !== 'Diğer / Belirtilmemiş'} label={v} active={f.cesit === v} onPress={() => set({ cesit: v })} />)}
+                            {[...varietyList, 'Diğer / Belirtilmemiş'].map(v => <Chip key={v} raw={v !== 'Diğer / Belirtilmemiş'} label={v} active={f.cesit === v} onPress={() => autoNext(0, { cesit: v })} />)}
                         </View>
                     </> : null}
                 </> : null}
@@ -209,7 +226,7 @@ export default function ListingEditor() {
                     <Field label="İlan başlığı" value={f.baslik} onChangeText={v => set({ baslik: v })} maxLength={150}
                         placeholder={land ? 'Örn. Karapınar’da yola cepheli 12 dönüm sulu tarla' : 'Örn. Eğirdir Gala elma — 1. sınıf, kasalı'}
                         hint="Başlıkta çeşit, kalite sınıfı ve bölgeyi belirtmek alıcıların ilanını bulmasını kolaylaştırır." />
-                    {!land ? <Field label="Hasat tarihi (isteğe bağlı)" value={f.hasatTarihi} onChangeText={v => set({ hasatTarihi: v.replace(/[^0-9.]/g, '').slice(0, 10) })} keyboardType="numbers-and-punctuation" placeholder="GG.AA.YYYY" hint="Ürünün hasat edildiği veya edileceği tarih." /> : null}
+                    {!land ? <DateField label="Hasat tarihi (isteğe bağlı)" value={f.hasatTarihi} onChange={v => set({ hasatTarihi: v })} hint="Ürünün hasat edildiği veya edileceği tarih." /> : null}
                     <Field label="Açıklama" value={f.aciklama} onChangeText={v => set({ aciklama: v })} maxLength={5000} multiline style={{ minHeight: 140 }}
                         placeholder={land ? 'Toprak yapısı, ulaşım, su kaynağı, ağaç sayısı, ödeme koşulları…' : 'Kalibre / boy, kalite sınıfı, renk, depolama durumu, ilaçlama bilgisi, ödeme ve yükleme koşulları…'} />
                 </Card> : null}
@@ -228,8 +245,8 @@ export default function ListingEditor() {
                             <Select label="Ambalaj" value={f.ambalaj} allowEmpty emptyLabel="Belirtilmedi" options={PACKAGING} raw={false} onChange={v => set({ ambalaj: v })} />
                             <Select label="Teslimat" value={f.teslimat} allowEmpty emptyLabel="Belirtilmedi" options={DELIVERY} raw={false} onChange={v => set({ teslimat: v })} />
                         </> : <>
-                            <Select label="İmar durumu" value={f.imarDurumu} options={ZONING} raw={false} onChange={v => set({ imarDurumu: v })} />
-                            <Select label="Tapu durumu" value={f.tapuDurumu} options={DEED} raw={false} onChange={v => set({ tapuDurumu: v })} />
+                            <Select label="İmar durumu" value={f.imarDurumu} options={ZONING} raw={false} onChange={v => { set({ imarDurumu: v }); if (!f.tapuDurumu) setOpenDeed(n => n + 1); }} />
+                            <Select label="Tapu durumu" value={f.tapuDurumu} options={DEED} raw={false} openSignal={openDeed} onChange={v => set({ tapuDurumu: v })} />
                             <Select label="Sulama (isteğe bağlı)" value={f.sulama} allowEmpty emptyLabel="Belirtilmedi" options={IRRIGATION} raw={false} onChange={v => set({ sulama: v })} />
                             <View style={{ flexDirection: 'row', gap: 10 }}>
                                 <View style={{ flex: 1 }}><Field label="Ada" value={f.ada} onChangeText={v => set({ ada: v })} maxLength={20} placeholder="Örn. 112" /></View>
@@ -240,8 +257,8 @@ export default function ListingEditor() {
                         </>}
                     </Card>
                     <Card>
-                        <Select label={land ? 'Arazinin bulunduğu il' : 'Ürünün bulunduğu il'} value={f.il} options={cities} onChange={v => set({ il: v, ilce: '', enlem: null, boylam: null })} />
-                        <Select label="İlçe" value={f.ilce} options={f.il ? districts(f.il) : []} disabled={!f.il} placeholder={f.il ? 'Seç' : 'Önce il seç'} onChange={v => set({ ilce: v })} />
+                        <Select label={land ? 'Arazinin bulunduğu il' : 'Ürünün bulunduğu il'} value={f.il} options={cities} onChange={v => { set({ il: v, ilce: '', enlem: null, boylam: null }); setOpenDistrict(n => n + 1); }} />
+                        <Select label="İlçe" value={f.ilce} options={f.il ? districts(f.il) : []} disabled={!f.il} placeholder={f.il ? 'Seç' : 'Önce il seç'} openSignal={openDistrict} onChange={v => set({ ilce: v })} />
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Txt weight="800" style={{ flex: 1 }}>Haritada konum (isteğe bağlı)</Txt>
                             {f.enlem != null ? <Button title="Konumu kaldır" kind="plain" small full={false} onPress={() => set({ enlem: null, boylam: null })} /> : null}
@@ -302,11 +319,12 @@ export default function ListingEditor() {
             </ScrollView>
 
             <View style={{ flexDirection: 'row', gap: 10, padding: 12, paddingBottom: 12 + insets.bottom, backgroundColor: c.panel, borderTopWidth: 1, borderColor: c.line }}>
-                {step > 0 ? <View style={{ flex: 1 }}><Button title="Geri" kind="secondary" onPress={() => { setError(null); setStep(s => s - 1); }} /></View> : null}
+                {step > 0 ? <View style={{ flex: 1 }}><Button title="Geri" kind="secondary" onPress={() => goTo(step - 1)} /></View> : null}
                 <View style={{ flex: 2 }}>
                     {step < 3 ? <Button title="Devam et" onPress={next} /> : <Button title={editing ? 'Değişiklikleri kaydet' : 'Yayınla'} kind="accent" busy={busy} onPress={publish} />}
                 </View>
             </View>
+            </KeyboardAvoidingView>
             {confirm.node}
         </View>
     );

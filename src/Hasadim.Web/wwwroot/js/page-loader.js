@@ -21,6 +21,7 @@ const pageScripts = [
     '/js/listing-workflow.js',
     '/js/market-presentation.js',
     '/js/kart-fotograf.js',
+    '/js/tarih-tekerlek.js',
     '/js/market-tools.js',
     '/js/messages.js',
     '/js/message-notifications.js',

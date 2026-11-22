@@ -1,5 +1,26 @@
 # Yeni özellikler (Kasım 2026)
 
+## Arama: satıcılar da aranır
+- Web'de üstteki arama kutusuna yazdıkça öneri listesi açılır: **Ürünler** (seçince pazar yeri o ürünle süzülür) ve **Satıcılar** (ad veya firma adıyla; seçince profili açılır). En altta "… için ilanlarda ara" satırı vardır; ok tuşları, Enter ve Esc ile kullanılabilir.
+- Mobilde de aynı öneriler arama kutusunun altında çıkar.
+- Yalnızca yayında ilanı olan kullanıcılar listelenir; engellediğin kişiler çıkmaz. Bireysel hesapta firma adı gösterilmez. API: `GET /api/profiles/search?q=` (en az 2 harf, en fazla 8 sonuç).
+
+## Tekerlekli tarih seçici
+- Hasat tarihi gibi tarih alanlarında iPhone'daki gibi **gün / ay / yıl tekerlekleri** açılır (web ve mobil). Web'de telefonda alttan, bilgisayarda ortada açılır; fareyle kaydırma, tıklama ve klavye (↑/↓, Tab, Enter) ile çalışır. "Bugün" ve "Temizle" düğmeleri vardır.
+
+## Mobil: ilan verirken klavye ve otomatik ilerleme
+- iPhone'da sayı klavyesinin üstünde **Sonraki / Bitti** çubuğu çıkar; "Sonraki" sıradaki alana geçer, "Bitti" klavyeyi kapatır. Yazı alanlarında klavyenin "Sonraki" tuşu da bir sonraki alana geçer.
+- Liste kaydırılınca veya bir seçim listesi açılınca klavye kapanır; ekran klavyeye göre kayar, alttaki düğmeler kapanmaz.
+- İlk adımda ürün / çeşit seçilince bir sonraki adıma kendiliğinden geçilir. İl seçilince ilçe listesi, imar durumu seçilince tapu durumu listesi kendiliğinden açılır.
+
+## Mobil: paylaşım
+- Paylaş düğmesi Türkçe bir pencere açar: **WhatsApp, Mesajlar, E-posta, Telegram** ve "Diğer uygulamalar" (telefonun kendi paylaşım menüsü). Satıcı profilinde de paylaş düğmesi var.
+- Paylaşılan bağlantı her zaman herkese açık siteyi gösterir (`app.json → extra.publicWebUrl`, varsayılan https://hasadim.com).
+- Telefonun kendi menüsü Expo Go'da İngilizce görünebilir; yayınlanan uygulamada Türkçe görünmesi için `CFBundleDevelopmentRegion = tr` ve Türkçe dil desteği eklendi.
+
+## Mobil: kaydırınca üst çubuk
+- Pazar ekranında aşağı kaydırınca üstteki logo çubuğu yerini **arama kutusu + Harita + Ürün takvimi + Filtreler** kısayollarına bırakır; yukarı çıkınca logo geri gelir.
+
 ## Satıcı profili (yenilendi)
 - Kapak bandı, kapağa taşan profil fotoğrafı, ad / işletme adı, konum ve üyelik tarihi.
 - Rozetler: faaliyet (Üretici, Tüccar…), Kurumsal (beyan), Yeni üye (ilk 30 gün), E-posta doğrulandı, kaç ilan yayında, "Şu an hasatta ürünü var".

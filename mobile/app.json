@@ -23,7 +23,13 @@
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
-        }
+        },
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleLocalizations": [
+          "tr",
+          "en"
+        ],
+        "CFBundleAllowMixedLocalizations": true
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -99,7 +105,8 @@
         "ios": "",
         "android": "",
         "web": ""
-      }
+      },
+      "publicWebUrl": "https://hasadim.com"
     }
   }
 }

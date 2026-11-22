@@ -1,12 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, Share, Text, useWindowDimensions, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon';
 import { MiniMap, approximate } from '../../components/MiniMap';
 import { Photo } from '../../components/Photo';
+import { useShare } from '../../components/ShareSheet';
 import { Button, Card, ErrorBox, Eyebrow, Field, goBack, H1, Header, IconButton, Loading, Sheet, Tag, toast, Txt, useConfirm } from '../../components/ui';
-import { API_BASE } from '../../lib/config';
 import { del, get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
 import { ACTIVITY, category } from '../../lib/catalog';
@@ -28,6 +28,7 @@ export default function ListingDetail() {
     const [index, setIndex] = useState(0);
     const [sheet, setSheet] = useState<'offer' | 'report' | 'more' | null>(null);
     const confirm = useConfirm();
+    const sharer = useShare();
     const valid = typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id);
 
     const load = useCallback(async () => {
@@ -65,9 +66,8 @@ export default function ListingDetail() {
         ['Minimum alım', x.minAlimKg ? number(x.minAlimKg) + ' ' + unitLabel(x.birim) : null], ['Ambalaj', x.ambalaj], ['Teslimat', x.teslimat]
     ];
 
-    async function share() {
-        const url = API_BASE.startsWith('https://') ? API_BASE + '/html/ilan.html?id=' + x!.id : undefined;
-        await Share.share({ message: x!.baslik + ' — ' + t(priceText(x!)) + (url ? '\n' + url : ''), url });
+    function share() {
+        sharer.open({ title: x!.baslik, text: x!.baslik + ' — ' + t(priceText(x!)) + ' · ' + x!.il + ' / ' + x!.ilce + ' · Hasadım', path: '/html/ilan.html?id=' + x!.id });
     }
     async function block() {
         setSheet(null);
@@ -191,6 +191,7 @@ export default function ListingDetail() {
                 <Button title="Satıcıyı engelle" kind="danger" icon={<Icon name="ban" color={c.danger} size={18} />} onPress={needLogin(block)} />
             </Sheet>
             {confirm.node}
+            {sharer.node}
         </View>
     );
 }

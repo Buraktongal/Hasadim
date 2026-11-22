@@ -301,7 +301,17 @@ window.HasadimEn = (() => {
         'QR kodu okutmak için Hasadım’ın kameraya erişmesine izin ver. Fotoğraf veya video kaydedilmez.': 'Allow Hasadım to use the camera to scan the QR code. No photo or video is saved.',
         'Bilgisayardaki oturumu Hesap → Güvenlik bölümünden istediğin zaman kapatabilirsin.': 'You can end the computer session any time under Account → Security.',
         'Bilgisayarda QR ile giriş yapmak için önce bu uygulamada giriş yap.': 'Sign in to this app first to sign in on a computer with a QR code.',
-        'Bu kodu yalnızca kendi bilgisayarında açtığın sayfadan okuttuysan onayla. Biri sana kod gönderip “okut” dediyse reddet; onaylarsan hesabına o kişi girer.': 'Only confirm if you scanned this code from a page you opened on your own computer. If someone sent you a code to scan, decline — approving would let them into your account.'
+        'Bu kodu yalnızca kendi bilgisayarında açtığın sayfadan okuttuysan onayla. Biri sana kod gönderip “okut” dediyse reddet; onaylarsan hesabına o kişi girer.': 'Only confirm if you scanned this code from a page you opened on your own computer. If someone sent you a code to scan, decline — approving would let them into your account.',
+        // Arama önerileri ve satıcı profili
+        'Ürünler': 'Products', 'Satıcılar': 'Sellers', 'Arama önerileri': 'Search suggestions',
+        'Hazır stok': 'Available stock', 'Ne zaman ne bulunur?': 'What’s available when?', 'Ürünlerin çıktığı yerler': 'Where the products come from',
+        'Hakkında': 'About', 'aktif ilan': 'active listings', 'ürün çeşidi': 'products', 'yıldır üye': 'years a member', 'aydır üye': 'months a member',
+        'Paylaş': 'Share', 'Telefon': 'Phone', 'Ara': 'Search', 'Daha fazla ilan göster': 'Show more listings', 'Hasat döneminde': 'In season',
+        'Şu an hasatta ürünü var': 'Has products in season', 'Yeni üye': 'New member', 'Tümü': 'All', 'Satıcıya mesaj gönder': 'Message the seller',
+        'Hangi ilan hakkında?': 'Which listing is it about?', 'Mesajın': 'Your message', 'Gönder': 'Send', 'Vazgeç': 'Cancel',
+        'Profil bağlantısı kopyalandı.': 'Profile link copied.',
+        'Satıcının ürünlerinin hasat dönemleri. Koyu yeşil: yoğun hasat.': 'Harvest seasons of the seller’s products. Dark green: peak harvest.',
+        'Tarih seç': 'Pick a date', 'Gün': 'Day', 'Ay': 'Month', 'Yıl': 'Year', 'Bugün': 'Today', 'Temizle': 'Clear', 'Tamam': 'OK',
     };
 
     const tr = new Intl.NumberFormat('tr-TR');

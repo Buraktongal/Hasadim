@@ -2,7 +2,9 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import { ListingCard } from '../../components/ListingCard';
-import { Card, Empty, ErrorBox, Header, Spinner, Tag, Txt } from '../../components/ui';
+import { Icon } from '../../components/Icon';
+import { useShare } from '../../components/ShareSheet';
+import { Card, Empty, ErrorBox, Header, IconButton, Spinner, Tag, Txt } from '../../components/ui';
 import { get } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
 import { ACTIVITY } from '../../lib/catalog';
@@ -17,10 +19,11 @@ export default function Seller() {
     const [p, setP] = useState<PublicProfile | null>(null);
     const [error, setError] = useState<string | null>(null);
     const list = useListingPages({ ownerId: id }, valid);
+    const sharer = useShare();
     useEffect(() => { if (valid) get<PublicProfile>('/api/profiles/' + id).then(setP).catch(e => setError(e.message)); }, [id, valid]);
     return (
         <View style={{ flex: 1, backgroundColor: c.bg }}>
-            <Header title={p?.displayName ?? t('Satıcı')} raw />
+            <Header title={p?.businessName || p?.displayName || t('Satıcı')} raw right={p ? <IconButton label="Paylaş" onPress={() => sharer.open({ title: (p.businessName || p.displayName) + ' — Hasadım', text: (p.businessName || p.displayName) + ' · ' + t('Hasadım satıcı profili'), path: '/html/satici.html?id=' + p.id })}><Icon name="share" color={c.green2} /></IconButton> : undefined} />
             <FlatList data={list.items} keyExtractor={x => x.id} onEndReached={list.more} contentContainerStyle={{ padding: 12, gap: 10, paddingBottom: 40 }}
                 ListHeaderComponent={<View style={{ gap: 10, marginBottom: 4 }}>
                     {error ? <ErrorBox message={error} /> : null}
@@ -44,6 +47,7 @@ export default function Seller() {
                 </View>}
                 renderItem={({ item }) => <ListingCard item={item} />}
                 ListEmptyComponent={list.loading ? <View style={{ padding: 30, alignItems: 'center' }}><Spinner /></View> : <Empty title="Yayında ilan yok" />} />
+            {sharer.node}
         </View>
     );
 }

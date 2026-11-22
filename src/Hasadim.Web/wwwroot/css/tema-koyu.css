@@ -200,6 +200,50 @@ html[data-theme="dark"] .site-footer .footer-draft-note {
 html[data-theme="dark"] .footer-bottom {
     border-top: 1px solid var(--line, #41493b);
 }
+html[data-theme="dark"] .search-suggest {
+    border: 1px solid #41493b;
+    background: #161616;
+}
+html[data-theme="dark"] .suggest-option:hover,
+html[data-theme="dark"] .suggest-option[aria-selected="true"] {
+    background: #1e2519;
+}
+html[data-theme="dark"] .suggest-icon,
+html[data-theme="dark"] .suggest-avatar {
+    background: #1d221a;
+}
+html[data-theme="dark"] .suggest-avatar {
+    color: #8fd0a3;
+    background: #232d1e;
+}
+html[data-theme="dark"] .suggest-search {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .suggest-check {
+    color: #91c0df;
+}
+html[data-theme="dark"] .dw-field {
+    border: 1px solid #464d43;
+    background: #161616;
+}
+html[data-theme="dark"] .dw-field:hover {
+    border-color: #4e614d;
+}
+html[data-theme="dark"] .dw-clear:hover {
+    background: #1f251b;
+}
+html[data-theme="dark"] .dw-preview {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .dw-band {
+    background: #1f291b;
+}
+html[data-theme="dark"] .dw-col:focus-visible .dw-item.on {
+    color: #8fd0a3;
+}
+html[data-theme="dark"] .dw-item.on {
+    color: #d8e3dc;
+}
 
 /* ---- tema.css ---- */
 html[data-theme="dark"] .fruit-letter {

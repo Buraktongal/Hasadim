@@ -16,6 +16,14 @@ window.layoutReady = (async () => {
     }
 
     container.innerHTML = await response.text();
+
+    // Arama önerileri (ürün ve satıcı) her sayfada ortak arama kutusuna eklenir.
+    if (!document.querySelector('script[src="/js/arama-onerileri.js"]')) {
+        const script = document.createElement('script');
+        script.src = '/js/arama-onerileri.js';
+        script.defer = true;
+        document.head.append(script);
+    }
 })();
 
 window.HasadimLoading?.track(window.layoutReady);

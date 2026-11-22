@@ -7,6 +7,7 @@ public class ProfilesController(ProfileService service,IWebHostEnvironment env):
 {
  [Authorize,HttpGet("me")]public async Task<IActionResult> Mine(CancellationToken ct)=>Ok(await service.Mine(ct));
  [Authorize,HttpPut("me")]public async Task<IActionResult> Update(ProfileRequest r,CancellationToken ct){await service.Update(r,ct);return Ok(await service.Mine(ct));}
+ [HttpGet("search")]public async Task<IActionResult> Search([FromQuery]string? q,CancellationToken ct)=>Ok(await service.Search(q,ct));
  [HttpGet("{id:guid}")]public async Task<IActionResult> Public(Guid id,CancellationToken ct)=>Ok(await service.Public(id,ct));
  string Folder=>Path.Combine(env.ContentRootPath,"App_Data","profiles");
  void Remove(string? name){if(name is null||Path.GetFileName(name)!=name)return;try{System.IO.File.Delete(Path.Combine(Folder,name));}catch(IOException){}}

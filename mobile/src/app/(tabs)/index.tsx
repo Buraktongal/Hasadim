@@ -1,10 +1,11 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Image, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, FlatList, Image, Keyboard, type NativeScrollEvent, type NativeSyntheticEvent, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon';
 import { ListingCard } from '../../components/ListingCard';
 import { ProductIcon } from '../../components/ProductIcon';
+import { SearchSuggest } from '../../components/SearchSuggest';
 import { Button, Chip, Empty, ErrorBox, IconButton, Spinner, toast } from '../../components/ui';
 import { get, post } from '../../lib/api';
 import { useApp } from '../../lib/app-state';
@@ -23,6 +24,17 @@ export default function Market() {
     const [counts, setCounts] = useState<Record<string, number>>({});
     const badges = useCounts(Boolean(user));
     const list = useListingPages(filters);
+    // Liste aşağı kaydırılınca üstteki logo çubuğu yerini arama + harita + ürün takvimi kısayollarına bırakır.
+    const [compact, setCompact] = useState(false);
+    const [focused, setFocused] = useState<'top' | 'list' | null>(null);
+    const fade = useRef(new Animated.Value(0)).current;
+    useEffect(() => { Animated.timing(fade, { toValue: compact ? 1 : 0, duration: 180, useNativeDriver: true }).start(); }, [compact, fade]);
+    const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const y = e.nativeEvent.contentOffset.y;
+        setCompact(prev => (prev ? y > 90 : y > 140)); // iki eşik: sınırda titremesin
+    }, []);
+    const submit = () => { Keyboard.dismiss(); setFocused(null); setFilters({ ...filters, q: text }); };
+    const pickProduct = (kategori: string, meyveTuru: string) => { setText(''); setFocused(null); setFilters({ sort: filters.sort, kategori, meyveTuru }); };
 
     useEffect(() => { setText(filters.q ?? ''); }, [filters.q]);
     const loadCounts = useCallback(() => {
@@ -55,8 +67,8 @@ export default function Market() {
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 2, borderColor: c.green, borderRadius: radius.m, backgroundColor: c.input, paddingLeft: 10 }}>
                     <Icon name="search" color={c.muted} size={19} />
                     <TextInput value={text} onChangeText={setText} returnKeyType="search" maxLength={150}
-                        onSubmitEditing={() => setFilters({ ...filters, q: text })}
-                        placeholder={t('Ürün, çeşit veya ilan ara')} placeholderTextColor={c.muted}
+                        onSubmitEditing={submit} onFocus={() => setFocused('list')} onBlur={() => setTimeout(() => setFocused(f => (f === 'list' ? null : f)), 150)}
+                        placeholder={t('Ürün, satıcı veya ilan ara')} placeholderTextColor={c.muted}
                         accessibilityLabel={t('Ürün, çeşit veya ilan ara')}
                         style={{ flex: 1, height: 44, paddingHorizontal: 8, color: c.ink, fontSize: 15.5 }} />
                     {text ? <IconButton label="Temizle" size={34} onPress={() => { setText(''); setFilters({ ...filters, q: '' }); }}><Icon name="close" color={c.muted} size={16} /></IconButton> : null}
@@ -67,6 +79,8 @@ export default function Market() {
                     {filterCount ? <View style={{ position: 'absolute', top: -5, right: -5, backgroundColor: c.accent, borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: '#fff', fontSize: 11, fontWeight: '900' }}>{filterCount}</Text></View> : null}
                 </Pressable>
             </View>
+
+            {focused === 'list' ? <SearchSuggest q={text} onProduct={pickProduct} onSearch={submit} /> : null}
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                 <Chip label={t('Tümü') + (totalAll ? ' · ' + number(totalAll) : '')} raw active={!filters.kategori} onPress={() => setFilters({ q: filters.q, sort: filters.sort })} />
@@ -115,15 +129,42 @@ export default function Market() {
 
     return (
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.bg }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line }}>
-                <Image source={require('../../../assets/logo.png')} style={{ width: 120, height: 40, borderRadius: 6 }} resizeMode="contain" accessibilityLabel="Hasadım" />
-                <View style={{ flex: 1 }} />
-                <IconButton label="Bildirimler" badge={badges.notifications} onPress={() => router.push(user ? '/bildirimler' : '/giris')}><Icon name="bell" color={c.green2} /></IconButton>
+            <View style={{ flex: 1 }}>
+            <View style={{ height: 56, backgroundColor: c.panel, borderBottomWidth: 1, borderColor: c.line, zIndex: 2 }}>
+                <Animated.View pointerEvents={compact ? 'none' : 'auto'} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, opacity: fade.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }}>
+                    <Image source={require('../../../assets/logo.png')} style={{ width: 120, height: 40, borderRadius: 6 }} resizeMode="contain" accessibilityLabel="Hasadım" />
+                    <View style={{ flex: 1 }} />
+                    <IconButton label="Bildirimler" badge={badges.notifications} onPress={() => router.push(user ? '/bildirimler' : '/giris')}><Icon name="bell" color={c.green2} /></IconButton>
+                </Animated.View>
+                {compact ? (
+                    <Animated.View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [-8, 0] }) }] }}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', height: 40, borderWidth: 1.5, borderColor: c.green, borderRadius: radius.m, backgroundColor: c.input, paddingLeft: 9 }}>
+                            <Icon name="search" color={c.muted} size={17} />
+                            <TextInput value={text} onChangeText={setText} returnKeyType="search" maxLength={150} onSubmitEditing={submit}
+                                onFocus={() => setFocused('top')} onBlur={() => setTimeout(() => setFocused(f => (f === 'top' ? null : f)), 150)}
+                                placeholder={t('Ürün, satıcı veya ilan ara')} placeholderTextColor={c.muted} accessibilityLabel={t('Ürün, çeşit veya ilan ara')}
+                                style={{ flex: 1, height: 38, paddingHorizontal: 7, color: c.ink, fontSize: 15 }} />
+                        </View>
+                        {([['map', 'Harita', '/harita'], ['calendar', 'Ürün takvimi', '/urun-takvimi']] as const).map(([icon, label, href]) => (
+                            <IconButton key={href} label={label} size={40} onPress={() => router.push(href)}><Icon name={icon} color={c.green2} size={21} /></IconButton>
+                        ))}
+                        <IconButton label="Filtreler" size={40} badge={filterCount || undefined} onPress={() => router.push('/filtreler')}><Icon name="filter" color={c.green2} size={20} /></IconButton>
+                    </Animated.View>
+                ) : null}
             </View>
+            {compact && focused === 'top' ? (
+                <View style={{ position: 'absolute', left: 10, right: 10, top: 60, zIndex: 5, elevation: 6 }}>
+                    <SearchSuggest q={text} onProduct={pickProduct} onSearch={submit} />
+                </View>
+            ) : null}
             <FlatList
                 data={list.items}
                 keyExtractor={x => x.id}
                 ListHeaderComponent={header}
+                onScroll={onScroll}
+                scrollEventThrottle={32}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 30 }}
                 renderItem={({ item }) => <ListingCard item={item} onFavorite={x => toggleFavorite(x, Boolean(user), fav => list.setItems(all => all.map(i => (i.id === x.id ? { ...i, favorite: fav } : i)))).catch(e => toast(e.message))} />}
                 onEndReached={list.more}
@@ -133,6 +174,7 @@ export default function Market() {
                     : list.error ? undefined : <Empty title="Bu aramaya uygun ilan bulunamadı." text="Filtreleri değiştirerek tekrar dene." action={<View style={{ width: 220 }}><Button title="Filtreleri temizle" kind="secondary" onPress={() => setFilters({})} /></View>} />}
                 ListFooterComponent={list.items.length && list.hasMore ? <View style={{ padding: 16, alignItems: 'center' }}><Spinner size={30} /></View> : undefined}
             />
+            </View>
         </SafeAreaView>
     );
 }
