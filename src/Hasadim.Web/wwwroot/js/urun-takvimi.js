@@ -1,13 +1,17 @@
 'use strict';
 
-// Ürün takvimi: hangi ürünün hangi aylarda hasat edildiği / piyasada bulunduğu.
+// Ürün takvimi (mobildeki görünümle aynı): kategori çipleri, ürün başına 12 aylık şerit.
+// Hasat dönemi açık, yoğun hasat koyu renkli kesintisiz bir şerittir; içinde bulunulan ay bütün satırlarda vurgulanır.
+// Ay başlıkları kaydırırken üstte sabit kalır. Bir satıra tıklayınca o ürünün (çeşidin) ilanları açılır.
 (() => {
     const catalog = window.HasadimCatalog;
     const $ = s => document.querySelector(s);
-    const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
+    const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined && text !== null) n.textContent = text; if (cls) n.className = cls; return n; };
     const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const now = new Date().getMonth() + 1;
     const form = $('#calendarFilters');
+    const field = name => form.elements.namedItem(name);
+    const icon = (name, size) => { const s = node('span', undefined, 'cc-icon'); if (window.FruitIcons) s.append(window.FruitIcons.node(name, size)); return s; };
 
     function rows(category) {
         const list = [];
@@ -15,8 +19,7 @@
             if (c.land || (category && c.id !== category)) continue;
             for (const product of c.products) {
                 const s = catalog.seasons[product];
-                if (!s) continue;
-                list.push({ category: c, product, season: s[0], peak: s[1] });
+                if (s) list.push({ category: c, product, season: s[0], peak: s[1] });
                 for (const [variety, vs] of Object.entries(catalog.varietySeasons[product] || {}))
                     list.push({ category: c, product, variety, season: vs[0], peak: vs[1] });
             }
@@ -30,75 +33,103 @@
         return '/html/index.html?' + p;
     }
 
+    function chips() {
+        const root = $('#ccChips'); root.replaceChildren();
+        const current = field('kategori').value;
+        const add = (id, label, iconName) => {
+            const b = node('button', undefined, 'cc-chip' + (current === id ? ' on' : ''));
+            b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(current === id));
+            if (iconName) b.append(icon(iconName, 18));
+            b.append(node('span', label));
+            b.onclick = () => {
+                field('kategori').value = id;
+                const url = new URL(location.href);
+                if (id) url.searchParams.set('kategori', id); else url.searchParams.delete('kategori');
+                history.replaceState(null, '', url.pathname + url.search);
+                chips(); render();
+            };
+            root.append(b);
+        };
+        add('', 'Tümü');
+        for (const c of catalog.categories) if (!c.land) add(c.id, c.short || c.name, c.icon || c.products[0]);
+    }
+
+    // Bir aydaki durum: 0 yok, 1 hasat dönemi, 2 yoğun hasat.
+    const state = (r, m) => (m < 1 || m > 12 ? 0 : r.peak.includes(m) ? 2 : r.season.includes(m) ? 1 : 0);
+
+    function track(r) {
+        const t = node('span', undefined, 'cc-track');
+        for (let m = 1; m <= 12; m++) {
+            const st = state(r, m);
+            const cell = node('span', undefined, 'cc-cell' + (m === now ? ' now' : ''));
+            cell.setAttribute('role', 'cell');
+            cell.setAttribute('aria-label', months[m - 1] + ': ' + (st === 2 ? 'yoğun hasat' : st === 1 ? 'hasat dönemi' : 'dönem dışı'));
+            const bar = node('i', undefined, st === 2 ? 'peak' : st === 1 ? 'season' : 'off');
+            // Şerit kesintisizdir: yalnızca başı ve sonu yuvarlatılır.
+            if (st && !state(r, m - 1)) bar.classList.add('start');
+            if (st && !state(r, m + 1)) bar.classList.add('end');
+            cell.append(bar);
+            t.append(cell);
+        }
+        return t;
+    }
+
     function render() {
-        const category = form.elements.namedItem('kategori').value;
-        const query = form.elements.namedItem('ara').value.trim().toLocaleLowerCase('tr-TR');
+        const category = field('kategori').value;
+        const query = field('ara').value.trim().toLocaleLowerCase('tr-TR');
         const list = rows(category).filter(r => !query || (r.product + ' ' + (r.variety || '')).toLocaleLowerCase('tr-TR').includes(query));
-        const table = $('#calendarTable');
-        table.replaceChildren();
-        const head = node('thead');
-        const hr = node('tr');
-        hr.append(node('th', 'Ürün'));
-        months.forEach((m, i) => { const th = node('th', m, i + 1 === now ? 'this-month' : ''); th.scope = 'col'; if (i + 1 === now) th.setAttribute('aria-current', 'date'); hr.append(th); });
-        head.append(hr);
-        table.append(head);
-        const body = node('tbody');
+        const board = $('#calendarTable');
+        board.replaceChildren();
+
+        const head = node('div', undefined, 'cc-row cc-months');
+        head.setAttribute('role', 'row');
+        const corner = node('span', 'Ürün', 'cc-name'); corner.setAttribute('role', 'columnheader'); head.append(corner);
+        const mt = node('span', undefined, 'cc-track');
+        months.forEach((m, i) => {
+            const h = node('span', undefined, 'cc-cell' + (i + 1 === now ? ' now' : ''));
+            h.setAttribute('role', 'columnheader'); h.title = m;
+            h.append(node('b', m.slice(0, 3), 'cc-m-long'), node('b', m.slice(0, 1), 'cc-m-short'));
+            if (i + 1 === now) h.setAttribute('aria-current', 'date');
+            mt.append(h);
+        });
+        head.append(mt);
+        board.append(head);
+
         let group = '';
         for (const r of list) {
             if (r.category.id !== group) {
                 group = r.category.id;
-                const tr = node('tr', undefined, 'group-row');
-                const th = node('th');
-                th.append(node('span', r.category.name, 'group-label'));
-                th.colSpan = 13;
-                tr.append(th);
-                body.append(tr);
+                const g = node('div', undefined, 'cc-group');
+                g.setAttribute('role', 'row');
+                g.append(icon(r.category.icon || r.category.products[0], 18), node('span', r.category.name));
+                board.append(g);
             }
-            const tr = node('tr');
-            const name = node('th', undefined, 'product-cell');
-            name.scope = 'row';
-            if (window.FruitIcons) name.append(window.FruitIcons.node(r.product, 22));
-            const a = node('a', r.variety ? r.variety : r.product);
+            const a = node('a', undefined, 'cc-row' + (r.variety ? ' variety' : ''));
             a.href = link(r);
-            if (r.variety) { name.classList.add('variety-row'); a.setAttribute('translate', 'no'); }
-            name.append(a);
-            tr.append(name);
-            for (let m = 1; m <= 12; m++) {
-                const peak = r.peak.includes(m), on = r.season.includes(m);
-                const td = node('td', undefined, (peak ? 'peak' : on ? 'season' : '') + (m === now ? ' this-month' : ''));
-                td.setAttribute('aria-label', months[m - 1] + ': ' + (peak ? 'yoğun hasat' : on ? 'hasat dönemi' : 'dönem dışı'));
-                if (peak || on) td.append(node('span', peak ? '●' : '', 'sr-hidden'));
-                tr.append(td);
-            }
-            body.append(tr);
+            a.setAttribute('role', 'row');
+            const name = node('span', undefined, 'cc-name');
+            name.setAttribute('role', 'rowheader');
+            name.append(icon(r.product, 20), node('span', r.variety || r.product, 'cc-label'));
+            if (r.variety) name.querySelector('.cc-label').setAttribute('translate', 'no');
+            a.append(name, track(r));
+            board.append(a);
         }
-        if (!list.length) {
-            const tr = node('tr'); const td = node('td', 'Aramana uyan ürün yok.', 'muted'); td.colSpan = 13; tr.append(td); body.append(tr);
-        }
-        table.append(body);
-        const chips = $('#inSeason');
-        chips.replaceChildren();
+        if (!list.length) board.append(node('p', 'Aramana uyan ürün yok.', 'cc-empty'));
+
+        const chipsRoot = $('#inSeason');
+        chipsRoot.replaceChildren();
         for (const r of rows(category).filter(r => !r.variety && r.peak.includes(now)).slice(0, 18)) {
             const a = node('a', undefined, 'season-chip');
             a.href = link(r);
-            if (window.FruitIcons) a.append(window.FruitIcons.node(r.product, 20));
-            a.append(node('span', r.product));
-            chips.append(a);
+            a.append(icon(r.product, 20), node('span', r.product));
+            chipsRoot.append(a);
         }
         $('#seasonTitle').textContent = months[now - 1] + ' ayında yoğun hasatta';
-        // Dar ekranda tablo, bu ay görünecek şekilde kendiliğinden kaydırılır.
-        const scroller = $('.calendar-scroll');
-        const current = table.querySelector('thead th.this-month');
-        if (scroller && current && scroller.scrollWidth > scroller.clientWidth) {
-            const sticky = table.querySelector('thead th')?.offsetWidth || 0;
-            scroller.scrollLeft = Math.max(0, current.offsetLeft - sticky - (scroller.clientWidth - sticky) / 2 + current.offsetWidth / 2);
-        }
     }
 
-    const params = new URLSearchParams(location.search);
-    form.elements.namedItem('kategori').value = params.get('kategori') || '';
+    field('kategori').value = new URLSearchParams(location.search).get('kategori') || '';
     form.addEventListener('input', render);
-    form.addEventListener('change', render);
     form.onsubmit = e => { e.preventDefault(); render(); };
+    chips();
     render();
 })();

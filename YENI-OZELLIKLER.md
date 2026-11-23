@@ -1,5 +1,8 @@
 # Yeni özellikler (Kasım 2026)
 
+## Web ürün takvimi mobildeki gibi
+- Tablo yerine mobil uygulamadaki görünüm: kategori çipleri (simgeli), ürün arama, her ürün için 12 aylık kesintisiz şerit (açık: hasat dönemi, koyu: yoğun hasat), içinde bulunulan ay bütün satırlarda turuncu sütun. Ay başlıkları kaydırırken üstte sabit kalır; dar ekranda ay baş harfleri, geniş ekranda kısaltmalar görünür. Satıra tıklayınca o ürünün/çeşidin ilanları açılır. Koyu tema destekli (`css/takvim.css`).
+
 ## İlan verme düzeltmeleri
 - **"Teslimat seçeneği geçersiz" hatası:** Birden çok teslimat seçeneği ("Yerinden teslim, Kargo") sunucunun ilan kuralında tek seçenek gibi kontrol ediliyordu; artık her seçenek ayrı kontrol edilir.
 - **Mobil "İleri" sırası:** Ekrandaki sırayı izler. 2. adım: İlan başlığı → Hasat tarihi (tarih tekerleği açılır) → Açıklama. 3. adım: Miktar → Fiyat → Minimum alım → Ambalaj (liste açılır) → İl → İlçe; arazide İmar → Tapu → Ada → Parsel → İl → İlçe. Dolu seçimler atlanır; sırada bir şey kalmayınca "Devam et" olur.

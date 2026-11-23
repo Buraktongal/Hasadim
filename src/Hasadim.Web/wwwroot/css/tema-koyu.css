@@ -1575,6 +1575,43 @@ html[data-theme="dark"] .sp-badge-me {
     border-color: #59402c;
 }
 
+/* ---- takvim.css ---- */
+html[data-theme="dark"] .cc-chip {
+    border: 1px solid #434a3f;
+    background: #161616;
+}
+html[data-theme="dark"] .cc-chip:hover {
+    border-color: #4e614d;
+}
+html[data-theme="dark"] .cc-legend {
+    color: #aaaab6;
+}
+html[data-theme="dark"] .cc-board {
+    border: 1px solid #41493b;
+    background: #161616;
+}
+html[data-theme="dark"] .cc-row {
+    border-bottom: 1px solid #3a4036;
+}
+html[data-theme="dark"] a.cc-row:hover {
+    background: #1b2217;
+}
+html[data-theme="dark"] .cc-months {
+    background: #161616;
+    border-bottom: 1px solid #41493b;
+}
+html[data-theme="dark"] .cc-row.variety .cc-label {
+    color: #bac3bc;
+}
+html[data-theme="dark"] .cc-group {
+    background: #1f291b;
+    color: #b2e5c5;
+    border-bottom: 1px solid #41493b;
+}
+html[data-theme="dark"] .cc-empty {
+    color: #aaaab6;
+}
+
 /* ---- elle ince ayar ---- */
 html[data-theme="dark"] body { background: var(--t-bg); color: var(--t-ink); }
 html[data-theme="dark"] img.avatar, html[data-theme="dark"] .card-media img { filter: brightness(.92); }

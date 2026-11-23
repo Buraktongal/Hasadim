@@ -1,0 +1,64 @@
+@charset "UTF-8";
+
+/* Ürün takvimi (html/urun-takvimi.html) — mobil uygulamadaki görünümle aynı */
+.cc-page { --cc-season: #F1DFA6; --cc-peak: #3B8350; --cc-track: #0000000f; --cc-now: #D9661F17; --cc-name: 200px; }
+.cc-head { align-items: end; }
+.cc-search input { width: min(340px, 100%); min-height: 44px; padding: 0 14px; border-radius: 999px; }
+.cc-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: thin; }
+.cc-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid #d6dfd1; background: #fff; color: inherit; font: inherit; font-weight: 700; font-size: 14px; white-space: nowrap; cursor: pointer; }
+.cc-chip:hover { border-color: #9cc39a; }
+.cc-chip.on { background: var(--green); border-color: var(--green); color: #fff; }
+.cc-icon { display: inline-grid; place-items: center; flex-shrink: 0; }
+.cc-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 6px 0 10px; color: #667; font-size: 13px; }
+.cc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cc-legend i { width: 20px; height: 12px; border-radius: 4px; }
+.cc-legend i.season { background: var(--cc-season); }
+.cc-legend i.peak { background: var(--cc-peak); }
+.cc-legend i.now { width: 14px; height: 14px; background: var(--cc-now); border: 1px solid #D9661F; }
+
+.cc-board { border: 1px solid #dce5d6; border-radius: 16px; background: #fff; overflow: clip; }
+.cc-row { display: grid; grid-template-columns: var(--cc-name) 1fr; align-items: center; padding: 0 14px; color: inherit; text-decoration: none; border-bottom: 1px solid #edf1ea; }
+a.cc-row:hover { background: #f3f8f0; }
+a.cc-row:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.cc-months { position: sticky; top: var(--cc-sticky-top, 0px); z-index: 3; background: #fff; border-bottom: 1px solid #dce5d6; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.cc-months .cc-name { font-size: 12px; font-weight: 800; color: #7a857c; text-transform: uppercase; letter-spacing: .05em; }
+.cc-months .cc-cell { justify-content: center; padding: 8px 0; }
+.cc-months b { font-size: 12.5px; font-weight: 700; color: #7a857c; }
+.cc-months .now b { color: #D9661F; font-weight: 900; }
+.cc-m-short { display: none; }
+.cc-name { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 10px; }
+.cc-label { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-row.variety .cc-label { font-weight: 500; color: #4f5b52; }
+.cc-row.variety .cc-name { padding-left: 14px; }
+.cc-track { display: grid; grid-template-columns: repeat(12, 1fr); }
+.cc-cell { display: flex; align-items: center; height: 38px; }
+.cc-cell.now { background: var(--cc-now); }
+.cc-cell i { display: block; width: 100%; height: 6px; background: var(--cc-track); }
+.cc-cell i.season, .cc-cell i.peak { height: 16px; }
+.cc-cell i.season { background: var(--cc-season); }
+.cc-cell i.peak { background: var(--cc-peak); }
+.cc-cell:first-child i.off { border-radius: 3px 0 0 3px; }
+.cc-cell:last-child i.off { border-radius: 0 3px 3px 0; }
+.cc-cell i.start { border-top-left-radius: 8px; border-bottom-left-radius: 8px; margin-left: 2px; }
+.cc-cell i.end { border-top-right-radius: 8px; border-bottom-right-radius: 8px; margin-right: 2px; }
+.cc-group { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: #e9f3e4; color: #1f5c36; font-weight: 800; border-bottom: 1px solid #dce5d6; }
+.cc-empty { padding: 30px; text-align: center; color: #667; }
+
+@media (max-width: 720px) {
+    .cc-page { --cc-name: 112px; }
+    .cc-row { padding: 0 10px; }
+    .cc-label { font-size: 13px; }
+    .cc-m-long { display: none; }
+    .cc-m-short { display: inline; }
+    .cc-cell { height: 34px; }
+    .cc-row.variety .cc-name { padding-left: 6px; }
+    .cc-search, .cc-search input { width: 100%; }
+}
+
+html[data-theme="dark"] .cc-page { --cc-season: #5E5128; --cc-peak: #3FAE6A; --cc-track: #ffffff14; --cc-now: #E2762F24; }
+html[data-theme="dark"] .cc-page .cc-chip.on { background: #2f7a4a; border-color: #2f7a4a; color: #fff; }
+/* Dar ekranda "bu ay yoğun hasatta" çipleri tek satırda yana kayar; takvim hemen görünür. */
+@media (max-width: 720px) {
+    .cc-page .season-chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .cc-page .season-chips > * { flex-shrink: 0; }
+}

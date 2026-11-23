@@ -10,7 +10,7 @@
     <script src="/js/insan-dogrulama.js"></script>
     <link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/tema.css"><link rel="stylesheet" href="/css/yukleme.css">
     <link rel="stylesheet" href="/css/market-header.css"><link rel="stylesheet" href="/css/messages.css"><link rel="stylesheet" href="/css/ticaret.css">
-    <link rel="stylesheet" href="/css/hesap-merkezi.css"><link rel="stylesheet" href="/css/tema-koyu.css">
+    <link rel="stylesheet" href="/css/hesap-merkezi.css"><link rel="stylesheet" href="/css/takvim.css"><link rel="stylesheet" href="/css/tema-koyu.css">
     <script src="/js/i18n.js" defer></script>
     <script src="/js/layout.js" defer></script>
     <script src="/js/footer.js" defer></script>
@@ -28,26 +28,25 @@
 </head>
 <body data-page="calendar">
 <div id="siteLayout"></div>
-<main class="tool-page">
-    <header class="tool-head">
+<main class="tool-page cc-page">
+    <header class="tool-head cc-head">
         <div>
             <p class="eyebrow">Hasat takvimi</p>
             <h1>Ürün takvimi</h1>
-            <p>Türkiye genelinde ürünlerin hasat edildiği ve piyasada bol bulunduğu aylar. Bölgeye ve yıla göre birkaç hafta kayabilir.</p>
+            <p>Türkiye geneli yaklaşık hasat dönemleri. Bir ürüne tıklayınca o ürünün ilanları açılır. Bölgeye ve yıla göre birkaç hafta kayabilir.</p>
         </div>
-        <form id="calendarFilters" class="tool-filters">
-            <label>Kategori<select name="kategori"><option value="">Tüm kategoriler</option><option value="Meyve">Meyve</option><option value="Sebze">Sebze</option><option value="Tahil">Tahıl</option><option value="Yem">Yem ve balya</option><option value="Bal">Bal ve arı ürünleri</option><option value="Kuruyemis">Kuruyemiş</option></select></label>
-            <label>Ürün ara<input name="ara" type="search" maxlength="40" placeholder="Örn. kiraz, buğday, bal"></label>
+        <form id="calendarFilters" class="cc-search" role="search">
+            <input name="ara" type="search" maxlength="40" placeholder="Ürün ara (kiraz, buğday, bal…)" aria-label="Ürün ara">
+            <input name="kategori" type="hidden">
         </form>
     </header>
+    <div class="cc-chips" id="ccChips" role="radiogroup" aria-label="Kategori"></div>
     <section class="season-now" aria-labelledby="seasonTitle">
         <h2 id="seasonTitle">Bu ay yoğun hasatta</h2>
         <div id="inSeason" class="season-chips"></div>
     </section>
-    <div class="calendar-legend" aria-hidden="true"><span><i class="peak"></i>Yoğun hasat</span><span><i class="season"></i>Hasat dönemi</span><span><i class="this-month"></i>Bu ay</span><span class="scroll-hint">Diğer aylar için tabloyu yana kaydır ↔</span></div>
-    <div class="calendar-scroll">
-        <table id="calendarTable" class="crop-calendar"></table>
-    </div>
+    <div class="cc-legend" aria-hidden="true"><span><i class="season"></i>Hasat dönemi</span><span><i class="peak"></i>Yoğun hasat</span><span><i class="now"></i>Bu ay</span></div>
+    <div class="cc-board" id="calendarTable" role="table" aria-label="Ürün takvimi"></div>
     <p class="muted">Takvim bilgilendirme amaçlıdır; güncel ürün durumu için satıcıya danış. Arazi ilanları takvimde yer almaz.</p>
 </main>
 <div id="siteFooter"></div>
