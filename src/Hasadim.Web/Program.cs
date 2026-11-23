@@ -9,6 +9,23 @@ builder.Services.AddHttpClient("api",c=>{c.BaseAddress=apiUri;c.Timeout=TimeSpan
 // eklenir) ve o durumda bu betiklerin yerine boş bir dosya döndürür. Yalnızca geliştirmede; yayında bu betikler hiç yoktur.
 if(builder.Environment.IsDevelopment())builder.Services.Insert(0,ServiceDescriptor.Transient<IStartupFilter,QuietDevToolsFilter>());
 var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();
+// Yalnızca geliştirmede: mobil uygulamanın bilgisayarda tarayıcıda açılan sürümü (Expo web, http://localhost:8081)
+// API'ye başka bir adresten (dev tunnel) istek atar. Tarayıcı buna izin versin diye bu yerel kaynaklara CORS izni verilir.
+// Çerez gönderilmez (mobil uygulama Authorization başlığıyla giriş yapar). Yayında bu blok hiç çalışmaz.
+if(app.Environment.IsDevelopment())app.Use(async(c,next)=>
+{
+ var origin=c.Request.Headers.Origin.ToString();
+ if(c.Request.Path.StartsWithSegments("/api")&&System.Text.RegularExpressions.Regex.IsMatch(origin,@"^http://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+$"))
+ {
+  c.Response.Headers["Access-Control-Allow-Origin"]=origin;
+  c.Response.Headers["Vary"]="Origin";
+  c.Response.Headers["Access-Control-Allow-Headers"]="Authorization, Content-Type, X-Hasadim-Client, X-Human-Token, X-Human-Nonce, X-Human-Answer";
+  c.Response.Headers["Access-Control-Allow-Methods"]="GET, POST, PUT, PATCH, DELETE, OPTIONS";
+  c.Response.Headers["Access-Control-Max-Age"]="600";
+  if(HttpMethods.IsOptions(c.Request.Method)){c.Response.StatusCode=204;return;}
+ }
+ await next();
+});
 // Geliştirmede Visual Studio'nun canlı yenileme ve Browser Link betikleri localhost'a bağlanır; yayında eklenmez.
 var devConnect=app.Environment.IsDevelopment()?" ws://localhost:* wss://localhost:* http://localhost:* https://localhost:*":"";app.UseHttpsRedirection();
 app.Use(async(c,next)=>{

@@ -2,6 +2,13 @@
 
 Expo SDK 58, Expo Router ve TypeScript ile yazıldı. Bütün veriler web sitesiyle aynı API'den gelir; ayrı bir sunucu yoktur.
 
+## Bilgisayarda telefon görünümüyle açmak
+
+`npx expo start` çalışırken terminalde **w** tuşuna bas: uygulama tarayıcıda `http://localhost:8081` adresinde açılır.
+Chrome'da **F12 → Ctrl+Shift+M** ile cihaz görünümüne geçip üstten bir iPhone modeli seç; ekran telefon boyutunda görünür.
+Kamera, bildirim, titreşim gibi telefona özgü özellikler tarayıcıda çalışmaz; bunlar için Expo Go kullan.
+Geliştirmede Hasadim.Web, `localhost` kaynaklı bu isteklere CORS izni verir (yayında kapalı).
+
 ## Özellikler
 
 - **Pazar:** arama, kategoriler, detaylı filtreler, sıralama, sonsuz kaydırma (25'er ilan), favoriler ve arama kaydetme.
