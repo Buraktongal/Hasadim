@@ -56,3 +56,11 @@ a:focus-visible,button:focus-visible { outline: 3px solid #a56a25; outline-offse
 .cp-dots i.on { background: #fff; transform: scale(1.15); }
 .cp-media:hover .cp-dots, .cp-media:focus-within .cp-dots { opacity: 1; }
 @media (hover: none) { .cp-dots { opacity: 1; } }
+
+/* Satıcı kartı: dar sütunda da her parça kendi satırında; "Profili ve tüm ilanları gör" tam genişlikte, ortalı. */
+.seller-profile { display: grid; gap: 12px; min-width: 0; }
+.seller-profile > * { min-width: 0; margin-top: 0; margin-bottom: 0; }
+.seller-profile > small { display: block; line-height: 1.45; }
+.seller-profile .seller-call { display: flex; justify-content: center; width: 100%; margin-top: 4px; box-sizing: border-box; }
+.seller-profile .seller-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.seller-profile-heading .seller-name { display: inline-block; overflow-wrap: anywhere; }
