@@ -640,3 +640,20 @@ html.site-menu-open #siteLayout .market-header > .header-new-listing { visibilit
 .multi-chip.on::before { border-color: var(--green); background: var(--green) url("/img/ikon/tik.svg") center / 12px no-repeat; }
 .multi-chip:disabled { opacity: .5; cursor: not-allowed; }
 #pinHelp.warn { color: #b45309; font-weight: 600; }
+
+/* Araç sayfası filtreleri (harita, takvim): geliştirilmiş seçim kutuları tam metni gösterir,
+   "Liste olarak gör" bağlantısı onlarla aynı hizada ve yükseklikte bir buton gibi durur. */
+.tool-filters label > .ss { width: 200px; }
+.tool-filters a.secondary {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+    min-height: 42px; box-sizing: border-box; padding: 0 16px; white-space: nowrap;
+    border: 1.5px solid #d3dccf; border-radius: 10px;
+}
+.tool-filters a.secondary::before {
+    content: ""; width: 16px; height: 16px; background: currentColor;
+    -webkit-mask: url(/img/ikon/liste.svg) center / contain no-repeat; mask: url(/img/ikon/liste.svg) center / contain no-repeat;
+}
+@media (max-width: 760px) {
+    .tool-filters label > .ss { width: 100%; }
+    .tool-filters a.secondary { grid-column: 1 / -1; justify-content: center; }
+}
