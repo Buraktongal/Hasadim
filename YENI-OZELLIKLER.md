@@ -1,5 +1,10 @@
 # Yeni özellikler (Kasım 2026)
 
+## İlan verme düzeltmeleri
+- **"Teslimat seçeneği geçersiz" hatası:** Birden çok teslimat seçeneği ("Yerinden teslim, Kargo") sunucunun ilan kuralında tek seçenek gibi kontrol ediliyordu; artık her seçenek ayrı kontrol edilir.
+- **Mobil "İleri" sırası:** Ekrandaki sırayı izler. 2. adım: İlan başlığı → Hasat tarihi (tarih tekerleği açılır) → Açıklama. 3. adım: Miktar → Fiyat → Minimum alım → Ambalaj (liste açılır) → İl → İlçe; arazide İmar → Tapu → Ada → Parsel → İl → İlçe. Dolu seçimler atlanır; sırada bir şey kalmayınca "Devam et" olur.
+- **Mobilde haritada işaretleme kolaylaştı:** "Haritada işaretle" tam ekran harita açar; haritayı kaydırırsın, ortadaki iğnenin altındaki yer seçilir ("Bu konumu kullan"). Çok uzaktayken düğme önce yakınlaştırır. Google Haritalar bağlantısı ya da "38.49, 27.70" gibi koordinat yapıştırılabilir. Küçük haritada dokunulan yerin, sayfa kaydırılmışken yanlış hesaplanması da düzeltildi.
+
 ## Veritabanı kilitlenmesi (deadlock) düzeltmesi
 - Hata: `Transaction … was deadlocked … chosen as the deadlock victim` (MobileTokenStore.Validate). Mobil uygulama aynı anda birçok istek gönderiyor; her istek oturumu doğrularken aynı satıra "son görülme" yazıyordu. `UserSessions` tablosunun sıralama anahtarında bu sütun (LastSeenAt) olduğu için her yazımda satır yer değiştiriyor ve eşzamanlı okumalarla ters sırada kilit alınıyordu.
 - `021_OturumKilitlenme.sql`: tablonun anahtarı değişmeyen sütunlara (UserId, Id) alındı.

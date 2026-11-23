@@ -138,6 +138,7 @@ Check(h1!=h2,"Aynı şifre farklı salt ile hashlenir");Check(hasher.VerifyHashe
 user.Id=owner;await Status(400,()=>service.Create(request,ct),"Fotoğrafsız ilan API tarafından reddedilir");
 await Status(400,()=>service.Create(request,ct,Enumerable.Repeat("a.jpg",11).ToArray()),"11 fotoğraf reddedilir");
 Check(DeliveryOptions.Normalize("Kargo, Yerinden teslim, Kargo, Uçak")=="Yerinden teslim, Kargo","Teslimat seçenekleri sıralanır, tekrar ve bilinmeyenler atılır");
+Check(Listing.Create(Guid.NewGuid(),Request().Data() with{Teslimat="Yerinden teslim, Kargo"}).Teslimat=="Yerinden teslim, Kargo","Birden çok teslimat seçenekli ilan oluşturulur");
 Check(DeliveryOptions.Normalize("  ")==null&&System.Text.RegularExpressions.Regex.IsMatch("Yerinden teslim, Kargo",DeliveryOptions.Pattern)&&!System.Text.RegularExpressions.Regex.IsMatch("Kargo; DROP",DeliveryOptions.Pattern),"Teslimat biçimi doğrulanır");
 var profiles=new MemoryProfiles();var ps=new ProfileService(profiles,user);
 user.Id=null;Check((await ps.Public(profiles.Value.UserId,ct)).Phone is null,"Anonim profil telefonu gizlenir");

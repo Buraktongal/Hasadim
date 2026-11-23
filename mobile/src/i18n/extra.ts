@@ -1,5 +1,10 @@
 // Yalnızca mobil uygulamada geçen metinlerin İngilizcesi.
 export const extraEn: Record<string, string> = {
+    'Konumu işaretle': 'Mark the location', 'Haritada işaretle': 'Mark on map', 'Konumu değiştir': 'Change location', 'Konum işaretlendi': 'Location marked',
+    'Bu konumu kullan': 'Use this location', 'Yakınlaştır': 'Zoom in', 'Git': 'Go',
+    'Haritayı kaydır; iğnenin altındaki yer seçilir. +/− ile yakınlaştır.': 'Drag the map; the spot under the pin is chosen. Use +/− to zoom.',
+    'Google Haritalar bağlantısı veya 38.49, 27.70': 'Google Maps link or 38.49, 27.70', 'Yeri Google Haritalar’da bul, konumu kopyalayıp buraya yapıştır ↗': 'Find the place in Google Maps, copy the location and paste it here ↗',
+    'İşaretlemezsen ilan, il merkezine yakın yaklaşık konumla gösterilir.': 'If you don’t mark it, the listing is shown near the province centre.',
     'İleri': 'Next', 'profili aç': 'open profile', 'Profili gör': 'View profile', 'Yazdığın ilan': 'Listing',
     'Menü': 'Menu', 'Menüyü kapat': 'Close menu', 'Keşfet': 'Explore', 'Tüm ilanlar': 'All listings', 'İlanlar ve alışveriş': 'Listings and trade',
     'Giriş yap veya kayıt ol': 'Sign in or sign up', 'Profilini görüntüle': 'View your profile', 'İlan vermek ve mesajlaşmak için': 'To post listings and message', 'Bu cihazdaki oturumun kapatılacak.': 'You will be signed out on this device.',

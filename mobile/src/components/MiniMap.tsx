@@ -26,9 +26,12 @@ export const TURKEY = { lat: 39.0, lon: 35.2 };
 
 export interface MapPin { id: string; lat: number; lon: number; render: () => ReactNode; onPress?: () => void }
 
-export function MiniMap({ center, zoom: initialZoom = 6, height = 220, pins = [], pin, interactive = true, onTap }: {
+export function MiniMap({ center, zoom: initialZoom = 6, height = 220, pins = [], pin, interactive = true, onTap, onMove, rounded = true }: {
     center: { lat: number; lon: number }; zoom?: number; height?: number; pins?: MapPin[]; pin?: { lat: number; lon: number }; interactive?: boolean;
     onTap?: (at: { lat: number; lon: number }) => void;
+    // Harita kaydırılınca/yakınlaştırılınca yeni merkez (tam ekran konum seçicide "artı işaretinin altındaki yer").
+    onMove?: (center: { lat: number; lon: number }, zoom: number) => void;
+    rounded?: boolean;
 }) {
     const { colors: c, t } = useApp();
     const [width, setWidth] = useState(0);
@@ -36,22 +39,24 @@ export function MiniMap({ center, zoom: initialZoom = 6, height = 220, pins = []
     const [view, setView] = useState(center);
     const drag = useRef<{ x: number; y: number } | null>(null);
     const box = useRef<ViewInstance>(null);
-    const page = useRef({ x: 0, y: 0 });
     // Dışarıdan yeni merkez gelirse (ör. il değişti) harita oraya gider.
     useEffect(() => { setView(center); setZoom(initialZoom); }, [center.lat, center.lon, initialZoom]); // eslint-disable-line react-hooks/exhaustive-deps
     const [offset, setOffset] = useState({ x: 0, y: 0 });
+    useEffect(() => { onMove?.(view, zoom); }, [view, zoom]); // eslint-disable-line react-hooks/exhaustive-deps
+    const touchAt = useRef({ x: 0, y: 0 });
 
     const origin = useMemo(() => project(view.lat, view.lon, zoom), [view, zoom]);
     const pan = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => Boolean(onTap),
         onMoveShouldSetPanResponder: (_, g) => interactive && Math.abs(g.dx) + Math.abs(g.dy) > 6,
-        onPanResponderGrant: () => { drag.current = { x: 0, y: 0 }; },
+        // Dokunulan nokta, haritanın kendi köşesine göre alınır (sayfa kaydırılmış olsa da doğru yer işaretlenir).
+        onPanResponderGrant: e => { drag.current = { x: 0, y: 0 }; touchAt.current = { x: e.nativeEvent.locationX, y: e.nativeEvent.locationY }; },
         onPanResponderMove: (_, g) => setOffset({ x: g.dx, y: g.dy }),
         onPanResponderRelease: (_, g) => {
             drag.current = null; setOffset({ x: 0, y: 0 });
             if (Math.abs(g.dx) + Math.abs(g.dy) < 6) {
                 // Dokunma: haritadaki noktanın enlem/boylamı.
-                if (onTap) onTap(unproject(origin.x + (g.x0 - page.current.x) - width / 2, origin.y + (g.y0 - page.current.y) - height / 2, zoom));
+                if (onTap) onTap(unproject(origin.x + touchAt.current.x - width / 2, origin.y + touchAt.current.y - height / 2, zoom));
                 return;
             }
             setView(unproject(origin.x - g.dx, origin.y - g.dy, zoom));
@@ -78,12 +83,15 @@ export function MiniMap({ center, zoom: initialZoom = 6, height = 220, pins = []
     const zoomBy = (d: number) => setZoom(z => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z + d)));
 
     return (
-        <View ref={box} onLayout={(e: LayoutChangeEvent) => { setWidth(e.nativeEvent.layout.width); box.current?.measureInWindow((x, y) => { page.current = { x, y }; }); }} {...pan.panHandlers}
-            accessibilityLabel={t('Harita')} style={{ height, borderRadius: 12, overflow: 'hidden', backgroundColor: c.greenSoft, borderWidth: 1, borderColor: c.line }}>
-            {tiles.map(tile => (
-                <Image key={tile.key} source={{ uri: tile.url, headers: { 'User-Agent': USER_AGENT } }} cachePolicy="memory-disk"
-                    style={{ position: 'absolute', left: tile.left, top: tile.top, width: TILE, height: TILE }} />
-            ))}
+        <View ref={box} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)} {...pan.panHandlers}
+            accessibilityLabel={t('Harita')} style={{ height, borderRadius: rounded ? 12 : 0, overflow: 'hidden', backgroundColor: c.greenSoft, borderWidth: rounded ? 1 : 0, borderColor: c.line }}>
+            {/* Karolar dokunmayı almaz: dokunulan yer haritanın kendisine göre hesaplanır. */}
+            <View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }}>
+                {tiles.map(tile => (
+                    <Image key={tile.key} source={{ uri: tile.url, headers: { 'User-Agent': USER_AGENT } }} cachePolicy="memory-disk"
+                        style={{ position: 'absolute', left: tile.left, top: tile.top, width: TILE, height: TILE }} />
+                ))}
+            </View>
             {width ? pins.map(p => {
                 const at = place(p.lat, p.lon);
                 if (at.left < -60 || at.left > width + 60 || at.top < -40 || at.top > height + 40) return null;

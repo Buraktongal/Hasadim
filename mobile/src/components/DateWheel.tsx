@@ -84,7 +84,7 @@ export function DateWheelPicker({ value, onChange, minYear, maxYear }: { value: 
 }
 
 // Form alanı: dokununca alttan tekerlekli seçici açılır.
-export function DateField({ label, value, onChange, hint, minYear, maxYear }: { label: string; value: string; onChange: (v: string) => void; hint?: string; minYear?: number; maxYear?: number }) {
+export function DateField({ label, value, onChange, hint, minYear, maxYear, openSignal = 0 }: { label: string; value: string; onChange: (v: string) => void; hint?: string; minYear?: number; maxYear?: number; openSignal?: number }) {
     const { colors: c, t, lang } = useApp();
     const now = new Date();
     const lo = minYear ?? now.getFullYear() - 3, hi = maxYear ?? now.getFullYear() + 2;
@@ -98,6 +98,7 @@ export function DateField({ label, value, onChange, hint, minYear, maxYear }: { 
         setDraft(p && p.y >= lo && p.y <= hi ? p : { d: now.getDate(), m: now.getMonth() + 1, y: Math.min(hi, Math.max(lo, now.getFullYear())) });
         setOpen(true);
     };
+    useEffect(() => { if (openSignal > 0) show(); }, [openSignal]); // eslint-disable-line react-hooks/exhaustive-deps
     const commit = () => { onChange(pad(draft.d) + '.' + pad(draft.m) + '.' + draft.y); setOpen(false); };
     return (
         <View style={{ gap: 5 }}>

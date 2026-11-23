@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateField } from '../components/DateWheel';
 import { Icon } from '../components/Icon';
 import { MiniMap, CITY_CENTERS, TURKEY } from '../components/MiniMap';
+import { MapPicker } from '../components/MapPicker';
 import { Photo } from '../components/Photo';
 import { ProductIcon } from '../components/ProductIcon';
 import { Button, Card, Chip, ErrorBox, Field, goBack, H2, Header, Loading, Notice, Segmented, Select, SignInRequired, SwitchRow, Tag, toast, Txt, useConfirm } from '../components/ui';
@@ -71,6 +72,13 @@ export default function ListingEditor() {
         minAlimKg: useRef<FieldNode>(null), ada: useRef<FieldNode>(null), parsel: useRef<FieldNode>(null)
     };
     const [focusKey, setFocusKey] = useState<keyof typeof fieldRefs | null>(null);
+    const [cursorKey, setCursorKey] = useState<string | null>(null); // en son gidilen/odaklanılan öğe (tarih/listelerde odak olmadığı için)
+    const [openDate, setOpenDate] = useState(0);
+    const [openPackaging, setOpenPackaging] = useState(0);
+    const [openZoning, setOpenZoning] = useState(0);
+    const [openCity, setOpenCity] = useState(0);
+    const [mapOpen, setMapOpen] = useState(false);
+    useEffect(() => { setCursorKey(null); }, [step]);
     // Taslak: yeni ilanda girilenler her değişiklikte saklanır, ekran yeniden açılınca geri yüklenir.
     const [restored, setRestored] = useState(false);
     const [draftReady, setDraftReady] = useState(editing);
@@ -204,11 +212,23 @@ export default function ListingEditor() {
     if (!user) return <View style={{ flex: 1, backgroundColor: c.bg }}><Header title="İlan ver" /><SignInRequired /></View>;
     if (loading) return <View style={{ flex: 1, backgroundColor: c.bg }}><Header title="İlanı düzenle" /><Loading /></View>;
 
-    const stepFields: (keyof typeof fieldRefs)[] = step === 1 ? ['baslik', 'aciklama'] : step === 2 ? (land ? ['miktarKg', 'kilogramFiyati', 'ada', 'parsel'] : ['miktarKg', 'kilogramFiyati', 'minAlimKg']) : [];
-    const at = focusKey ? stepFields.indexOf(focusKey) : -1;
-    const nextField = at >= 0 ? stepFields[at + 1] ?? null : stepFields.find(k => !String(f[k] ?? '').trim()) ?? null;
+    // Adımın sırası (ekrandaki sırayla): yazı alanları, tarih ve seçim listeleri. "İleri" sıradakine geçer:
+    // yazı alanına odaklanır, tarih/listeyi açar. Dolu seçimler atlanır; sırada bir şey kalmayınca "Devam et" olur.
+    type Item = { key: string; kind: 'text' | 'pick'; filled: boolean; go: () => void };
+    const text = (k: keyof typeof fieldRefs): Item => ({ key: k, kind: 'text', filled: Boolean(String(f[k] ?? '').trim()), go: () => fieldRefs[k].current?.focus() });
+    const pick = (key: string, filled: boolean, open: () => void): Item => ({ key, kind: 'pick', filled, go: () => { Keyboard.dismiss(); open(); } });
+    const items: Item[] = step === 1
+        ? [text('baslik'), ...(!land ? [pick('hasatTarihi', Boolean(f.hasatTarihi), () => setOpenDate(n => n + 1))] : []), text('aciklama')]
+        : step === 2 ? [
+            text('miktarKg'), text('kilogramFiyati'),
+            ...(!land ? [text('minAlimKg'), pick('ambalaj', Boolean(f.ambalaj), () => setOpenPackaging(n => n + 1))]
+                : [pick('imarDurumu', Boolean(f.imarDurumu), () => setOpenZoning(n => n + 1)), pick('tapuDurumu', Boolean(f.tapuDurumu), () => setOpenDeed(n => n + 1)), text('ada'), text('parsel')]),
+            pick('il', Boolean(f.il), () => setOpenCity(n => n + 1)), pick('ilce', Boolean(f.ilce), () => setOpenDistrict(n => n + 1))
+        ] : [];
+    const here = items.findIndex(i => i.key === (focusKey ?? cursorKey));
+    const nextItem = (here >= 0 ? items.slice(here + 1) : items).find(i => i.kind === 'text' || !i.filled || here < 0) ?? null;
     const forward = () => {
-        if (nextField) { fieldRefs[nextField].current?.focus(); return; }
+        if (nextItem) { setCursorKey(nextItem.key); nextItem.go(); return; }
         next();
     };
 
@@ -266,11 +286,11 @@ export default function ListingEditor() {
                 </> : null}
 
                 {step === 1 ? <Card>
-                    <Field ref={fieldRefs.baslik} onFocus={() => setFocusKey('baslik')} onBlur={() => setFocusKey(x => (x === 'baslik' ? null : x))} label="İlan başlığı" value={f.baslik} onChangeText={v => set({ baslik: v })} maxLength={150}
+                    <Field ref={fieldRefs.baslik} onFocus={() => { setFocusKey('baslik'); setCursorKey('baslik'); }} onBlur={() => setFocusKey(x => (x === 'baslik' ? null : x))} label="İlan başlığı" value={f.baslik} onChangeText={v => set({ baslik: v })} maxLength={150}
                         placeholder={land ? 'Örn. Karapınar’da yola cepheli 12 dönüm sulu tarla' : 'Örn. Eğirdir Gala elma — 1. sınıf, kasalı'}
                         hint="Başlıkta çeşit, kalite sınıfı ve bölgeyi belirtmek alıcıların ilanını bulmasını kolaylaştırır." />
-                    {!land ? <DateField label="Hasat tarihi (isteğe bağlı)" value={f.hasatTarihi} onChange={v => set({ hasatTarihi: v })} hint="Ürünün hasat edildiği veya edileceği tarih." /> : null}
-                    <Field ref={fieldRefs.aciklama} onFocus={() => setFocusKey('aciklama')} onBlur={() => setFocusKey(x => (x === 'aciklama' ? null : x))} label="Açıklama" value={f.aciklama} onChangeText={v => set({ aciklama: v })} maxLength={5000} multiline style={{ minHeight: 140 }}
+                    {!land ? <DateField openSignal={openDate} label="Hasat tarihi (isteğe bağlı)" value={f.hasatTarihi} onChange={v => set({ hasatTarihi: v })} hint="Ürünün hasat edildiği veya edileceği tarih." /> : null}
+                    <Field ref={fieldRefs.aciklama} onFocus={() => { setFocusKey('aciklama'); setCursorKey('aciklama'); }} onBlur={() => setFocusKey(x => (x === 'aciklama' ? null : x))} label="Açıklama" value={f.aciklama} onChangeText={v => set({ aciklama: v })} maxLength={5000} multiline style={{ minHeight: 140 }}
                         placeholder={land ? 'Toprak yapısı, ulaşım, su kaynağı, ağaç sayısı, ödeme koşulları…' : 'Kalibre / boy, kalite sınıfı, renk, depolama durumu, ilaçlama bilgisi, ödeme ve yükleme koşulları…'} />
                 </Card> : null}
 
@@ -279,13 +299,13 @@ export default function ListingEditor() {
                         {land ? <Segmented value={f.islemTipi} onChange={v => set({ islemTipi: v })} options={[['Satilik', 'Satılık'], ['Kiralik', 'Kiralık']]} /> : null}
                         {f.kategori === 'Yem' ? <Segmented value={f.birim} onChange={v => set({ birim: v })} options={[['balya', 'Balya'], ['kg', 'Kilogram (kg)']]} /> : null}
                         <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <View style={{ flex: 1 }}><Field ref={fieldRefs.miktarKg} onFocus={() => setFocusKey('miktarKg')} onBlur={() => setFocusKey(x => (x === 'miktarKg' ? null : x))} label={qtyLabel} keyboardType="decimal-pad" value={f.miktarKg} onChangeText={v => set({ miktarKg: num(v) })} /></View>
-                            <View style={{ flex: 1 }}><Field ref={fieldRefs.kilogramFiyati} onFocus={() => setFocusKey('kilogramFiyati')} onBlur={() => setFocusKey(x => (x === 'kilogramFiyati' ? null : x))} label={priceLabel} keyboardType="decimal-pad" value={f.kilogramFiyati} onChangeText={v => set({ kilogramFiyati: num(v) })} /></View>
+                            <View style={{ flex: 1 }}><Field ref={fieldRefs.miktarKg} onFocus={() => { setFocusKey('miktarKg'); setCursorKey('miktarKg'); }} onBlur={() => setFocusKey(x => (x === 'miktarKg' ? null : x))} label={qtyLabel} keyboardType="decimal-pad" value={f.miktarKg} onChangeText={v => set({ miktarKg: num(v) })} /></View>
+                            <View style={{ flex: 1 }}><Field ref={fieldRefs.kilogramFiyati} onFocus={() => { setFocusKey('kilogramFiyati'); setCursorKey('kilogramFiyati'); }} onBlur={() => setFocusKey(x => (x === 'kilogramFiyati' ? null : x))} label={priceLabel} keyboardType="decimal-pad" value={f.kilogramFiyati} onChangeText={v => set({ kilogramFiyati: num(v) })} /></View>
                         </View>
                         {land && Number(f.miktarKg) > 0 ? <Notice message={number(Number(f.miktarKg) / 1000, 1) + ' ' + t('dönüm') + (Number(f.kilogramFiyati) > 0 ? ' · ' + (rent ? money(Number(f.kilogramFiyati) / Number(f.miktarKg) * 1000, 0) + ' / ' + t('dönüm · yıllık') : money(Number(f.kilogramFiyati) / Number(f.miktarKg)) + ' / m²') : '')} /> : null}
                         {!land ? <>
-                            <Field ref={fieldRefs.minAlimKg} onFocus={() => setFocusKey('minAlimKg')} onBlur={() => setFocusKey(x => (x === 'minAlimKg' ? null : x))} label={'Minimum alım (' + unitLabel(unit) + ') — isteğe bağlı'} keyboardType="decimal-pad" value={f.minAlimKg} onChangeText={v => set({ minAlimKg: num(v) })} />
-                            <Select label="Ambalaj" value={f.ambalaj} allowEmpty emptyLabel="Belirtilmedi" options={PACKAGING} raw={false} onChange={v => set({ ambalaj: v })} />
+                            <Field ref={fieldRefs.minAlimKg} onFocus={() => { setFocusKey('minAlimKg'); setCursorKey('minAlimKg'); }} onBlur={() => setFocusKey(x => (x === 'minAlimKg' ? null : x))} label={'Minimum alım (' + unitLabel(unit) + ') — isteğe bağlı'} keyboardType="decimal-pad" value={f.minAlimKg} onChangeText={v => set({ minAlimKg: num(v) })} />
+                            <Select openSignal={openPackaging} label="Ambalaj" value={f.ambalaj} allowEmpty emptyLabel="Belirtilmedi" options={PACKAGING} raw={false} onChange={v => set({ ambalaj: v })} />
                             {/* Teslimat birden çok seçilebilir; ", " ile birleştirilip gönderilir. */}
                             <View style={{ gap: 6 }}>
                                 <Txt weight="700" size={13.5}>Teslimat (birden çok seçilebilir)</Txt>
@@ -301,28 +321,35 @@ export default function ListingEditor() {
                                 </View>
                             </View>
                         </> : <>
-                            <Select label="İmar durumu" value={f.imarDurumu} options={ZONING} raw={false} onChange={v => { set({ imarDurumu: v }); if (!f.tapuDurumu) setOpenDeed(n => n + 1); }} />
+                            <Select openSignal={openZoning} label="İmar durumu" value={f.imarDurumu} options={ZONING} raw={false} onChange={v => { set({ imarDurumu: v }); if (!f.tapuDurumu) setOpenDeed(n => n + 1); }} />
                             <Select label="Tapu durumu" value={f.tapuDurumu} options={DEED} raw={false} openSignal={openDeed} onChange={v => set({ tapuDurumu: v })} />
                             <Select label="Sulama (isteğe bağlı)" value={f.sulama} allowEmpty emptyLabel="Belirtilmedi" options={IRRIGATION} raw={false} onChange={v => set({ sulama: v })} />
                             <View style={{ flexDirection: 'row', gap: 10 }}>
-                                <View style={{ flex: 1 }}><Field ref={fieldRefs.ada} onFocus={() => setFocusKey('ada')} onBlur={() => setFocusKey(x => (x === 'ada' ? null : x))} label="Ada" value={f.ada} onChangeText={v => set({ ada: v })} maxLength={20} placeholder="Örn. 112" /></View>
-                                <View style={{ flex: 1 }}><Field ref={fieldRefs.parsel} onFocus={() => setFocusKey('parsel')} onBlur={() => setFocusKey(x => (x === 'parsel' ? null : x))} label="Parsel" value={f.parsel} onChangeText={v => set({ parsel: v })} maxLength={20} placeholder="Örn. 7" /></View>
+                                <View style={{ flex: 1 }}><Field ref={fieldRefs.ada} onFocus={() => { setFocusKey('ada'); setCursorKey('ada'); }} onBlur={() => setFocusKey(x => (x === 'ada' ? null : x))} label="Ada" value={f.ada} onChangeText={v => set({ ada: v })} maxLength={20} placeholder="Örn. 112" /></View>
+                                <View style={{ flex: 1 }}><Field ref={fieldRefs.parsel} onFocus={() => { setFocusKey('parsel'); setCursorKey('parsel'); }} onBlur={() => setFocusKey(x => (x === 'parsel' ? null : x))} label="Parsel" value={f.parsel} onChangeText={v => set({ parsel: v })} maxLength={20} placeholder="Örn. 7" /></View>
                             </View>
                             <SwitchRow label="Elektrik var" value={f.elektrik} onChange={v => set({ elektrik: v })} />
                             <SwitchRow label="Yola cephesi var" value={f.yolCephesi} onChange={v => set({ yolCephesi: v })} />
                         </>}
                     </Card>
                     <Card>
-                        <Select label={land ? 'Arazinin bulunduğu il' : 'Ürünün bulunduğu il'} value={f.il} options={cities} onChange={v => { set({ il: v, ilce: '', enlem: null, boylam: null }); setOpenDistrict(n => n + 1); }} />
+                        <Select openSignal={openCity} label={land ? 'Arazinin bulunduğu il' : 'Ürünün bulunduğu il'} value={f.il} options={cities} onChange={v => { set({ il: v, ilce: '', enlem: null, boylam: null }); setOpenDistrict(n => n + 1); }} />
                         <Select label="İlçe" value={f.ilce} options={f.il ? districts(f.il) : []} disabled={!f.il} placeholder={f.il ? 'Seç' : 'Önce il seç'} openSignal={openDistrict} onChange={v => set({ ilce: v })} />
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Txt weight="800" style={{ flex: 1 }}>Haritada konum (isteğe bağlı)</Txt>
                             {f.enlem != null ? <Button title="Konumu kaldır" kind="plain" small full={false} onPress={() => set({ enlem: null, boylam: null })} /> : null}
                         </View>
-                        <MiniMap center={mapCenter} zoom={f.enlem != null ? 13 : f.il ? 9 : 5} height={220}
-                            pin={f.enlem != null && f.boylam != null ? { lat: f.enlem, lon: f.boylam } : undefined}
-                            onTap={at => set({ enlem: Math.round(at.lat * 10000) / 10000, boylam: Math.round(at.lon * 10000) / 10000 })} />
-                        <Txt muted size={12.5}>{f.enlem != null ? t('Konum işaretlendi. Değiştirmek için haritada başka bir yere dokun.') : t('Haritaya dokunarak ürünün veya arazinin yerini işaretle. İşaretlemezsen ilan, il merkezine yakın yaklaşık konumla gösterilir.')}</Txt>
+                        {/* Küçük önizleme; işaretleme tam ekranda yapılır (haritayı kaydır, ortadaki iğne yeri gösterir). */}
+                        <Pressable onPress={() => { Keyboard.dismiss(); setMapOpen(true); }} accessibilityRole="button" accessibilityLabel={t('Haritada işaretle')}>
+                            <View pointerEvents="none">
+                                <MiniMap center={mapCenter} zoom={f.enlem != null ? 13 : f.il ? 9 : 5} height={150} interactive={false}
+                                    pin={f.enlem != null && f.boylam != null ? { lat: f.enlem, lon: f.boylam } : undefined} />
+                            </View>
+                        </Pressable>
+                        <Button title={f.enlem != null ? 'Konumu değiştir' : 'Haritada işaretle'} kind="secondary" icon={<Icon name="pin" color={c.green2} size={18} />} onPress={() => { Keyboard.dismiss(); setMapOpen(true); }} />
+                        <Txt muted size={12.5}>{f.enlem != null ? t('Konum işaretlendi') + ' (' + f.enlem.toFixed(4) + ', ' + f.boylam!.toFixed(4) + ').' : t('İşaretlemezsen ilan, il merkezine yakın yaklaşık konumla gösterilir.')}</Txt>
+                        <MapPicker visible={mapOpen} start={mapCenter} startZoom={f.enlem != null ? 15 : f.il ? 10 : 6} place={[f.ilce, f.il].filter(Boolean).join(', ')}
+                            onCancel={() => setMapOpen(false)} onPick={at => { set({ enlem: at.lat, boylam: at.lon }); setMapOpen(false); }} />
                         <Txt muted size={12.5}>İletişim için profilindeki telefon kullanılır.</Txt>
                     </Card>
                 </> : null}
@@ -377,7 +404,7 @@ export default function ListingEditor() {
             <View style={{ flexDirection: 'row', gap: 10, padding: 12, paddingBottom: 12 + insets.bottom, backgroundColor: c.panel, borderTopWidth: 1, borderColor: c.line }}>
                 {step > 0 ? <View style={{ flex: 1 }}><Button title="Geri" kind="secondary" onPress={() => goTo(step - 1)} /></View> : null}
                 <View style={{ flex: 2 }}>
-                    {step < 3 ? <Button title={nextField ? 'İleri' : 'Devam et'} onPress={forward} /> : <Button title={editing ? 'Değişiklikleri kaydet' : 'Yayınla'} kind="accent" busy={busy} onPress={publish} />}
+                    {step < 3 ? <Button title={nextItem ? 'İleri' : 'Devam et'} onPress={forward} /> : <Button title={editing ? 'Değişiklikleri kaydet' : 'Yayınla'} kind="accent" busy={busy} onPress={publish} />}
                 </View>
             </View>
             </KeyboardAvoidingView>

@@ -68,7 +68,7 @@ public static class ListingCategories
 
     public static readonly string[] Packaging =
         ["Kasa", "Koli", "Dökme", "Çuval", "Big bag", "Balya", "Kavanoz", "Teneke", "Diğer"];
-    public static readonly string[] Delivery = ["Yerinden teslim", "Satıcı teslimatı", "Görüşülür"];
+    public static readonly string[] Delivery = DeliveryOptions.All;
     public static readonly string[] Zoning =
         ["İmarsız (tarım arazisi)", "Konut imarlı", "Ticari imarlı", "Sanayi imarlı", "Turizm imarlı", "Belirtilmedi"];
     public static readonly string[] Deed = ["Müstakil tapu", "Hisseli tapu", "Tahsisli", "Zilliyet"];
@@ -375,7 +375,8 @@ public class Listing
             throw new ArgumentException("Minimum alım miktarı sıfırdan büyük olmalı ve ürün miktarını aşmamalı.");
         if (!land && !string.IsNullOrEmpty(data.Ambalaj) && !ListingCategories.Packaging.Contains(data.Ambalaj))
             throw new ArgumentException("Ambalaj seçeneği geçersiz.");
-        if (!land && !string.IsNullOrEmpty(data.Teslimat) && !ListingCategories.Delivery.Contains(data.Teslimat))
+        // Teslimat birden çok seçenek olabilir ("Yerinden teslim, Kargo"); her parça tanımlı bir seçenek olmalı.
+        if (!land && !string.IsNullOrEmpty(data.Teslimat) && data.Teslimat.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Any(x => !DeliveryOptions.All.Contains(x)))
             throw new ArgumentException("Teslimat seçeneği geçersiz.");
         if (land)
         {
