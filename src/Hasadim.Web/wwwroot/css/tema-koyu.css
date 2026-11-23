@@ -1291,6 +1291,9 @@ html[data-theme="dark"] .multi-chip.on {
     background: #1f291b;
     color: #8fd0a3;
 }
+html[data-theme="dark"] #pinHelp.warn {
+    color: #e0b493;
+}
 
 /* ---- yonetim.css ---- */
 html[data-theme="dark"] .admin-body {

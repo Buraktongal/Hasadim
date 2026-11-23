@@ -7,7 +7,8 @@ builder.Services.AddHttpClient("api",c=>{c.BaseAddress=apiUri;c.Timeout=TimeSpan
 // Site dev tunnel gibi localhost dışı bir adresten açıldığında Visual Studio'nun tarayıcı yenileme ve Browser Link
 // betikleri bilgisayardaki localhost'a bağlanamaz ve konsolu hatayla doldurur. Bu süzgeç en dışta çalışır (listenin başına
 // eklenir) ve o durumda bu betiklerin yerine boş bir dosya döndürür. Yalnızca geliştirmede; yayında bu betikler hiç yoktur.
-if(builder.Environment.IsDevelopment())builder.Services.Insert(0,ServiceDescriptor.Transient<IStartupFilter,QuietDevToolsFilter>());
+// localhost'ta da bağlantı kurulamadığı görüldü; araçlar ancak appsettings'te "Dev:BrowserTools": true verilirse açık kalır.
+if(builder.Environment.IsDevelopment()&&!builder.Configuration.GetValue<bool>("Dev:BrowserTools"))builder.Services.Insert(0,ServiceDescriptor.Transient<IStartupFilter,QuietDevToolsFilter>());
 var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();
 // Yalnızca geliştirmede: mobil uygulamanın bilgisayarda tarayıcıda açılan sürümü (Expo web, http://localhost:8081)
 // API'ye başka bir adresten (dev tunnel) istek atar. Tarayıcı buna izin versin diye bu yerel kaynaklara CORS izni verilir.
@@ -89,9 +90,7 @@ sealed class QuietDevToolsFilter:IStartupFilter
   {
    var path=c.Request.Path.Value??"";
    var tool=path.StartsWith("/_framework/aspnetcore-browser-refresh",StringComparison.OrdinalIgnoreCase)||path.StartsWith("/_vs/browserLink",StringComparison.OrdinalIgnoreCase);
-   var host=c.Request.Host.Host;
-   var local=host.Equals("localhost",StringComparison.OrdinalIgnoreCase)||host=="127.0.0.1"||host=="[::1]";
-   if(tool&&!local){c.Response.ContentType="application/javascript; charset=utf-8";c.Response.Headers.CacheControl="no-store";await c.Response.WriteAsync("// Geliştirme araçları bu adreste kapalı.\n");return;}
+   if(tool){c.Response.ContentType="application/javascript; charset=utf-8";c.Response.Headers.CacheControl="no-store";await c.Response.WriteAsync("// Geliştirme araçları bu adreste kapalı.\n");return;}
    await go();
   });
   next(app);

@@ -349,7 +349,15 @@ export default function ListingEditor() {
                         <Button title={f.enlem != null ? 'Konumu değiştir' : 'Haritada işaretle'} kind="secondary" icon={<Icon name="pin" color={c.green2} size={18} />} onPress={() => { Keyboard.dismiss(); setMapOpen(true); }} />
                         <Txt muted size={12.5}>{f.enlem != null ? t('Konum işaretlendi') + ' (' + f.enlem.toFixed(4) + ', ' + f.boylam!.toFixed(4) + ').' : t('İşaretlemezsen ilan, il merkezine yakın yaklaşık konumla gösterilir.')}</Txt>
                         <MapPicker visible={mapOpen} start={mapCenter} startZoom={f.enlem != null ? 15 : f.il ? 10 : 6} place={[f.ilce, f.il].filter(Boolean).join(', ')}
-                            onCancel={() => setMapOpen(false)} onPick={at => { set({ enlem: at.lat, boylam: at.lon }); setMapOpen(false); }} />
+                            onCancel={() => setMapOpen(false)} onPick={at => {
+                                set({ enlem: at.lat, boylam: at.lon }); setMapOpen(false);
+                                // Seçilen ilden çok uzak bir nokta işaretlendiyse uyar (ilan yanlış yerde görünmesin).
+                                const city = f.il ? CITY_CENTERS[f.il] : undefined;
+                                if (city) {
+                                    const km = Math.hypot((at.lat - city[0]) * 111, (at.lon - city[1]) * 111 * Math.cos(at.lat * Math.PI / 180));
+                                    if (km > 130) toast(t('İşaretlediğin yer seçtiğin ilden yaklaşık') + ' ' + Math.round(km) + ' km ' + t('uzakta. İl/ilçe veya konum yanlış olabilir.'));
+                                }
+                            }} />
                         <Txt muted size={12.5}>İletişim için profilindeki telefon kullanılır.</Txt>
                     </Card>
                 </> : null}

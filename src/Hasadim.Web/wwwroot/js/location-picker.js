@@ -28,9 +28,17 @@ window.LocationPicker = (() => {
         const clear = form.querySelector('#clearPin');
         if (clear) clear.hidden = lat === null;
         const help = form.querySelector('#pinHelp');
+        // İşaretlenen yer seçilen ilin merkezinden çok uzaksa (başka ilde) uyarılır: ilan yanlış yerde görünmesin.
+        let far = '';
+        const city = window.HasadimMap?.cities?.[form.elements.namedItem('il')?.value];
+        if (lat !== null && city) {
+            const km = Math.hypot((lat - city[0]) * 111, (lon - city[1]) * 111 * Math.cos(lat * Math.PI / 180));
+            if (km > 130) far = ' ⚠ Bu nokta seçtiğin ilden yaklaşık ' + Math.round(km) + ' km uzakta; il/ilçe veya konum yanlış olabilir.';
+        }
         if (help) help.textContent = message || (lat === null
             ? 'Konum eklemezsen ilan, seçtiğin ilçeye yakın yaklaşık konumla gösterilir.'
-            : 'Konum eklendi (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + '). Haritada kontrol et.');
+            : 'Konum eklendi (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + '). Haritada kontrol et.' + far);
+        help?.classList.toggle('warn', Boolean(far));
         preview(form);
     }
 
@@ -93,7 +101,7 @@ window.LocationPicker = (() => {
         if (!bound) {
             bound = true;
             form.querySelector('#clearPin')?.addEventListener('click', () => set(form, null, null));
-            for (const name of ['il', 'ilce']) form.elements.namedItem(name)?.addEventListener('change', () => { if (!values(form)) preview(form); });
+            for (const name of ['il', 'ilce']) form.elements.namedItem(name)?.addEventListener('change', () => { const v = values(form); if (!v) preview(form); else set(form, v[0], v[1]); });
         }
         const pinned = values(form);
         set(form, pinned ? pinned[0] : null, pinned ? pinned[1] : null);

@@ -639,3 +639,4 @@ html.site-menu-open #siteLayout .market-header > .header-new-listing { visibilit
 .multi-chip.on { border-color: var(--green); background: #e9f3e4; color: var(--green); }
 .multi-chip.on::before { border-color: var(--green); background: var(--green) url("/img/ikon/tik.svg") center / 12px no-repeat; }
 .multi-chip:disabled { opacity: .5; cursor: not-allowed; }
+#pinHelp.warn { color: #b45309; font-weight: 600; }
