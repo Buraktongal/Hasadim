@@ -643,6 +643,7 @@ html.site-menu-open #siteLayout .market-header > .header-new-listing { visibilit
 
 /* Araç sayfası filtreleri (harita, takvim): geliştirilmiş seçim kutuları tam metni gösterir,
    "Liste olarak gör" bağlantısı onlarla aynı hizada ve yükseklikte bir buton gibi durur. */
+.tool-filters label { margin: 0; }
 .tool-filters label > .ss { width: 200px; }
 .tool-filters a.secondary {
     display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
