@@ -241,7 +241,7 @@ public static class DemoSeeder
         return (Math.Round((decimal)(c.Lat + Math.Sin(angle) * distance * 0.75), 4), Math.Round((decimal)(c.Lon + Math.Cos(angle) * distance), 4));
     }
 
-    public static async Task Run(IServiceProvider services, string contentRoot, CancellationToken ct)
+    public static async Task Run(IServiceProvider services, string contentRoot, string dataRoot, CancellationToken ct)
     {
         var factory = services.GetRequiredService<SqlConnectionFactory>();
         var users = services.GetRequiredService<UserManager<AppUser>>();
@@ -261,7 +261,7 @@ public static class DemoSeeder
         }
         foreach (var folder in new[] { "photos", "profiles" })
         {
-            var path = Path.Combine(contentRoot, "App_Data", folder);
+            var path = Path.Combine(dataRoot, folder);
             Directory.CreateDirectory(path);
             foreach (var file in Directory.EnumerateFiles(path)) File.Delete(file);
         }
@@ -338,7 +338,7 @@ public static class DemoSeeder
                 foreach (var n in Enumerable.Range(1, 3).OrderBy(_ => random.Next()).Take(photoCount))
                 {
                     var name = Guid.NewGuid().ToString("N") + ".jpg";
-                    File.Copy(Path.Combine(sourcePhotos, $"{slug}-{n}.jpg"), Path.Combine(contentRoot, "App_Data", "photos", name));
+                    File.Copy(Path.Combine(sourcePhotos, $"{slug}-{n}.jpg"), Path.Combine(dataRoot, "photos", name));
                     photos.Add("/api/meyve-ilanlari/photo-file/" + name);
                 }
                 var (lat, lon) = Pin(region.City, random);
@@ -403,7 +403,7 @@ public static class DemoSeeder
                 foreach (var n in Enumerable.Range(1, 3).OrderBy(_ => random.Next()).Take(random.Next(1, 4)))
                 {
                     var name = Guid.NewGuid().ToString("N") + ".jpg";
-                    File.Copy(Path.Combine(sourcePhotos, $"{x.Slug}-{n}.jpg"), Path.Combine(contentRoot, "App_Data", "photos", name));
+                    File.Copy(Path.Combine(sourcePhotos, $"{x.Slug}-{n}.jpg"), Path.Combine(dataRoot, "photos", name));
                     photos.Add("/api/meyve-ilanlari/photo-file/" + name);
                 }
                 var (lat, lon) = Pin(x.City, random, always: land);

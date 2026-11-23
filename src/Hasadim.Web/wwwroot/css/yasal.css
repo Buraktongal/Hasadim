@@ -1,0 +1,28 @@
+/* Yasal metin sayfaları */
+.legal-page { max-width: 1080px; margin: 0 auto; padding: 18px 16px 48px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start; }
+.legal-nav { position: sticky; top: 14px; display: grid; gap: 2px; padding: 10px; background: #fff; border: 1px solid #dfe7da; border-radius: 14px; }
+.legal-nav a { padding: 9px 12px; border-radius: 9px; color: #2f3d33; text-decoration: none; font-weight: 600; font-size: 14px; }
+.legal-nav a:hover { background: #eef4ea; }
+.legal-nav a[aria-current="page"] { background: #1f5e3b; color: #fff; }
+.legal-body { background: #fff; border: 1px solid #dfe7da; border-radius: 16px; padding: 28px 32px; line-height: 1.65; color: #26322a; font-size: 15px; }
+.legal-body h1 { margin: 2px 0 4px; font-size: 28px; }
+.legal-body h2 { margin: 26px 0 8px; font-size: 18px; color: #1f5e3b; }
+.legal-body ul { padding-left: 20px; margin: 8px 0; }
+.legal-body li { margin: 4px 0; }
+.legal-date { color: #6b7a6d; font-size: 13px; margin: 0 0 18px; }
+.legal-missing { background: #fff3c4; color: #7a5500; border-radius: 4px; padding: 0 4px; }
+.legal-table-wrap { overflow-x: auto; }
+.legal-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.legal-table th, .legal-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #e4ebe0; vertical-align: top; }
+.legal-table th { background: #f3f6f0; }
+.legal-info { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 8px 16px; margin: 12px 0; }
+.legal-info dt { font-weight: 700; color: #4d5b49; }
+.legal-info dd { margin: 0; }
+@media (max-width: 800px) {
+    .legal-page { grid-template-columns: 1fr; gap: 14px; padding-top: 10px; }
+    .legal-nav { position: static; display: flex; overflow-x: auto; padding: 6px; }
+    .legal-nav a { white-space: nowrap; }
+    .legal-body { padding: 20px 18px; }
+    .legal-info { grid-template-columns: 1fr; gap: 2px; }
+    .legal-info dd { margin-bottom: 10px; }
+}

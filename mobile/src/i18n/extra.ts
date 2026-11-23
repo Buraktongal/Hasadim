@@ -50,6 +50,8 @@ export const extraEn: Record<string, string> = {
     'Mesaj yaz…': 'Write a message…', 'Henüz mesajın yok': 'No messages yet', 'Giriş yapınca mesajların burada görünür.': 'Your messages appear here after you sign in.',
     'İl haritası': 'Province map', 'Sokak haritası': 'Street map', 'Ürün takvimi': 'Crop calendar',
     'Bu cihaz': 'This device', 'Oturumu kapat': 'End session', 'Diğer oturumları kapat': 'End other sessions',
+    'Yasal': 'Legal', 'Kullanım koşulları': 'Terms of use', 'KVKK aydınlatma metni': 'Privacy notice (KVKK)', 'Gizlilik politikası': 'Privacy policy',
+    'Kayıt olarak': 'By signing up you accept the', 'nı kabul etmiş olursun. Kişisel verilerinin nasıl işlendiği': '. How your personal data is processed is explained in the', 'nde.': '.',
     'Hesabı sil': 'Delete account', 'Görünüm': 'Appearance', 'Dil': 'Language', 'Bildirimler': 'Notifications',
     'Cihaza göre': 'Match device', 'Açık': 'Light', 'Koyu': 'Dark', 'Türkçe': 'Türkçe', 'English': 'English',
     'Şifre değiştir': 'Change password', 'Mevcut şifre': 'Current password', 'Yeni şifre': 'New password', 'Yeni şifre (tekrar)': 'New password (again)',

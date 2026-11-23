@@ -7,6 +7,7 @@ import { Button, Card, Divider, ErrorBox, Field, H2, Page, Row, Segmented, Sheet
 import { api, post } from '../lib/api';
 import { useApp } from '../lib/app-state';
 import { API_BASE, APP_VERSION } from '../lib/config';
+import { openLegal } from '../lib/legal';
 
 export default function SettingsScreen() {
     const app = useApp();
@@ -51,8 +52,20 @@ export default function SettingsScreen() {
                 </Card>
             ) : null}
 
+            {/* Yasal metinler: mağaza kuralları gereği uygulama içinden her zaman erişilebilir olmalı. */}
+            <Card padded={false} style={{ overflow: 'hidden' }}>
+                <View style={{ padding: 14, paddingBottom: 4 }}><H2>Yasal</H2></View>
+                <Row title="Kullanım koşulları" icon={<Icon name="info" color={c.green2} size={20} />} onPress={() => openLegal('kullanim-kosullari')} />
+                <Divider />
+                <Row title="KVKK aydınlatma metni" icon={<Icon name="shield" color={c.green2} size={20} />} onPress={() => openLegal('kvkk')} />
+                <Divider />
+                <Row title="Gizlilik politikası" icon={<Icon name="lock" color={c.green2} size={20} />} onPress={() => openLegal('gizlilik')} />
+                <Divider />
+                <Row title="İletişim" icon={<Icon name="chat" color={c.green2} size={20} />} onPress={() => openLegal('iletisim')} />
+            </Card>
+
             <Card>
-                <Txt muted size={13}>{t('Sunucu adresi') + ': ' + (API_BASE || '–')}</Txt>
+                {__DEV__ ? <Txt muted size={13}>{t('Sunucu adresi') + ': ' + (API_BASE || '–')}</Txt> : null}
                 <Txt muted size={13}>{t('Sürüm') + ': ' + APP_VERSION}</Txt>
             </Card>
 

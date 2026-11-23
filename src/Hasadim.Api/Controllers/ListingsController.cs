@@ -12,7 +12,8 @@ namespace Hasadim.Api.Controllers;
 [Route("api/meyve-ilanlari")]
 public class ListingsController(
     MarketplaceService service,
-    IWebHostEnvironment env) : ControllerBase
+    IWebHostEnvironment env,
+    IConfiguration config) : ControllerBase
 {
     private const long MaxPhotoSize = 5_000_000;
     private const long MaxUploadSize = 52_000_000;
@@ -21,7 +22,7 @@ public class ListingsController(
         new(JsonSerializerDefaults.Web);
 
     private string Folder =>
-        Path.Combine(env.ContentRootPath, "App_Data", "photos");
+        Hasadim.Api.Hosting.StoragePaths.Folder(config, env, "photos");
 
     [HttpGet]
     public async Task<IActionResult> List(

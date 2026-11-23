@@ -1066,6 +1066,9 @@ html[data-theme="dark"] .listing-price .price.has-discount {
 html[data-theme="dark"] .page-number {
     background: #161616;
 }
+html[data-theme="dark"] .site-footer .footer-legal li a:hover {
+    color: var(--t-green, #b0e5c8);
+}
 
 /* ---- hesap-merkezi.css ---- */
 html[data-theme="dark"] .notification-bell {
@@ -1616,6 +1619,40 @@ html[data-theme="dark"] .cc-group {
 }
 html[data-theme="dark"] .cc-empty {
     color: #aaaab6;
+}
+
+/* ---- yasal.css ---- */
+html[data-theme="dark"] .legal-nav {
+    background: #161616;
+    border: 1px solid #3f473b;
+}
+html[data-theme="dark"] .legal-nav a {
+    color: #c9d6cd;
+}
+html[data-theme="dark"] .legal-nav a:hover {
+    background: #1f251a;
+}
+html[data-theme="dark"] .legal-body {
+    background: #161616;
+    border: 1px solid #3f473b;
+    color: #cfdbd3;
+}
+html[data-theme="dark"] .legal-body h2 {
+    color: #b0e5c8;
+}
+html[data-theme="dark"] .legal-missing {
+    background: #3e3512;
+    color: #e8d7af;
+}
+html[data-theme="dark"] .legal-table th,
+html[data-theme="dark"] .legal-table td {
+    border-bottom: 1px solid #3d4538;
+}
+html[data-theme="dark"] .legal-table th {
+    background: #1d2119;
+}
+html[data-theme="dark"] .legal-info dt {
+    color: #bcc7b9;
 }
 
 /* ---- elle ince ayar ---- */

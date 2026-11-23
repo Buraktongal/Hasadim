@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(hostArgs);
 const bool confirm = true;
 builder.Services.AddHasadim(confirm);
 builder.Services.AddHttpContextAccessor(); builder.Services.AddScoped<ICurrentUser, CurrentUser>(); builder.Services.AddScoped<AccountMail>(); builder.Services.AddScoped<RegistrationStore>(); builder.Services.AddSingleton<ISmsSender, SmsSender>();
-var keys = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys"); Directory.CreateDirectory(keys);
+var keys = Hasadim.Api.Hosting.StoragePaths.Folder(builder.Configuration, builder.Environment, "keys");
 builder.Services.AddDataProtection().SetApplicationName("Hasadim.Api.v2").PersistKeysToFileSystem(new DirectoryInfo(keys));
 builder.Services.ConfigureApplicationCookie(o =>
 {
@@ -106,7 +106,7 @@ if (args.Contains("--seed-demo"))
 {
     if (!app.Environment.IsDevelopment()) throw new InvalidOperationException("Demo verisi yalnızca Development ortamında yüklenebilir.");
     using var scope = app.Services.CreateScope();
-    await Hasadim.Api.Development.DemoSeeder.Run(scope.ServiceProvider, app.Environment.ContentRootPath, CancellationToken.None);
+    await Hasadim.Api.Development.DemoSeeder.Run(scope.ServiceProvider, app.Environment.ContentRootPath, Hasadim.Api.Hosting.StoragePaths.Root(app.Configuration, app.Environment), CancellationToken.None);
     Console.WriteLine("Demo verisi yüklendi: 100 ilan (75 meyve, 25 tahıl/yem/bal/kuruyemiş/arazi), örnek teklif ve kayıtlı aramalar.");
     Console.WriteLine("Hesaplar (e-posta / şifre):");
     foreach (var a in Hasadim.Api.Development.DemoSeeder.Accounts)
@@ -120,7 +120,10 @@ app.UseExceptionHandler(handler => handler.Run(async c =>
     c.Response.StatusCode = error is AppException a ? a.Status : 500;
     await c.Response.WriteAsJsonAsync(new { mesaj = error is AppException e ? e.Message : "İşlem tamamlanamadı. Sunucu kayıtlarını kontrol edin." });
 }));
-if (!app.Environment.IsDevelopment()) app.UseHsts(); app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment()) app.UseHsts();
+// Yayında API, web sitesiyle aynı sunucuda yalnızca 127.0.0.1 üzerinden (http) dinleyebilir; dışarıya açık değildir.
+// O iç bağlantıda https'e yönlendirme yapılmaz. Dışarıdan gelen her istek https'e yönlendirilir.
+app.UseWhen(c => c.Request.IsHttps || c.Connection.LocalIpAddress is not { } local || !System.Net.IPAddress.IsLoopback(local), b => b.UseHttpsRedirection());
 app.Use(async (c, next) => { c.Response.Headers["Cache-Control"] = "no-store"; c.Response.Headers["X-Content-Type-Options"] = "nosniff"; await next(); });
 app.UseRouting(); app.UseAuthentication(); app.UseAuthorization(); app.UseRateLimiter(); app.MapControllers();
 app.MapGet("/api/csrf", (IAntiforgery a, HttpContext c) => Results.Ok(new { token = a.GetAndStoreTokens(c).RequestToken }));

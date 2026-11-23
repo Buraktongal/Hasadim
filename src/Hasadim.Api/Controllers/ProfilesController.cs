@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace Hasadim.Api.Controllers;
 [ApiController,Route("api/profiles")]
-public class ProfilesController(ProfileService service,IWebHostEnvironment env):ControllerBase
+public class ProfilesController(ProfileService service,IWebHostEnvironment env,IConfiguration config):ControllerBase
 {
  [Authorize,HttpGet("me")]public async Task<IActionResult> Mine(CancellationToken ct)=>Ok(await service.Mine(ct));
  [Authorize,HttpPut("me")]public async Task<IActionResult> Update(ProfileRequest r,CancellationToken ct){await service.Update(r,ct);return Ok(await service.Mine(ct));}
  [HttpGet("search")]public async Task<IActionResult> Search([FromQuery]string? q,CancellationToken ct)=>Ok(await service.Search(q,ct));
  [HttpGet("{id:guid}")]public async Task<IActionResult> Public(Guid id,CancellationToken ct)=>Ok(await service.Public(id,ct));
- string Folder=>Path.Combine(env.ContentRootPath,"App_Data","profiles");
+ string Folder=>Hasadim.Api.Hosting.StoragePaths.Folder(config,env,"profiles");
  void Remove(string? name){if(name is null||Path.GetFileName(name)!=name)return;try{System.IO.File.Delete(Path.Combine(Folder,name));}catch(IOException){}}
  // Fotoğraf dosyası yalnızca imzasına (JPG/PNG/WebP) bakılarak kabul edilir; dosya adı sunucuda üretilir.
  async Task<(string? name,IActionResult? error)> Save(IFormFile file,int max,CancellationToken ct)

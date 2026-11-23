@@ -1,15 +1,21 @@
 using System.Net;
 var builder=WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(o=>o.Limits.MaxRequestBodySize=52000000);
+// IIS üzerinde çalışırken de aynı sınır (10 fotoğraflık ilan yüklemesi): IIS varsayılanı 30 MB.
+builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(o=>o.MaxRequestBodySize=52000000);
 var apiUrl=builder.Configuration["Api:BaseUrl"]??throw new InvalidOperationException("API adresi gerekli.");
-if(!Uri.TryCreate(apiUrl,UriKind.Absolute,out var apiUri)||apiUri.Scheme!="https")throw new InvalidOperationException("API adresi HTTPS olmalıdır.");
+// API adresi https olmalıdır; tek istisna aynı sunucudaki iç bağlantıdır (http://127.0.0.1:port), o trafik makineden çıkmaz.
+if(!Uri.TryCreate(apiUrl,UriKind.Absolute,out var apiUri)||!(apiUri.Scheme=="https"||apiUri.Scheme=="http"&&apiUri.IsLoopback))throw new InvalidOperationException("API adresi HTTPS (veya aynı sunucuda http://127.0.0.1) olmalıdır.");
 builder.Services.AddHttpClient("api",c=>{c.BaseAddress=apiUri;c.Timeout=TimeSpan.FromSeconds(60);}).ConfigurePrimaryHttpMessageHandler(()=>new HttpClientHandler{UseCookies=false,AllowAutoRedirect=false});
 // Site dev tunnel gibi localhost dışı bir adresten açıldığında Visual Studio'nun tarayıcı yenileme ve Browser Link
 // betikleri bilgisayardaki localhost'a bağlanamaz ve konsolu hatayla doldurur. Bu süzgeç en dışta çalışır (listenin başına
 // eklenir) ve o durumda bu betiklerin yerine boş bir dosya döndürür. Yalnızca geliştirmede; yayında bu betikler hiç yoktur.
 // localhost'ta da bağlantı kurulamadığı görüldü; araçlar ancak appsettings'te "Dev:BrowserTools": true verilirse açık kalır.
 if(builder.Environment.IsDevelopment()&&!builder.Configuration.GetValue<bool>("Dev:BrowserTools"))builder.Services.Insert(0,ServiceDescriptor.Transient<IStartupFilter,QuietDevToolsFilter>());
-var app=builder.Build();if(!app.Environment.IsDevelopment())app.UseHsts();
+builder.Services.AddMemoryCache();
+// Yayında site IIS/nginx gibi bir ters vekilin arkasında çalışırsa gerçek ziyaretçi IP'si ve https bilgisi bu başlıklardan alınır.
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(o=>o.ForwardedHeaders=Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor|Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto);
+var app=builder.Build();app.UseForwardedHeaders();if(!app.Environment.IsDevelopment())app.UseHsts();
 // Yalnızca geliştirmede: mobil uygulamanın bilgisayarda tarayıcıda açılan sürümü (Expo web, http://localhost:8081)
 // API'ye başka bir adresten (dev tunnel) istek atar. Tarayıcı buna izin versin diye bu yerel kaynaklara CORS izni verilir.
 // Çerez gönderilmez (mobil uygulama Authorization başlığıyla giriş yapar). Yayında bu blok hiç çalışmaz.
@@ -62,6 +68,14 @@ app.MapMethods("/api/{**path}",["GET","POST","PUT","DELETE"],async(HttpContext c
   await response.Content.CopyToAsync(c.Response.Body,c.RequestAborted);
  }catch(HttpRequestException){c.Response.StatusCode=502;await c.Response.WriteAsJsonAsync(new{mesaj="API bağlantısı kurulamadı. API projesini ve HTTPS sertifikasını kontrol edin."});}
 });
+// Arama motorları: robots.txt ve tüm yayındaki ilanları içeren site haritası. Sunucu izleme: /health (API'yi de yoklar).
+app.MapGet("/robots.txt",(HttpContext c)=>Results.Text(Seo.Robots(c),"text/plain; charset=utf-8"));
+app.MapGet("/sitemap.xml",async(HttpContext c)=>Results.Text(await Seo.Sitemap(c),"application/xml; charset=utf-8"));
+app.MapGet("/health",async(IHttpClientFactory clients,CancellationToken ct)=>
+{
+ try{using var r=await clients.CreateClient("api").GetAsync("/api/health",ct);return r.IsSuccessStatusCode?Results.Ok(new{status="ok",api="ok"}):Results.Json(new{status="degraded",api=(int)r.StatusCode},statusCode:503);}
+ catch(Exception){return Results.Json(new{status="degraded",api="unreachable"},statusCode:503);}
+});
 // HTML sayfaları wwwroot/html içinde tutulur. Ana adres arama parametrelerini korur.
 app.MapGet("/", (HttpContext c) =>
     Results.Redirect("/html/index.html" + c.Request.QueryString.Value));
@@ -78,7 +92,7 @@ foreach (var file in Directory.EnumerateFiles(
 // Sayfalardaki /js, /css, /img ve /data adreslerine dosyanın içerik özeti (?v=...) eklenir. Özetli dosyalar tarayıcıda
 // bir yıl saklanır (ör. Türkiye haritası, il-ilçe listesi, ürün kataloğu bir kez iner); dosya değişince özet de değişir
 // ve yeni sürüm hemen iner. Sayfaların kendisi her açılışta kısa bir kontrolle (304) tazelenir.
-app.Use(async(c,next)=>{if(!await StaticAssets.TryServeHtml(c,app.Environment.WebRootPath))await next();});
+app.Use(async(c,next)=>{if(!await StaticAssets.TryServeHtml(c,app.Environment.WebRootPath,Seo.Enrich))await next();});
 app.UseStaticFiles(new StaticFileOptions{OnPrepareResponse=ctx=>ctx.Context.Response.Headers.CacheControl=StaticAssets.CachePolicy(ctx.Context.Request,ctx.File.Name)});
 app.Run();
 
@@ -132,7 +146,7 @@ static class StaticAssets
  }
 
  // /html/*.html isteklerinde sayfa, varlık adresleri özetlenerek döndürülür (ETag ile; değişmediyse 304).
- public static async Task<bool> TryServeHtml(HttpContext c,string root)
+ public static async Task<bool> TryServeHtml(HttpContext c,string root,Func<HttpContext,string,Task<string>>? enrich=null)
  {
   var path=c.Request.Path.Value??"";
   if(!HttpMethods.IsGet(c.Request.Method)&&!HttpMethods.IsHead(c.Request.Method))return false;
@@ -153,14 +167,21 @@ static class StaticAssets
   {
    var html=System.Text.Encoding.UTF8.GetString(page.Body);
    foreach(System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(html,"(/(?:js|css|img|data)/[A-Za-z0-9_./-]+)\\?v=([0-9a-f]{10})"))
-    if(Hash(root,m.Groups[1].Value)!=m.Groups[2].Value){pages.TryRemove(full,out _);return await TryServeHtml(c,root);}
+    if(Hash(root,m.Groups[1].Value)!=m.Groups[2].Value){pages.TryRemove(full,out _);return await TryServeHtml(c,root,enrich);}
   }
-  c.Response.Headers.ETag=page.Etag;
+  // Paylaşım önizlemesi ve arama motorları için sayfaya başlık/açıklama/görsel etiketleri eklenir (Seo.Enrich).
+  var body=page.Body;var etag=page.Etag;
+  if(enrich is not null)
+  {
+   var html=System.Text.Encoding.UTF8.GetString(body);var rich=await enrich(c,html);
+   if(rich!=html){body=System.Text.Encoding.UTF8.GetBytes(rich);etag="\""+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(body))[..16]+"\"";}
+  }
+  c.Response.Headers.ETag=etag;
   c.Response.Headers.CacheControl="no-cache";
-  if(c.Request.Headers.IfNoneMatch.ToString()==page.Etag){c.Response.StatusCode=304;return true;}
+  if(c.Request.Headers.IfNoneMatch.ToString()==etag){c.Response.StatusCode=304;return true;}
   c.Response.ContentType="text/html; charset=utf-8";
-  c.Response.ContentLength=page.Body.Length;
-  if(HttpMethods.IsGet(c.Request.Method))await c.Response.Body.WriteAsync(page.Body,c.RequestAborted);
+  c.Response.ContentLength=body.Length;
+  if(HttpMethods.IsGet(c.Request.Method))await c.Response.Body.WriteAsync(body,c.RequestAborted);
   return true;
  }
 }

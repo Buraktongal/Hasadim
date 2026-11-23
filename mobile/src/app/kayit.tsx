@@ -1,10 +1,14 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Button, Card, ErrorBox, Field, Notice, Page, Txt } from '../components/ui';
+import { Text } from 'react-native';
+import { Button, Card, ErrorBox, Field, Notice, Page } from '../components/ui';
 import { api } from '../lib/api';
+import { useApp } from '../lib/app-state';
+import { openLegal } from '../lib/legal';
 
 // Kayıt: bilgiler gönderilir, e-postaya gelen 6 haneli kodla hesap oluşturulur.
 export default function Register() {
+    const { colors: c, t } = useApp();
     const [f, setF] = useState({ displayName: '', email: '', phone: '', password: '', passwordConfirm: '' });
     const [challenge, setChallenge] = useState<string | null>(null);
     const [code, setCode] = useState('');
@@ -55,7 +59,9 @@ export default function Register() {
                         <Field label="Şifre (tekrar)" value={f.passwordConfirm} onChangeText={set('passwordConfirm')} secureTextEntry autoComplete="new-password" maxLength={128} />
                         {error ? <ErrorBox message={error} /> : null}
                         <Button title="Kayıt ol" busy={busy} onPress={start} />
-                        <Txt muted size={12.5} center>Kayıt olarak kullanım koşullarını kabul etmiş olursun.</Txt>
+                        <Text style={{ color: c.muted, fontSize: 12.5, lineHeight: 17, textAlign: 'center' }}>
+                            {t('Kayıt olarak')} <Text style={{ color: c.green2, fontWeight: '700' }} onPress={() => openLegal('kullanim-kosullari')}>{t('Kullanım koşulları')}</Text>{t('nı kabul etmiş olursun. Kişisel verilerinin nasıl işlendiği')} <Text style={{ color: c.green2, fontWeight: '700' }} onPress={() => openLegal('kvkk')}>{t('KVKK aydınlatma metni')}</Text>{t('nde.')}
+                        </Text>
                         <Button title="Zaten hesabın var mı? Giriş yap" kind="plain" onPress={() => router.replace('/giris')} />
                     </Card>
                 )}

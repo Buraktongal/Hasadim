@@ -368,3 +368,13 @@ Ayarlanmamışsa uygulamada düğme "Google ile devam et (yakında)" olarak pasi
 ## Sebze kategorisi
 Meyve ile aynı yapıda yeni ana kategori (`Sebze`): 22 ürün (domates, biber, patlıcan, salatalık, kabak, patates, soğan, sarımsak, havuç, lahana, karnabahar, brokoli, marul, ıspanak, pırasa, fasulye, bezelye, bamya, enginar, turp, mantar, yeşillik) ve "Diğer sebze"; her biri için çeşitler, SVG simge ve hasat takvimi. Web (pazar, filtreler, harita, ürün takvimi, ilan verme, alt bilgi) ve mobil uygulama (veriler `tools/mobil-veri-uret.js` ile üretilir) aynı kataloğu kullanır.
 Veritabanı: `018_Sebze.sql` kategori kısıtını günceller. Sebze için demo ilan üretilmez (fotoğraf seti yok).
+
+## Yayına hazırlık (24 Kasım 2026)
+- Yasal sayfalar: kullanım koşulları, KVKK aydınlatma metni, gizlilik politikası, çerez politikası, iletişim (taslak; avukat kontrolü gerekir). Şirket bilgileri tek yerden: `wwwroot/data/sirket.json`. Alt bilgide, kayıt formunda (web + mobil) ve mobil Ayarlar → Yasal bölümünde bağlantılar.
+- Paylaşım önizlemesi: ilan bağlantısı WhatsApp/Facebook/X'te başlık, fiyat, konum ve ilk fotoğrafla görünür; Google için ürün bilgisi (schema.org). Tüm sayfalara açıklama ve varsayılan paylaşım görseli.
+- `robots.txt`, `sitemap.xml` (yayındaki tüm ilanlar), `/health` (site + API durumu).
+- Fotoğraf/anahtar klasörü `Storage:Root` ayarıyla uygulama dışına alınabilir.
+- `appsettings.Production.json` (API ve Web), IIS için `web.config` (50 MB yükleme sınırı), ters vekil başlıkları.
+- API aynı sunucuda `http://127.0.0.1` üzerinden çalışabilir (dışarıya kapalı iç bağlantı).
+- Mobil: `eas.json` (development/preview/production), sunucu adresi derleme profilinden gelir; Ayarlar'da sunucu adresi yalnızca geliştirmede görünür.
+- Ayrıntılı adımlar: `YAYINA-CIKIS.md`.

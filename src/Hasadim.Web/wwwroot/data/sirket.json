@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Yasal sayfalarda (kullanım koşulları, KVKK, gizlilik, çerez, iletişim) gösterilen şirket bilgileri. Köşeli parantezli değerler doldurulmadan yayına çıkmayın; doldurulmamış alanlar sayfada sarı vurgulanır.",
+  "unvan": "[Şirket unvanı / şahıs işletmesi adı]",
+  "adres": "[Açık adres]",
+  "eposta": "destek@hasadim.com",
+  "telefon": "[Telefon]",
+  "kep": "[KEP adresi]",
+  "mersis": "[MERSİS numarası]",
+  "vergi": "[Vergi dairesi / numarası]",
+  "oda": "[Kayıtlı olunan meslek odası]",
+  "etbis": "[ETBİS kayıt numarası]",
+  "mahkeme": "[İl]",
+  "saglayicilar": "[Sunucu sağlayıcı (ör. Microsoft Azure), e-posta sağlayıcı, SMS sağlayıcı, Google, Apple]",
+  "guncelleme": "24 Kasım 2026"
+}
