@@ -645,6 +645,7 @@ html.site-menu-open #siteLayout .market-header > .header-new-listing { visibilit
    "Liste olarak gör" bağlantısı onlarla aynı hizada ve yükseklikte bir buton gibi durur. */
 .tool-filters label { margin: 0; }
 .tool-filters label > .ss { width: 200px; }
+.tool-filters .ss-button { min-height: 42px; }
 .tool-filters a.secondary {
     display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
     min-height: 42px; box-sizing: border-box; padding: 0 16px; white-space: nowrap;
