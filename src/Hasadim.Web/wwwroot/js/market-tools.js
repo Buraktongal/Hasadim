@@ -13,12 +13,38 @@ window.MarketTools = (() => {
         }
         root.hidden = !root.children.length;
     }
+    // Geniş ekranda "Detaylı arama" başlığa tıklayınca açılıp kapanır. İlk açılışta kapalıdır (yan sütun kısa kalır,
+    // listeyle üst üste binmez); adreste fiyat, miktar, il gibi bir ayrıntılı filtre varsa açık başlar. Seçim oturum boyunca hatırlanır.
+    function collapsible(form) {
+        const heading = form.querySelector('.filter-heading');
+        const title = heading?.querySelector('h3');
+        if (!heading || !title || heading.querySelector('.filter-toggle')) return;
+        const button = node('button', undefined, 'filter-toggle');
+        button.type = 'button';
+        button.setAttribute('aria-controls', form.id);
+        button.append(node('span', title.textContent), node('span', undefined, 'filter-caret'));
+        title.replaceChildren(button);
+        const set = open => {
+            form.classList.toggle('is-collapsed', !open);
+            button.setAttribute('aria-expanded', String(open));
+            try { sessionStorage.setItem('hasadim.detayliArama', open ? '1' : '0'); } catch { /* gizli sekme */ }
+        };
+        button.onclick = () => set(form.classList.contains('is-collapsed'));
+        setTimeout(() => {
+            const detailed = ['q', 'cesit', 'il', 'ilce', 'minFiyat', 'maxFiyat', 'minMiktar', 'maxMiktar', 'ambalaj', 'teslimat']
+                .some(n => String(form.elements.namedItem(n)?.value || '').trim());
+            let saved = null;
+            try { saved = sessionStorage.getItem('hasadim.detayliArama'); } catch { /* gizli sekme */ }
+            set(detailed || saved === '1');
+        });
+    }
     function bindFilters(form, reload) {
         const toggle = document.querySelector('#toggleFilters');
         if (toggle) toggle.onclick = () => {
             const open = toggle.getAttribute('aria-expanded') !== 'true';
             toggle.setAttribute('aria-expanded', String(open)); form.classList.toggle('filters-open', open);
         };
+        collapsible(form);
         const quick = document.querySelector('#quickFruits');
         if (quick) for (const fruit of ['Elma', 'Armut', 'Mandalina', 'Nar', 'Üzüm', 'Avokado']) {
             const b = node('button', fruit, 'quick-fruit'); b.type = 'button';

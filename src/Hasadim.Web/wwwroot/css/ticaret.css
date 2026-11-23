@@ -643,3 +643,16 @@ footer.site-footer {
 .detail-stack { display: grid; gap: 12px; align-content: start; min-width: 0; }
 .detail-stack .seller-box { padding: 14px; margin: 0; box-shadow: none; background: var(--t-panel); border: 1px solid var(--t-line); border-radius: var(--t-radius); }
 .detail-stack .seller-box .harvest-facts { grid-template-columns: 1fr 1fr; }
+
+/* Detaylı arama aç/kapa (geniş ekran). Kapalıyken yalnızca başlık görünür. */
+.filter-toggle { all: unset; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; }
+.filter-toggle:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 4px; }
+.filter-caret { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); transition: transform .15s; }
+.filter-toggle[aria-expanded="true"] .filter-caret { transform: rotate(-135deg) translateY(-2px); }
+@media (min-width: 861px) {
+    #filters.is-collapsed > :not(.filter-heading) { display: none !important; }
+    #filters.is-collapsed .filter-heading { border-bottom: 0; border-radius: calc(var(--t-radius) - 1px); }
+    /* Açıkken yan sütun ekrandan uzun olabilir: yapışkan olmaz, sayfayla birlikte kayar (listenin üstüne binmez). */
+    .market-sidebar:has(#filters:not(.is-collapsed)) { position: static; }
+}
+@media (max-width: 860px) { .filter-toggle { pointer-events: none; } .filter-caret { display: none; } }

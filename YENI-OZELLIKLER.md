@@ -1,5 +1,9 @@
 # Yeni özellikler (Kasım 2026)
 
+## Detaylı arama kapalı başlar
+- Geniş ekranlarda (ör. Surface Pro) "Detaylı arama" yan sütunu ekrandan uzun olduğu için listeyle çakışıyordu. Artık ilk açılışta kapalıdır; başlığa tıklayınca açılır. Açıkken yan sütun yapışkan değildir, sayfayla birlikte kayar ve listenin üstüne binmez.
+- Adreste ayrıntılı bir filtre (il, fiyat, miktar, ambalaj, teslimat, kelime…) varsa açık başlar; açık/kapalı seçimi oturum boyunca hatırlanır. Telefonda eskisi gibi "Filtreler" düğmesiyle açılır.
+
 ## Web ürün takvimi mobildeki gibi
 - Tablo yerine mobil uygulamadaki görünüm: kategori çipleri (simgeli), ürün arama, her ürün için 12 aylık kesintisiz şerit (açık: hasat dönemi, koyu: yoğun hasat), içinde bulunulan ay bütün satırlarda turuncu sütun. Ay başlıkları kaydırırken üstte sabit kalır; dar ekranda ay baş harfleri, geniş ekranda kısaltmalar görünür. Satıra tıklayınca o ürünün/çeşidin ilanları açılır. Koyu tema destekli (`css/takvim.css`).
 
